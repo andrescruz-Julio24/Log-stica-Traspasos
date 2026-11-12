@@ -17,13 +17,13 @@ Versión: ampliación MVP 2026-11-12. Base: árbol de conocimiento SGTL v6.0. La
 
 ## Organización aplicada
 
-- Dashboard.js: navegación, carga y pantalla operativa existente.
-- WorkflowForms.js: formularios de creación y operaciones, extraídos sin duplicación.
-- OperationsViews.js: recepción, reservas, despacho, preparación, tránsito, movimientos y cancelaciones.
-- GovernanceViews.js: alertas, autorizaciones y administración.
-- InsightViews.js: reportes, clientes y búsqueda.
-- EntityDetail.js: trazabilidad individual de pedido y traspaso.
-- ModuleKit.js: tablas, estados, indicadores, progreso, vacíos, avisos y búsqueda reutilizables.
+- Dashboard.jsx: navegación, carga y pantalla operativa existente.
+- WorkflowForms.jsx: formularios de creación y operaciones, extraídos sin duplicación.
+- OperationsViews.jsx: recepción, reservas, despacho, preparación, tránsito, movimientos y cancelaciones.
+- GovernanceViews.jsx: alertas, autorizaciones y administración.
+- InsightViews.jsx: reportes, clientes y búsqueda.
+- EntityDetail.jsx: trazabilidad individual de pedido y traspaso.
+- ModuleKit.jsx: tablas, estados, indicadores, progreso, vacíos, avisos y búsqueda reutilizables.
 - Rutas Next.js dedicadas con parámetros para detalle.
 
 ## Limitaciones

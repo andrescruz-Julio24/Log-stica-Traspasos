@@ -1,6 +1,6 @@
 # SGTL — MVP de trazabilidad logística
 
-**MVP local, NO apto para producción.** Next.js/React JavaScript, NestJS TypeScript, Prisma y PostgreSQL.
+**MVP local, NO apto para producción.** Next.js/React con componentes y páginas `.jsx`, NestJS en TypeScript, Prisma y PostgreSQL.
 
 ## Ejecutar
 1. Node.js >=22, npm y Docker instalados.
@@ -28,3 +28,10 @@ El seed inicial muestra existencias reservadas para demostrar el cálculo de dis
 apps/web: rutas Next.js y componentes JS. apps/api: NestJS/DTO/Prisma TS. Docker Compose levanta PostgreSQL de desarrollo. Next reenvía peticiones /api a Nest mediante rewrite same-origin.
 
 Ver docs/MVP_SCOPE.md para pendientes y criterios de validación.
+
+## Convenciones de código
+
+- `apps/web/src/app/**/*.jsx`, `features/**/*.jsx` y `shared/ui/**/*.jsx`: componentes y páginas React que renderizan JSX.
+- `apps/web/src/shared/api/client.js`: utilidades JavaScript sin JSX (se conserva `.js`).
+- `apps/api/src/**/*.ts`: backend NestJS con TypeScript.
+- Se preservan imports sin extensión para permitir resolución automática de `.jsx` por Next.js.
