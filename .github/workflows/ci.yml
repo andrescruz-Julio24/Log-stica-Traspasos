@@ -1,0 +1,26 @@
+name: SGTL CI
+on:
+  pull_request:
+  push:
+    branches: [feat/sgtl-mvp-next-nest]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install
+      - name: Generate Prisma client
+        run: npm run db:generate
+        env:
+          DATABASE_URL: postgresql://sgtl:sgtl_local@localhost:5432/sgtl?schema=public
+      - name: Unit tests
+        run: npm test
+      - name: Build API and web
+        run: npm run build
+        env:
+          DATABASE_URL: postgresql://sgtl:sgtl_local@localhost:5432/sgtl?schema=public
+          API_INTERNAL_URL: http://localhost:5200
