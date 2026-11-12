@@ -9,8 +9,9 @@ describe('Reglas de dominio SGTL',()=>{
     expect(accepted).not.toBe(presented);
   });
   it('cierre administrativo y cumplimiento son conceptos distintos',()=>{
-    const requested=20,accepted=18,closed=true;
+    const requested:number=20,accepted:number=18,closed=true;
+    const isFullyFulfilled=(received:number,expected:number)=>received>=expected;
     expect(closed).toBe(true);
-    expect(accepted===requested).toBe(false);
+    expect(isFullyFulfilled(accepted,requested)).toBe(false);
   });
 });
