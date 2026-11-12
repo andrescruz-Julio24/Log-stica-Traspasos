@@ -1,12 +1,30 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Activity, AlertTriangle, ArrowLeftRight, Boxes, ClipboardCheck, ClipboardList, LayoutDashboard, Package, Plus, RefreshCw, Truck, History } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import ModuleViews from '../modules/ModuleViews';
+import { AlertTriangle, ArrowLeftRight, Boxes, ClipboardCheck, ClipboardList, LayoutDashboard, Package, Plus, RefreshCw, Truck, History, Bell, ShieldCheck, Users, Search, BarChart3, Settings, PackageCheck, CircleX, ListChecks } from 'lucide-react';
 import { api,submit } from '../../shared/api/client';
 
 const sections=[
-  ['dashboard','Resumen',LayoutDashboard],['orders','Pedidos de clientes',ClipboardList],
-  ['transfers','Traspasos',ArrowLeftRight],['stock','Inventario',Boxes],
-  ['incidents','Incidencias',AlertTriangle],['audit','Auditoría',History],
+  ['dashboard','Resumen',LayoutDashboard,'/'],
+  ['orders','Pedidos de clientes',ClipboardList,'/pedidos'],
+  ['clients','Clientes',Users,'/clientes'],
+  ['transfers','Traspasos',ArrowLeftRight,'/traspasos'],
+  ['stock','Inventario',Boxes,'/inventario'],
+  ['reservations','Reservas',PackageCheck,'/reservas'],
+  ['preparation','Preparación',ListChecks,'/preparacion'],
+  ['dispatches','Despachos',Truck,'/despachos'],
+  ['transit','En tránsito',Truck,'/transito'],
+  ['receipts','Recepciones',ClipboardCheck,'/recepciones'],
+  ['incidents','Incidencias',AlertTriangle,'/incidencias'],
+  ['cancellations','Cancelaciones',CircleX,'/cancelaciones'],
+  ['authorizations','Autorizaciones',ShieldCheck,'/autorizaciones'],
+  ['alerts','Alertas',Bell,'/alertas'],
+  ['audit','Auditoría',History,'/auditoria'],
+  ['reports','Reportes',BarChart3,'/reportes'],
+  ['search','Búsqueda global',Search,'/buscar'],
+  ['admin','Administración',Settings,'/administracion'],
 ];
 const fmt=(x)=>new Date(x).toLocaleString('es-MX');
 function Pill({status}) {
@@ -21,7 +39,9 @@ function Empty({children}){return <div className="empty">{children}</div>}
 function Modal({title,onClose,children}){return <div className="overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><div className="modal" role="dialog" aria-modal="true" aria-label={title}><div className="modal-head"><h2>{title}</h2><button className="ghost" onClick={onClose}>Cerrar ×</button></div>{children}</div></div>}
 function Quantity({value,onChange,label='Cantidad'}){return <label className="field"><span>{label}</span><input type="number" min="1" step="1" value={value} onChange={e=>onChange(e.target.value)}/></label>}
 export default function Dashboard(){
-  const [section,setSection]=useState('dashboard');
+  const pathname=usePathname();
+  const router=useRouter();
+  const section=sections.find(x=>x[3]===pathname)?.[0]||'dashboard';
   const [data,setData]=useState({products:[],locations:[],stocks:[],orders:[],transfers:[],incidents:[],audit:[]});
   const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
   const [modal,setModal]=useState(null),[selected,setSelected]=useState(null);
@@ -44,7 +64,7 @@ export default function Dashboard(){
     <aside className="sidebar">
       <div className="brand"><div className="brand-icon"><Package size={22}/></div><div><strong>SGTL</strong><small>Gestión logística</small></div></div>
       <p className="menu-label">OPERACIÓN</p>
-      <nav aria-label="Navegación principal">{sections.map(([key,label,Icon])=><button key={key} className={'nav-btn '+(section===key?'active':'')} onClick={()=>{setSection(key);setSelected(null)}}><Icon size={18}/>{label}</button>)}</nav>
+      <nav aria-label="Navegación principal">{sections.map(([key,label,Icon,href])=><Link key={key} href={href} aria-current={section===key?'page':undefined} className={'nav-btn '+(section===key?'active':'')}><Icon size={18}/>{label}</Link>)}</nav>
       <div className="sidebar-bottom"><span className="online-dot"/> Entorno de demostración <small>Sin autenticación empresarial</small></div>
     </aside>
     <main className="main">
@@ -57,8 +77,8 @@ export default function Dashboard(){
           {[['Pedidos listos',ready,'Confirmados para preparación'],['Abastecimiento parcial',partial,'Requieren mercancía'],['Traspasos activos',active,'En gestión o movimiento'],['Incidencias abiertas',data.incidents.filter(i=>i.status==='OPEN').length,'Necesitan revisión']].map(([label,num,caption])=><div className="stat" key={label}><small>{label}</small><strong>{num}</strong><span>{caption}</span></div>)}
         </div>
         <div className="two-cols">
-          <Panel title="Traspasos recientes" subtitle="Estado del movimiento y mercancía"><div className="stack">{data.transfers.slice(0,6).map(t=><button className="list-row" onClick={()=>{setSection('transfers');setSelected(t.id)}} key={t.id}><div><strong>{t.code}</strong><small>{t.origin.name} → {t.destination.name}</small></div><Pill status={t.status}/></button>)}{!data.transfers.length&&<Empty>Aún no hay traspasos.</Empty>}</div></Panel>
-          <Panel title="Pedidos por preparar" subtitle="Disponibilidad confirmada por cliente"><div className="stack">{data.orders.slice(0,6).map(o=><button className="list-row" onClick={()=>setSection('orders')} key={o.id}><div><strong>{o.code} · {o.customer}</strong><small>{o.lines.reduce((n,l)=>n+l.accepted,0)} / {o.lines.reduce((n,l)=>n+l.required,0)} unidades aceptadas</small></div><Pill status={o.status}/></button>)}{!data.orders.length&&<Empty>Sin pedidos registrados.</Empty>}</div></Panel>
+          <Panel title="Traspasos recientes" subtitle="Estado del movimiento y mercancía"><div className="stack">{data.transfers.slice(0,6).map(t=><button className="list-row" onClick={()=>router.push('/traspasos')} key={t.id}><div><strong>{t.code}</strong><small>{t.origin.name} → {t.destination.name}</small></div><Pill status={t.status}/></button>)}{!data.transfers.length&&<Empty>Aún no hay traspasos.</Empty>}</div></Panel>
+          <Panel title="Pedidos por preparar" subtitle="Disponibilidad confirmada por cliente"><div className="stack">{data.orders.slice(0,6).map(o=><button className="list-row" onClick={()=>router.push('/pedidos')} key={o.id}><div><strong>{o.code} · {o.customer}</strong><small>{o.lines.reduce((n,l)=>n+l.accepted,0)} / {o.lines.reduce((n,l)=>n+l.required,0)} unidades aceptadas</small></div><Pill status={o.status}/></button>)}{!data.orders.length&&<Empty>Sin pedidos registrados.</Empty>}</div></Panel>
         </div>
       </>}
       {section==='orders'&&<Panel title="Pedidos de clientes" subtitle="Listos únicamente cuando todas las líneas cumplen la cantidad aceptada" action={<button className="primary" onClick={()=>setModal('new-order')}><Plus size={16}/> Nuevo pedido</button>}>
@@ -72,6 +92,7 @@ export default function Dashboard(){
       {section==='incidents'&&<Panel title="Incidencias" subtitle="Diferencias y observaciones que requieren seguimiento" action={<button className="primary" onClick={()=>setModal('new-incident')}><Plus size={16}/> Registrar incidencia</button>}>
         <div className="table-scroll"><table><thead><tr><th>Tipo</th><th>Observación</th><th>Traspaso</th><th>Fecha</th><th>Estado</th></tr></thead><tbody>{data.incidents.map(i=><tr key={i.id}><td><strong>{i.type}</strong></td><td>{i.notes}</td><td>{data.transfers.find(t=>t.id===i.transferId)?.code||'General'}</td><td>{fmt(i.createdAt)}</td><td><Pill status={i.status}/></td></tr>)}</tbody></table>{!data.incidents.length&&<Empty>No hay incidencias.</Empty>}</div></Panel>}
       {section==='audit'&&<Panel title="Bitácora de auditoría" subtitle="Eventos históricos inmutables registrados por el servidor"><div className="timeline">{data.audit.map(a=><div className="audit-event" key={a.id}><span className="timeline-dot"/><div><strong>{a.type}</strong><p>{a.entity} · {a.entityId}</p><small>{a.actor} · {fmt(a.createdAt)}</small><details><summary>Datos del evento</summary><pre>{JSON.stringify(a.data,null,2)}</pre></details></div></div>)}{!data.audit.length&&<Empty>Sin eventos todavía.</Empty>}</div></Panel>}
+      {!['dashboard','orders','transfers','stock','incidents','audit'].includes(section)&&<ModuleViews section={section} data={data}/>}
       </>}
     </main>
     {modal&&<Modal title={{'new-order':'Nuevo pedido de cliente','new-transfer':'Nuevo traspaso','new-incident':'Registrar incidencia'}[modal]} onClose={()=>setModal(null)}>{modal==='new-order'?<CreateOrder data={data} busy={busy} act={act}/>:modal==='new-transfer'?<CreateTransfer data={data} busy={busy} act={act}/>:<CreateIncident data={data} busy={busy} act={act}/>}</Modal>}
