@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, PrismaClient, TransferStatus } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { createHash, randomUUID } from 'node:crypto';
 import { PrismaService } from './prisma.service';
 import { CreateIncidentDto, CreateOrderDto, CreateTransferDto, DispatchDto, ReceiveDto, ReserveDto } from './dto';
