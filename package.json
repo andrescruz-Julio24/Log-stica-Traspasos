@@ -10,7 +10,9 @@
     "test": "npm run test -w @sgtl/api",
     "db:generate": "npm run prisma:generate -w @sgtl/api",
     "db:migrate": "npm run prisma:migrate -w @sgtl/api",
-    "db:seed": "npm run seed -w @sgtl/api"
+    "db:seed": "npm run seed -w @sgtl/api",
+    "predev": "npm run db:generate",
+    "prebuild": "npm run db:generate"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
