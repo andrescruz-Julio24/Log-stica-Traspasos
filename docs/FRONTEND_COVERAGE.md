@@ -36,3 +36,6 @@ Este documento distingue **pantallas implementadas** de **operaciones aún no so
 ## Próximo hito QA
 
 El build de Next.js debe generar las 18 rutas sin errores. El MVP no se considerará completo hasta ejecutar pruebas de integración reales de inventario, transacciones y recepción contra una base de pruebas, y validar con operadores el flujo esperado.
+
+| /pedidos/[id] | Detalle individual de pedido | API | Consulta de líneas, reservas y traspasos relacionados | Autorizaciones comerciales |
+| /traspasos/[id] | Detalle individual de traspaso | API | Consulta de despachos, recepciones, incidencias y eventos | Cierre formal con evidencia |

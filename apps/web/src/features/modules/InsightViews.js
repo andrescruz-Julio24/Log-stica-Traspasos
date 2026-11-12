@@ -42,7 +42,7 @@ export function ReportsPage({data}){
     <Panel title="Detalle de resultados por traspaso" description="El cierre registrado no certifica cumplimiento total.">
       <Table headers={['Traspaso','Ruta','Solicitado','Despachado','Aceptado','Diferencia contra solicitud','Estado']} rows={transfers.map(t=>{
         const req=sum(t.lines,'requested'),dis=sum(t.lines,'dispatched'),acc=sum(t.lines,'accepted');
-        return {key:t.id,cells:[<Link href="/traspasos" className="text-link">{t.code}</Link>,t.origin.name+' → '+t.destination.name,req,dis,acc,Math.max(0,req-acc),<Status value={t.status}/>]};
+        return {key:t.id,cells:[<Link href={"/traspasos/"+t.id} className="text-link">{t.code}</Link>,t.origin.name+' → '+t.destination.name,req,dis,acc,Math.max(0,req-acc),<Status value={t.status}/>]};
       })} empty="No hay traspasos para generar el reporte."/>
     </Panel>
   </>;

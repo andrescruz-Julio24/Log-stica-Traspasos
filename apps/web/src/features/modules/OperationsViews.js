@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Empty,Hint,Metric,NextStep,Panel,Progress,SearchField,Status,Table,formatDate,stockAvailable,Unavailable } from '../../shared/ui/ModuleKit';
 
 const summation=(xs,field)=>xs.reduce((n,x)=>n+(Number(x[field])||0),0);
-function TransferLink({t}){return <Link href="/traspasos" className="text-link">{t.code}</Link>}
+function TransferLink({t}){return <Link href={"/traspasos/"+t.id} className="text-link">{t.code}</Link>}
 function locationRows(data){return data.stocks||[]}
 
 export function ReservationsPage({data}){
