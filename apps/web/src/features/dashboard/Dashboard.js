@@ -4,13 +4,15 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import ModuleViews from '../modules/ModuleViews';
 import { AlertTriangle, ArrowLeftRight, Boxes, ClipboardCheck, ClipboardList, LayoutDashboard, Package, Plus, RefreshCw, Truck, History, Bell, ShieldCheck, Users, Search, BarChart3, Settings, PackageCheck, CircleX, ListChecks } from 'lucide-react';
-import { api,submit } from '../../shared/api/client';
+import { api } from '../../shared/api/client';
+import { CreateOrder, CreateTransfer, CreateIncident, TransferDetail } from '../operations/WorkflowForms';
 
 const sections=[
   ['dashboard','Resumen',LayoutDashboard,'/'],
   ['orders','Pedidos de clientes',ClipboardList,'/pedidos'],
   ['clients','Clientes',Users,'/clientes'],
   ['transfers','Traspasos',ArrowLeftRight,'/traspasos'],
+  ['movements','Movimientos',ArrowLeftRight,'/movimientos'],
   ['stock','Inventario',Boxes,'/inventario'],
   ['reservations','Reservas',PackageCheck,'/reservas'],
   ['preparation','Preparación',ListChecks,'/preparacion'],
@@ -37,7 +39,6 @@ function Panel({title,subtitle,children,action}){
 }
 function Empty({children}){return <div className="empty">{children}</div>}
 function Modal({title,onClose,children}){return <div className="overlay" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><div className="modal" role="dialog" aria-modal="true" aria-label={title}><div className="modal-head"><h2>{title}</h2><button className="ghost" onClick={onClose}>Cerrar ×</button></div>{children}</div></div>}
-function Quantity({value,onChange,label='Cantidad'}){return <label className="field"><span>{label}</span><input type="number" min="1" step="1" value={value} onChange={e=>onChange(e.target.value)}/></label>}
 export default function Dashboard(){
   const pathname=usePathname();
   const router=useRouter();
@@ -97,29 +98,4 @@ export default function Dashboard(){
     </main>
     {modal&&<Modal title={{'new-order':'Nuevo pedido de cliente','new-transfer':'Nuevo traspaso','new-incident':'Registrar incidencia'}[modal]} onClose={()=>setModal(null)}>{modal==='new-order'?<CreateOrder data={data} busy={busy} act={act}/>:modal==='new-transfer'?<CreateTransfer data={data} busy={busy} act={act}/>:<CreateIncident data={data} busy={busy} act={act}/>}</Modal>}
   </div>;
-}
-function CreateOrder({data,busy,act}){
-  const [customer,setCustomer]=useState(''),[destinationId,setDestination]=useState(data.locations[0]?.id||''),[productId,setProduct]=useState(data.products[0]?.id||''),[required,setRequired]=useState('10');
-  return <form onSubmit={e=>{e.preventDefault();act(()=>submit('/orders',{customer,destinationId,items:[{productId,required:Number(required)}]}))}} className="form-grid"><label className="field full"><span>Cliente</span><input required value={customer} onChange={e=>setCustomer(e.target.value)} placeholder="Nombre del cliente"/></label><Select label="Destino" value={destinationId} onChange={setDestination} items={data.locations}/><Select label="Producto" value={productId} onChange={setProduct} items={data.products} caption={p=>p.sku+' — '+p.name}/><Quantity value={required} onChange={setRequired}/><div className="full muted">MVP: una línea por operación; puedes crear más pedidos para otros productos.</div><button disabled={busy} className="primary full">{busy?'Guardando...':'Crear pedido'}</button></form>;
-}
-function CreateTransfer({data,busy,act}){
-  const [originId,setOrigin]=useState(data.locations[0]?.id||''),[destinationId,setDestination]=useState(data.locations[1]?.id||''),[productId,setProduct]=useState(data.products[0]?.id||''),[requested,setRequested]=useState('20');
-  return <form onSubmit={e=>{e.preventDefault();act(()=>submit('/transfers',{originId,destinationId,items:[{productId,requested:Number(requested)}]}))}} className="form-grid"><Select label="Origen" value={originId} onChange={setOrigin} items={data.locations}/><Select label="Destino" value={destinationId} onChange={setDestination} items={data.locations}/><Select label="Producto" value={productId} onChange={setProduct} items={data.products} caption={p=>p.sku+' — '+p.name}/><Quantity value={requested} onChange={setRequested}/><p className="muted full">Crear el traspaso no mueve inventario. La reserva se realiza por separado.</p><button disabled={busy} className="primary full">{busy?'Guardando...':'Crear traspaso'}</button></form>;
-}
-function CreateIncident({data,busy,act}){
-  const [type,setType]=useState('FALTANTE'),[notes,setNotes]=useState(''),[transferId,setTransfer]=useState('');
-  return <form className="form-grid" onSubmit={e=>{e.preventDefault();act(()=>submit('/incidents',{type,notes,...(transferId?{transferId}:{})}))}}><label className="field"><span>Tipo</span><select value={type} onChange={e=>setType(e.target.value)}>{['FALTANTE','EXCEDENTE','PRODUCTO_INCORRECTO','RETRASO','OTRO'].map(x=><option key={x}>{x}</option>)}</select></label><label className="field"><span>Traspaso (opcional)</span><select value={transferId} onChange={e=>setTransfer(e.target.value)}><option value="">General</option>{data.transfers.map(t=><option key={t.id} value={t.id}>{t.code}</option>)}</select></label><label className="field full"><span>Descripción</span><textarea required value={notes} onChange={e=>setNotes(e.target.value)}/></label><button disabled={busy} className="primary full">Registrar incidencia</button></form>;
-}
-function Select({label,value,onChange,items,caption=(i)=>i.name}){return <label className="field"><span>{label}</span><select value={value} onChange={e=>onChange(e.target.value)} required>{items.map(i=><option key={i.id} value={i.id}>{caption(i)}</option>)}</select></label>}
-function TransferDetail({transfer,orders,busy,onAction}){
-  const [productId,setProduct]=useState(transfer.lines[0]?.productId||''),[quantity,setQuantity]=useState('1'),[orderLineId,setOrderLine]=useState(''),[presented,setPresented]=useState('1'),[accepted,setAccepted]=useState('1');
-  const line=transfer.lines.find(l=>l.productId===productId);
-  const candidates=orders.filter(o=>o.destinationId===transfer.destinationId&&o.status!=='CANCELLED').flatMap(o=>o.lines.filter(l=>l.productId===productId).map(l=>({id:l.id,name:o.code+' · '+o.customer+' ('+(l.required-l.accepted)+' faltantes)'})));
-  const qty=Number(quantity),a=Number(accepted),p=Number(presented);
-  return <><div className="detail"><h3>Operar {transfer.code}</h3><p className="muted">Origen: {transfer.origin.name} · Destino: {transfer.destination.name}</p><div className="form-grid"><Select label="Producto" value={productId} onChange={x=>{setProduct(x);setOrderLine('')}} items={transfer.lines.map(l=>({id:l.productId,name:l.product.sku+' · '+l.product.name}))}/><Quantity value={quantity} onChange={setQuantity}/>
-    <label className="field full"><span>Asignación prevista a cliente (opcional, antes de reservar)</span><select value={orderLineId} onChange={e=>setOrderLine(e.target.value)}><option value="">Sin pedido asociado</option>{candidates.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-    <div className="actions full"><button disabled={busy||!line} className="primary" onClick={()=>onAction(()=>submit('/transfers/'+transfer.id+'/reservations',{transferLineId:line.id,quantity:qty,...(orderLineId?{orderLineId}:{})}))}>1. Reservar</button><button disabled={busy||!line} className="secondary" onClick={()=>onAction(()=>submit('/transfers/'+transfer.id+'/dispatches',{items:[{productId,quantity:qty}]},{headers:{'Idempotency-Key':crypto.randomUUID()}}))}>2. Despachar</button></div>
-    <Quantity label="Presentado en recepción" value={presented} onChange={setPresented}/><Quantity label="Aceptado (no incluye rechazados)" value={accepted} onChange={setAccepted}/>
-    <button className="primary full" disabled={busy||!line||a>p||a<0} onClick={()=>onAction(()=>submit('/transfers/'+transfer.id+'/receipts',{items:[{productId,presented:p,accepted:a,rejected:p-a}]},{headers:{'Idempotency-Key':crypto.randomUUID()}}))}>3. Registrar recepción verificada</button>
-  </div></div><div className="line-summary">{transfer.lines.map(l=><div key={l.id}><strong>{l.product.sku}</strong> · Solicitado {l.requested} · Despachado {l.dispatched} · Aceptado {l.accepted} · Reservas {l.reservations.reduce((n,r)=>n+r.quantity-r.released,0)}</div>)}</div></>;
 }

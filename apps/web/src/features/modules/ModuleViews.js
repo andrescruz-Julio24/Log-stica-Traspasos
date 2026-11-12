@@ -1,10 +1,11 @@
 'use client';
-import {ReservationsPage,PreparationPage,DispatchesPage,TransitPage,ReceiptsPage,CancellationsPage} from './OperationsViews';
+import {ReservationsPage,PreparationPage,DispatchesPage,TransitPage,ReceiptsPage,CancellationsPage,MovementsPage} from './OperationsViews';
 import {AlertsPage,AuthorizationsPage,AdministrationPage} from './GovernanceViews';
 import {ClientsPage,ReportsPage,SearchPage} from './InsightViews';
 
 const views={
   clients:ClientsPage,
+  movements:MovementsPage,
   reservations:ReservationsPage,
   preparation:PreparationPage,
   dispatches:DispatchesPage,

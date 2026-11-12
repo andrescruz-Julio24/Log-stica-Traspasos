@@ -7,6 +7,7 @@ Este documento distingue **pantallas implementadas** de **operaciones aún no so
 | / | Dashboard | API | Abrir módulo | Alertas persistidas, SLA |
 | /pedidos | Pedidos | API | Alta de pedido (una línea UI) | Edición, cancelación, múltiples líneas UI |
 | /clientes | Clientes derivados | API | Consulta | Catálogo de clientes independiente |
+| /movimientos | Eventos logísticos | API | Consulta de reservas, despachos y recepciones | Libro mayor de inventario por evento |
 | /traspasos | Traspasos | API | Alta, reservar, despachar, recibir | Autorizaciones, correcciones |
 | /inventario | Inventario | API | Consulta | Movimientos controlados y ajustes |
 | /reservas | Reservas | API | Consulta y acceso a traspasos | Anulación/expiración y reservas por cliente completas |
