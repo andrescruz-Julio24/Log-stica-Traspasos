@@ -1,8 +1,7 @@
 'use client';
-import { deriveAlerts } from '../utils/alerts';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
-import { useState } from 'react';
 import Link from 'next/link';
+import { useAlerts } from '../hooks/useAlerts';
 import {
   Hint,
   Metric,
@@ -14,8 +13,7 @@ import {
 
 export function AlertsPage() {
   const { data, resources, complete } = useWorkspace();
-  const [q, setQ] = useState('');
-  const alerts = deriveAlerts(data, q);
+  const { q, setQ, alerts } = useAlerts(data);
   return (
     <>
       <Hint title="Alertas derivadas, no notificaciones persistidas">
