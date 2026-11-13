@@ -174,3 +174,42 @@ src/
       services/
       styles/
 ```
+
+
+## Iteración 13-nov-2026 — carpetas y responsabilidades del frontend
+
+Esta iteración trabaja sobre una rama separada para facilitar la revisión sin alterar la rama base.
+
+### Route Groups sin cambios de URL
+
+Los archivos de entrada `app/**/page.jsx` se agruparon bajo `app/(supervision)/`, `app/(pedidos)/`, `app/(traspasos)/`, `app/(inventario)/` y `app/(incidencias)/`. Las carpetas entre paréntesis no participan en las URLs de Next.js: `/buscar`, `/pedidos/[id]`, `/traspasos/[id]` y las demás rutas conservan sus direcciones. Los imports de estas páginas usan el alias `@/` configurado en `apps/web/jsconfig.json`.
+
+### Estilos
+
+Se reemplazaron los archivos agregadores `shared/styles/base.css` y `shared/styles/modules.css` por hojas más pequeñas y organizadas:
+
+- `shared/styles/`: fundamentos y reglas responsivas globales.
+- `shared/workspace/styles/`: shell, navegación y layout general.
+- `shared/ui/styles/`: controles, tablas, estados, formularios y paneles compartidos.
+- `modulos/pedidos/styles/list.module.css`: presentación exclusiva de líneas de pedidos.
+- `modulos/traspasos/styles/transferDetail.module.css`: interfaz operativa del detalle de traspaso.
+- `modulos/supervision/styles/`: reportes y reglas propias de administración.
+
+Se conservaron las reglas reutilizables en shared y el orden global de imports para minimizar diferencias visuales. La existencia de estilos compartidos no implica mezclar las reglas de cada módulo.
+
+### Hooks y utilidades de dominio
+
+- `pedidos/hooks/useOrderHistory.js`: consulta de historial con cancelación al desmontar.
+- `inventario/hooks/useMovements.js` y `utils/movementEvents.js`: filtro y proyección de eventos logísticos.
+- `inventario/hooks/useReservations.js` y `utils/reservationSummary.js`: filtros, relaciones y agregados de reservas.
+- `incidencias/hooks/useAlerts.js`: selección local y derivación de alertas usando `utils/alerts.js`.
+- `supervision/hooks/useGlobalSearch.js` y `utils/searchEntries.js`: estado del buscador y transformación pura de registros.
+- `supervision/hooks/useReportMetrics.js`, `utils/reportMetrics.js`, `data/reportStatuses.js` y `componentes/ReportBar.jsx`: cálculo, configuración y representación de reportes desacoplados.
+
+### Providers: decisión explícita
+
+`shared/workspace/providers/WorkspaceProvider.jsx` administra los datos de cada vista. No se crearon providers artificiales por módulo: un Context de módulo solo será apropiado si existe estado mutable que requiera persistir entre varias rutas o componentes y no sea estado de servidor. Añadir carpetas vacías o duplicar el contexto global no mejora la arquitectura. Se estabilizó la referencia de los datos del workspace con `useMemo` para evitar recalcular proyecciones de manera innecesaria ante renders sin cambios en los recursos.
+
+### Validación
+
+La confirmación del build y las pruebas depende de la ejecución de CI y de las verificaciones posteriores a estos commits. Esta nota describe cambios implementados, no sustituye pruebas funcionales ni visuales.
