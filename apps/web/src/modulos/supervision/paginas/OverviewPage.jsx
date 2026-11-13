@@ -1,7 +1,7 @@
 'use client';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { useRouter } from 'next/navigation';
-import { Status, Panel, Empty } from '../../../shared/ui/ModuleKit';
+import { Status, Panel, Empty, Metric } from '../../../shared/ui/ModuleKit';
 import styles from '../styles/OverviewPage.module.css';
 
 export default function OverviewPage() {
@@ -25,11 +25,7 @@ export default function OverviewPage() {
             'Necesitan revisión',
           ],
         ].map(([label, num, caption]) => (
-          <div className="stat" key={label}>
-            <small>{label}</small>
-            <strong>{num}</strong>
-            <span>{caption}</span>
-          </div>
+          <Metric key={label} label={label} value={num} detail={caption} />
         ))}
       </div>
       <div className="two-cols">

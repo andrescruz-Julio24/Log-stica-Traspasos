@@ -1,0 +1,5 @@
+.progress { min-width:130px; display:flex; align-items:center; gap:12px; font-size:11px; color:#5a7687; }
+.track { height:9px; background:#e8eef2; border-radius:99px; flex:1; min-width:65px; overflow:hidden; }
+.track > div { height:100%; background:#0d7479; border-radius:99px; min-width:0; }
+:global(td) .progress { width:190px; max-width:100%; }
+:global(td) .progress span { white-space:nowrap; }

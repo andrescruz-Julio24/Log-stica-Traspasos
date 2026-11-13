@@ -1,0 +1,5 @@
+.unavailable { text-align:center; padding:24px 20px 30px; color:#607b8b; font-size:12px; line-height:1.55; }
+.unavailable strong { font-size:15px; color:#25485f; }
+.unavailable p { max-width:580px; margin:11px auto; }
+.unavailable small { display:block; margin-top:15px; }
+.mark { display:grid; place-items:center; border-radius:50%; background:#fff0d6; color:#926418; font-weight:800; margin:0 auto 14px; width:35px; height:35px; }

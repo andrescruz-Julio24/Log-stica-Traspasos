@@ -1,0 +1,3 @@
+.pill { display:inline-block; font-size:10px; white-space:nowrap; padding:6px 10px; border-radius:99px; background:#edf2f6; color:#587284; font-weight:700; }
+.good { background:#e2f5ed; color:#167857; }
+.warn { background:#fff2d7; color:#9b670a; }
