@@ -1,0 +1,30 @@
+.form-grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:17px;
+  padding:21px 24px
+}
+.field {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  font-size:12px;
+  font-weight:700;
+  color:#455c6e
+}
+.field input,.field select,.field textarea {
+  border:1px solid #cfdae2;
+  border-radius:8px;
+  padding:11px 12px;
+  color:#274152;
+  background:#fff;
+  width:100%;
+  min-width:0;
+  font-size:13px
+}
+.field textarea {
+  min-height:90px
+}
+.full {
+  grid-column:1/-1
+}

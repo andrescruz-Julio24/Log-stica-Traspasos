@@ -1,0 +1,25 @@
+.primary,.secondary,.ghost {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border-radius:8px;
+  padding:10px 14px;
+  font-weight:700;
+  font-size:12px
+}
+.primary {
+  background:#0d7479;
+  border:1px solid #0d7479;
+  color:#fff
+}
+.secondary {
+  background:#fff;
+  border:1px solid #d5e1e8;
+  color:#285067
+}
+.ghost {
+  border:0;
+  background:transparent;
+  color:#60798a
+}
