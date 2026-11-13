@@ -4,3 +4,4 @@
 .header .secondary{text-decoration:none}
 
 @media(max-width:760px){.header{flex-direction:column}}
+.header :global(.eyebrow) { display:block; color:#6b8495; font-size:12px; margin-bottom:9px; }

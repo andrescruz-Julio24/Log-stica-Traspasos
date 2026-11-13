@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useWorkspace } from '../hooks/useWorkspace';
+import styles from '../styles/CreateRecordAction.module.css';
 export function CreateRecordAction({ label, title, form: Form }) {
   const dialog = useRef(null);
   const [open, setOpen] = useState(false);
@@ -20,7 +21,7 @@ export function CreateRecordAction({ label, title, form: Form }) {
         {label}
       </button>
       <dialog
-        className="record-dialog"
+        className={styles.dialog}
         ref={dialog}
         aria-label={title}
         onClose={() => setOpen(false)}
@@ -33,7 +34,7 @@ export function CreateRecordAction({ label, title, form: Form }) {
       >
         {open && (
           <div>
-            <div className="modal-head">
+            <div className={styles.head}>
               <h2>{title}</h2>
               <button className="ghost" disabled={saving} onClick={close}>
                 Cerrar ×

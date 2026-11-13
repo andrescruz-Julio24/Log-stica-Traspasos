@@ -1,5 +1,4 @@
 @import '../shared/styles/foundations.css';
-@import '../shared/workspace/styles/shell.css';
 @import '../shared/ui/styles/controls.css';
 @import '../shared/ui/styles/data-display.css';
 @import '../shared/ui/styles/feedback.css';
@@ -7,9 +6,7 @@
 @import '../shared/ui/styles/forms.css';
 @import '../shared/ui/styles/operational.css';
 @import '../shared/styles/responsive.css';
-@import '../shared/workspace/styles/navigation.css';
 @import '../shared/ui/styles/enhancements.css';
 @import '../modulos/supervision/styles/administration.css';
 @import '../shared/ui/styles/utilities.css';
 @import '../shared/styles/responsive-modules.css';
-@import '../shared/workspace/styles/workspace.css';
