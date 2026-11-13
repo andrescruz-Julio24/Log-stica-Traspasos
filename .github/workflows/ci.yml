@@ -34,7 +34,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://sgtl:sgtl_local@localhost:5432/sgtl?schema=public
       - name: Create isolated database schema
-        run: npx prisma db push --schema apps/api/prisma/schema.prisma
+        run: npx prisma migrate deploy --schema apps/api/prisma/schema.prisma
       - name: Unit tests
         run: npm test
       - name: PostgreSQL integration tests

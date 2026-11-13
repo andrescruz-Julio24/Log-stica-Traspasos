@@ -1,7 +1,7 @@
 # Alcance validable del MVP
 Implementado: pedidos; traspasos; stock; reservas; despachos; recepciones; incidencias; bitácora append-only; transacciones PostgreSQL; reintentos de concurrencia; idempotencia en despachos y recepciones.
 
-No implementado: autenticación real, roles, comprobación por sucursal, cierre administrativo autorizado, cancelación, evidencias, almacenamiento de archivos, flujo de aprobaciones, entregas detalladas por despacho, ERP, tiempo real. No interpretar el estado CLOSED como cumplimiento integral.
+La cobertura actual, los permisos y las reglas del flujo con diferencias se describen en [Operación](OPERACION.md). Integración con un ERP concreto, archivos adjuntos y permisos por ubicación requieren configuración o desarrollo adicional.
 
 Invariantes:
 - Solicitar no altera stock; reservar no es despachar; despachar no es recibir.
@@ -12,6 +12,6 @@ Invariantes:
 - Los eventos de auditoría se guardan en la misma transacción.
 - Las claves de idempotencia impiden duplicar despacho/recepción reintentados.
 
-Ejecución de pruebas pendiente: el código no ha sido compilado ni probado sobre una base conectada desde el asistente. Ejecutar npm install, migración, npm test y pruebas E2E antes de usar.
+La suite de integración usa PostgreSQL temporal. Incluye el escenario de 33 unidades, cierre excepcional, compensación de recepción y segregación de funciones.
 
 Decisión pendiente D-01: autoridad de inventario (SGTL u otro ERP).

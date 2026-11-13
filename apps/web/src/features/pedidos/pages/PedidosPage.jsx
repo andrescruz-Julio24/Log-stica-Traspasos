@@ -1,5 +1,6 @@
 'use client';
 import { useWorkspace } from '../../workspace/hooks/useWorkspace';
+import { OrderPlan } from '../components/OrderPlan';
 import Link from 'next/link';
 import { CreateRecordAction } from '../../workspace/components/CreateRecordAction';
 import { CreateOrder } from '../components/CreateOrder';
@@ -24,6 +25,7 @@ export default function PedidosPage() {
         <small>{formatDate(order.createdAt)}</small>
       </div>,
       order.customer,
+      <OrderPlan key="plan" order={order} />,
       order.destination.name,
       <div key="lineas">
         {order.lines.map((line) => (
@@ -56,6 +58,7 @@ export default function PedidosPage() {
         headers={[
           'Folio',
           'Cliente',
+          'Prioridad y compromiso',
           'Destino',
           'Productos',
           'Progreso',

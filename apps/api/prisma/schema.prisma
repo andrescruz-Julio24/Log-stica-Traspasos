@@ -13,6 +13,7 @@ enum OrderStatus {
   READY
   CANCELLED
 }
+
 enum TransferStatus {
   REQUESTED
   PREPARING
@@ -22,135 +23,197 @@ enum TransferStatus {
   CLOSED
   CANCELLED
 }
+
 enum IncidentStatus {
   OPEN
   RESOLVED
 }
+
 model Location {
-  id       String @id @default(cuid())
-  name     String @unique
-  stocks   Stock[]
-  orders   CustomerOrder[]
-  origins  Transfer[] @relation("Origin")
-  targets  Transfer[] @relation("Destination")
-}
-model Product {
-  id      String @id @default(cuid())
-  sku     String @unique
-  name    String
+  id      String          @id @default(cuid())
+  name    String          @unique
   stocks  Stock[]
-  lines   OrderLine[]
-  transfers TransferLine[]
+  orders  CustomerOrder[]
+  origins Transfer[]      @relation("Origin")
+  targets Transfer[]      @relation("Destination")
 }
+
+model Product {
+  variant      String?
+  presentation String?
+  id           String         @id @default(cuid())
+  sku          String         @unique
+  name         String
+  stocks       Stock[]
+  lines        OrderLine[]
+  transfers    TransferLine[]
+}
+
 model Stock {
-  id         String @id @default(cuid())
-  productId  String
-  locationId String
-  physical   Int @default(0)
-  reserved   Int @default(0)
-  blocked    Int @default(0)
-  version    Int @default(0)
-  product    Product @relation(fields: [productId], references: [id])
-  location   Location @relation(fields: [locationId], references: [id])
+  sourceCheckedAt DateTime?
+  id              String    @id @default(cuid())
+  productId       String
+  locationId      String
+  physical        Int       @default(0)
+  reserved        Int       @default(0)
+  blocked         Int       @default(0)
+  version         Int       @default(0)
+  product         Product   @relation(fields: [productId], references: [id])
+  location        Location  @relation(fields: [locationId], references: [id])
+
   @@unique([productId, locationId])
 }
-model CustomerOrder {
-  id         String @id @default(cuid())
-  code       String @unique
-  customer   String
-  destinationId String
-  status     OrderStatus @default(PENDING)
-  createdAt  DateTime @default(now())
-  destination Location @relation(fields: [destinationId], references: [id])
-  lines      OrderLine[]
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
 }
+
+model CustomerOrder {
+  priority      Priority    @default(NORMAL)
+  dueAt         DateTime?
+  id            String      @id @default(cuid())
+  code          String      @unique
+  customer      String
+  destinationId String
+  status        OrderStatus @default(PENDING)
+  createdAt     DateTime    @default(now())
+  destination   Location    @relation(fields: [destinationId], references: [id])
+  lines         OrderLine[]
+}
+
 model OrderLine {
-  id        String @id @default(cuid())
-  orderId   String
-  productId String
-  required  Int
-  accepted  Int @default(0)
-  order     CustomerOrder @relation(fields: [orderId], references: [id])
-  product   Product @relation(fields: [productId], references: [id])
+  id           String        @id @default(cuid())
+  orderId      String
+  productId    String
+  required     Int
+  accepted     Int           @default(0)
+  order        CustomerOrder @relation(fields: [orderId], references: [id])
+  product      Product       @relation(fields: [productId], references: [id])
   reservations Reservation[]
+
   @@unique([orderId, productId])
 }
+
 model Transfer {
-  id            String @id @default(cuid())
-  code          String @unique
-  originId      String
-  destinationId String
-  status        TransferStatus @default(REQUESTED)
-  createdAt     DateTime @default(now())
-  origin        Location @relation("Origin", fields: [originId], references: [id])
-  destination   Location @relation("Destination", fields: [destinationId], references: [id])
-  lines         TransferLine[]
-  dispatches    Dispatch[]
-  receipts      Receipt[]
+  closedWithDifferences Boolean        @default(false)
+  id                    String         @id @default(cuid())
+  code                  String         @unique
+  originId              String
+  destinationId         String
+  status                TransferStatus @default(REQUESTED)
+  createdAt             DateTime       @default(now())
+  origin                Location       @relation("Origin", fields: [originId], references: [id])
+  destination           Location       @relation("Destination", fields: [destinationId], references: [id])
+  lines                 TransferLine[]
+  dispatches            Dispatch[]
+  receipts              Receipt[]
 }
+
 model TransferLine {
-  id          String @id @default(cuid())
-  transferId  String
-  productId   String
-  requested   Int
-  dispatched  Int @default(0)
-  accepted    Int @default(0)
-  transfer    Transfer @relation(fields: [transferId], references: [id])
-  product     Product @relation(fields: [productId], references: [id])
+  id           String        @id @default(cuid())
+  transferId   String
+  productId    String
+  requested    Int
+  dispatched   Int           @default(0)
+  accepted     Int           @default(0)
+  transfer     Transfer      @relation(fields: [transferId], references: [id])
+  product      Product       @relation(fields: [productId], references: [id])
   reservations Reservation[]
+
   @@unique([transferId, productId])
 }
+
 model Reservation {
-  id           String @id @default(cuid())
-  stockId      String
+  unfulfilled    Int                  @default(0)
+  allocations    DispatchAllocation[]
+  id             String               @id @default(cuid())
+  stockId        String
   transferLineId String
-  orderLineId  String?
-  quantity     Int
-  released     Int @default(0)
-  createdAt    DateTime @default(now())
-  transferLine TransferLine @relation(fields: [transferLineId], references: [id])
-  orderLine    OrderLine? @relation(fields: [orderLineId], references: [id])
+  orderLineId    String?
+  quantity       Int
+  released       Int                  @default(0)
+  createdAt      DateTime             @default(now())
+  transferLine   TransferLine         @relation(fields: [transferLineId], references: [id])
+  orderLine      OrderLine?           @relation(fields: [orderLineId], references: [id])
 }
+
 model Dispatch {
-  id          String @id @default(cuid())
+  inspectedAt DateTime?
+  custodian   String?
+  receipts    Receipt[]
+  id          String         @id @default(cuid())
   transferId  String
-  createdAt   DateTime @default(now())
-  transfer    Transfer @relation(fields: [transferId], references: [id])
+  createdAt   DateTime       @default(now())
+  transfer    Transfer       @relation(fields: [transferId], references: [id])
   lines       DispatchLine[]
 }
+
 model DispatchLine {
-  id         String @id @default(cuid())
-  dispatchId String
-  productId  String
-  quantity   Int
-  dispatch   Dispatch @relation(fields: [dispatchId], references: [id])
+  allocations DispatchAllocation[]
+  id          String               @id @default(cuid())
+  dispatchId  String
+  productId   String
+  quantity    Int
+  dispatch    Dispatch             @relation(fields: [dispatchId], references: [id])
 }
+
 model Receipt {
-  id          String @id @default(cuid())
-  transferId  String
-  createdAt   DateTime @default(now())
-  transfer    Transfer @relation(fields: [transferId], references: [id])
-  lines       ReceiptLine[]
+  dispatchId String?
+  dispatch   Dispatch?     @relation(fields: [dispatchId], references: [id])
+  id         String        @id @default(cuid())
+  transferId String
+  createdAt  DateTime      @default(now())
+  transfer   Transfer      @relation(fields: [transferId], references: [id])
+  lines      ReceiptLine[]
 }
+
 model ReceiptLine {
-  id         String @id @default(cuid())
-  receiptId  String
-  productId  String
-  presented  Int
-  accepted   Int
-  rejected   Int
-  receipt    Receipt @relation(fields: [receiptId], references: [id])
+  applied   Json?
+  reversed  Boolean @default(false)
+  id        String  @id @default(cuid())
+  receiptId String
+  productId String
+  presented Int
+  accepted  Int
+  rejected  Int
+  receipt   Receipt @relation(fields: [receiptId], references: [id])
 }
+
+model DispatchAllocation {
+  id             String       @id @default(cuid())
+  dispatchLineId String
+  reservationId  String
+  quantity       Int
+  accepted       Int          @default(0)
+  sequence       Int
+  dispatchLine   DispatchLine @relation(fields: [dispatchLineId], references: [id])
+  reservation    Reservation  @relation(fields: [reservationId], references: [id])
+
+  @@unique([dispatchLineId, sequence])
+}
+
 model Incident {
-  id         String @id @default(cuid())
+  blocking   Boolean        @default(true)
+  dispatchId String?
+  sku        String?
+  quantity   Int?
+  custodian  String?
+  location   String?
+  evidence   String?
+  resolution String?
+  id         String         @id @default(cuid())
   transferId String?
   type       String
   notes      String
   status     IncidentStatus @default(OPEN)
-  createdAt  DateTime @default(now())
+  createdAt  DateTime       @default(now())
 }
+
 model AuditEvent {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   type      String
   entity    String
   entityId  String
@@ -158,10 +221,25 @@ model AuditEvent {
   data      Json
   createdAt DateTime @default(now())
 }
+
 model IdempotencyRecord {
-  id        String @id @default(cuid())
-  key       String @unique
+  id        String   @id @default(cuid())
+  key       String   @unique
   operation String
   result    Json
   createdAt DateTime @default(now())
+}
+
+model ExceptionRequest {
+  id        String    @id @default(cuid())
+  kind      String
+  targetId  String
+  payload   Json
+  reason    String
+  requester String
+  approver  String?
+  status    String    @default("PENDING")
+  decision  String?
+  createdAt DateTime  @default(now())
+  decidedAt DateTime?
 }

@@ -116,11 +116,11 @@ export function AdministrationPage() {
       {tab === 'roles' && (
         <Panel
           title="Usuarios y permisos"
-          description="Módulo restringido hasta contar con autenticación real y autorización en NestJS."
+          description="El servidor verifica credenciales individuales y las facultades de operador o supervisor."
         >
           <Unavailable
-            title="Gestión de usuarios no implementada"
-            description="El encabezado de demostración x-demo-actor no acredita identidad. No debe utilizarse para aprobar operaciones ni restringir el inventario."
+            title="Administración de cuentas fuera de esta pantalla"
+            description="Las cuentas se configuran en el servidor. Una solicitud requiere un supervisor distinto para aprobarse."
             dependency="BE-07 Seguridad · PM-BA Matriz de permisos · QA-09"
           />
         </Panel>

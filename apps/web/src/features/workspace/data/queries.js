@@ -15,7 +15,7 @@ export const queriesBySection = {
   receipts: ['transfers'],
   incidents: ['incidents', 'transfers'],
   cancellations: ['orders', 'transfers'],
-  authorizations: [],
+  authorizations: ['orders', 'transfers', 'authorizations'],
   alerts: ['incidents', 'orders', 'transfers'],
   audit: ['audit'],
   reports: ['orders', 'transfers'],
@@ -29,5 +29,6 @@ export const emptyWorkspaceData = {
   orders: [],
   transfers: [],
   incidents: [],
+  authorizations: [],
   audit: [],
 };

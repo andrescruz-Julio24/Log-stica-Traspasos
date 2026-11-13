@@ -1,4 +1,6 @@
 'use client';
+import { submit } from '../../../shared/services/apiClient';
+import { priorities } from '../../pedidos/data/priorities';
 import { activeReserved } from '../../../shared/utils/quantities';
 import { useState } from 'react';
 import { useTransferMovements } from '../hooks/useTransferMovements';
@@ -10,8 +12,16 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
     [orderLineId, setOrderLine] = useState(''),
     [presented, setPresented] = useState('1'),
     [accepted, setAccepted] = useState('1');
+  const [allocationId, setAllocation] = useState('');
+  const [dispatchId, setDispatch] = useState(''),
+    [notes, setNotes] = useState(''),
+    [custodian, setCustodian] = useState('');
   const { reserve, submitMovement } = useTransferMovements(transfer.id);
   const line = transfer.lines.find((l) => l.productId === productId);
+  const assigned =
+    transfer.dispatches
+      .find((d) => d.id === dispatchId)
+      ?.lines.find((l) => l.productId === productId)?.allocations || [];
   const candidates = orders
     .filter(
       (o) =>
@@ -26,6 +36,8 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
             o.code +
             ' · ' +
             o.customer +
+            ' · ' +
+            priorities[o.priority] +
             ' (' +
             (l.required - l.accepted) +
             ' faltantes)',
@@ -48,6 +60,7 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
             onChange={(x) => {
               setProduct(x);
               setOrderLine('');
+              setAllocation('');
             }}
             items={transfer.lines.map((l) => ({
               id: l.productId,
@@ -71,6 +84,13 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
               ))}
             </select>
           </label>
+          <label className="field full">
+            Custodio del despacho
+            <input
+              value={custodian}
+              onChange={(e) => setCustodian(e.target.value)}
+            />
+          </label>
           <div className="actions full">
             <button
               disabled={busy || !line || !Number.isSafeInteger(qty) || qty < 1}
@@ -92,13 +112,60 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
               className="secondary"
               onClick={() =>
                 onAction(() =>
-                  submitMovement('dispatches', { productId, quantity: qty }),
+                  submitMovement(
+                    'dispatches',
+                    { productId, quantity: qty },
+                    custodian ? { custodian } : {},
+                  ),
                 )
               }
             >
               2. Despachar
             </button>
           </div>
+          <label className="field full">
+            Despacho a inspeccionar
+            <select
+              value={dispatchId}
+              onChange={(e) => {
+                setDispatch(e.target.value);
+                setAllocation('');
+              }}
+            >
+              <option value="">Seleccionar despacho</option>
+              {transfer.dispatches
+                .filter((d) => !d.inspectedAt)
+                .map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.id} · {d.custodian}
+                  </option>
+                ))}
+            </select>
+          </label>
+          <label className="field full">
+            Asignación recibida
+            <select
+              value={allocationId}
+              onChange={(e) => setAllocation(e.target.value)}
+            >
+              <option value="">Aplicar orden del despacho</option>
+              {assigned
+                .filter((a) => a.accepted < a.quantity)
+                .map((a) => {
+                  const customer = orders.find((o) =>
+                    o.lines.some((l) => l.id === a.reservation.orderLineId),
+                  );
+                  return (
+                    <option value={a.id} key={a.id}>
+                      {customer
+                        ? customer.code + ' · ' + customer.customer
+                        : 'Sin cliente'}{' '}
+                      · {a.quantity - a.accepted} pendientes
+                    </option>
+                  );
+                })}
+            </select>
+          </label>
           <Quantity
             label="Presentado en recepción"
             value={presented}
@@ -119,21 +186,54 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
               p < 1 ||
               accepted === '' ||
               !Number.isSafeInteger(a) ||
+              !dispatchId ||
               a > p ||
               a < 0
             }
             onClick={() =>
               onAction(() =>
-                submitMovement('receipts', {
-                  productId,
-                  presented: p,
-                  accepted: a,
-                  rejected: p - a,
-                }),
+                submitMovement(
+                  'receipts',
+                  {
+                    productId,
+                    presented: p,
+                    accepted: a,
+                    rejected: p - a,
+                    ...(allocationId ? { allocationId } : {}),
+                  },
+                  { dispatchId },
+                ),
               )
             }
           >
             3. Registrar recepción verificada
+          </button>
+          <label className="field full">
+            Conclusión de la inspección
+            <input value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </label>
+          <button
+            className="secondary full"
+            disabled={busy || !dispatchId || !notes.trim()}
+            onClick={() =>
+              onAction(() =>
+                submit(
+                  '/transfers/' +
+                    transfer.id +
+                    '/dispatches/' +
+                    dispatchId +
+                    '/finish',
+                  { reason: notes },
+                ),
+              ).then((ok) => {
+                if (ok) {
+                  setDispatch('');
+                  setNotes('');
+                }
+              })
+            }
+          >
+            Finalizar inspección y registrar faltantes
           </button>
         </div>
       </div>

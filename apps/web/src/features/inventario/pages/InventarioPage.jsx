@@ -18,6 +18,7 @@ export default function InventarioPage() {
           'Reservado',
           'Bloqueado',
           'Disponible',
+          'Fuente',
         ]}
         rows={data.stocks.map((stock) => ({
           key: stock.id,
@@ -31,6 +32,9 @@ export default function InventarioPage() {
             <strong key="disponible" className="positive">
               {stockAvailable(stock)}
             </strong>,
+            stock.stale
+              ? 'ERP desactualizado · reserva bloqueada'
+              : data.inventorySource,
           ],
         }))}
         empty="Sin registros de inventario."

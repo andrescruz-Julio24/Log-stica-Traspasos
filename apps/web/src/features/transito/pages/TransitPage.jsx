@@ -19,7 +19,7 @@ export function TransitPage() {
       t.lines.map((l) => {
         const presented = t.receipts
           .flatMap((r) => r.lines)
-          .filter((r) => r.productId === l.productId)
+          .filter((r) => !r.reversed && r.productId === l.productId)
           .reduce((n, r) => n + r.presented, 0);
         return {
           key: l.id,
@@ -34,10 +34,9 @@ export function TransitPage() {
   return (
     <>
       <Hint title="Seguimiento físico aún incompleto" warning>
-        El MVP no registra vehículo, custodio, ubicación GPS ni vincula cada
-        recepción a un despacho específico. La cantidad sin presentar es un
-        saldo agregado por producto y traspaso; no prueba por sí sola dónde se
-        encuentra físicamente la mercancía.
+        El saldo agrupa por producto las salidas y recepciones vigentes. El
+        custodio y el conteo se registran por despacho. La ubicación física
+        requiere confirmación del responsable.
       </Hint>
       <Panel
         title="Traspasos con mercancía en movimiento"

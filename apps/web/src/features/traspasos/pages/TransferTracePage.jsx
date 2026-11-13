@@ -76,7 +76,11 @@ export default function TransferTracePage({ id }) {
           <div className="detail-fields">
             <div>
               <span>Estado</span>
-              <Status value={t.status} />
+              <Status
+                value={
+                  t.closedWithDifferences ? 'Cerrado con diferencias' : t.status
+                }
+              />
             </div>
             <div>
               <span>Origen</span>
@@ -141,7 +145,9 @@ export default function TransferTracePage({ id }) {
             rows={t.dispatches.map((d) => ({
               key: d.id,
               cells: [
-                d.id.slice(0, 10),
+                d.id.slice(0, 10) +
+                  ' · ' +
+                  (d.custodian || 'Custodio histórico sin registrar'),
                 sumField(d.lines, 'quantity'),
                 formatDate(d.createdAt),
               ],
@@ -159,9 +165,18 @@ export default function TransferTracePage({ id }) {
               key: r.id,
               cells: [
                 r.id.slice(0, 10),
-                sumField(r.lines, 'presented'),
-                sumField(r.lines, 'accepted'),
-                sumField(r.lines, 'rejected'),
+                sumField(
+                  r.lines.filter((l) => !l.reversed),
+                  'presented',
+                ),
+                sumField(
+                  r.lines.filter((l) => !l.reversed),
+                  'accepted',
+                ),
+                sumField(
+                  r.lines.filter((l) => !l.reversed),
+                  'rejected',
+                ),
               ],
             }))}
             empty="Sin recepciones."

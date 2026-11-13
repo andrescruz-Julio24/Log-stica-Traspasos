@@ -2,9 +2,9 @@ import { useRef } from 'react';
 import { submit } from '../../../shared/services/apiClient';
 export function useTransferMovements(transferId) {
   const pendingKeys = useRef(new Map());
-  async function submitMovement(operation, item) {
+  async function submitMovement(operation, item, extra = {}) {
     const path = '/transfers/' + transferId + '/' + operation;
-    const payload = { items: [item] };
+    const payload = { items: [item], ...extra };
     const signature = path + JSON.stringify(payload);
     const key = pendingKeys.current.get(signature) || crypto.randomUUID();
     pendingKeys.current.set(signature, key);

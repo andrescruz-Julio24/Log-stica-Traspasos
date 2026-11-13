@@ -1,4 +1,13 @@
-import { IsArray,IsInt,IsNotEmpty,IsOptional,IsString,Min,ValidateNested,ArrayMinSize } from 'class-validator';
+import {
+  IsArray,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested,
+  ArrayMinSize,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class TransferItemDto {
@@ -8,7 +17,11 @@ export class TransferItemDto {
 export class CreateTransferDto {
   @IsString() @IsNotEmpty() originId!: string;
   @IsString() @IsNotEmpty() destinationId!: string;
-  @IsArray() @ArrayMinSize(1) @ValidateNested({each:true}) @Type(()=>TransferItemDto) items!: TransferItemDto[];
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => TransferItemDto)
+  items!: TransferItemDto[];
 }
 export class ReserveDto {
   @IsString() @IsNotEmpty() transferLineId!: string;
@@ -20,14 +33,25 @@ export class QuantityDto {
   @IsInt() @Min(1) quantity!: number;
 }
 export class DispatchDto {
-  @IsArray() @ArrayMinSize(1) @ValidateNested({each:true}) @Type(()=>QuantityDto) items!: QuantityDto[];
+  @IsOptional() @IsString() @IsNotEmpty() custodian?: string;
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => QuantityDto)
+  items!: QuantityDto[];
 }
 export class ReceiptItemDto {
+  @IsOptional() @IsString() @IsNotEmpty() allocationId?: string;
   @IsString() @IsNotEmpty() productId!: string;
   @IsInt() @Min(1) presented!: number;
   @IsInt() @Min(0) accepted!: number;
   @IsInt() @Min(0) rejected!: number;
 }
 export class ReceiveDto {
-  @IsArray() @ArrayMinSize(1) @ValidateNested({each:true}) @Type(()=>ReceiptItemDto) items!: ReceiptItemDto[];
+  @IsOptional() @IsString() @IsNotEmpty() dispatchId?: string;
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => ReceiptItemDto)
+  items!: ReceiptItemDto[];
 }

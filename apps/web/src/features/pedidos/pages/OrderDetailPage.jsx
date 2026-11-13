@@ -1,4 +1,5 @@
 'use client';
+import { OrderHistory } from '../components/OrderHistory';
 import Link from 'next/link';
 import {
   Empty,
@@ -71,6 +72,7 @@ export default function OrderDetailPage({ id }) {
           detail="Calculado desde el registro"
         />
       </div>
+      <OrderHistory id={id} />
       <Hint title="Disponibilidad comercial">
         Este pedido solamente figura listo cuando todas sus líneas alcanzan la
         cantidad aceptada; la entrega final al cliente y los permisos de

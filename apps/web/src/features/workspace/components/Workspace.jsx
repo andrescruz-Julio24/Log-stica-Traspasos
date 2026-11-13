@@ -1,3 +1,4 @@
+import { OperatorAccess } from './OperatorAccess';
 import { WorkspaceProvider } from '../providers/WorkspaceProvider';
 import { Sidebar, SectionNavigation } from './WorkspaceNavigation';
 import { WorkspaceContent, RefreshButton } from './WorkspaceContent';
@@ -17,6 +18,7 @@ export default function Workspace({ section, children }) {
             </div>
             <div className="top-actions">
               <span className="tag">MVP · Desarrollo local</span>
+              <OperatorAccess />
               <RefreshButton />
             </div>
           </header>

@@ -1,9 +1,42 @@
 'use client';
-import { useState } from 'react';
 import { submit } from '../../../shared/services/apiClient';
-import { Quantity, Select } from '../../../shared/components/FormFields';
-
-export function CreateTransfer({data,busy,act}){
-  const [originId,setOrigin]=useState(data.locations[0]?.id||''),[destinationId,setDestination]=useState(data.locations[1]?.id||''),[productId,setProduct]=useState(data.products[0]?.id||''),[requested,setRequested]=useState('20');
-  return <form onSubmit={e=>{e.preventDefault();act(()=>submit('/transfers',{originId,destinationId,items:[{productId,requested:Number(requested)}]}))}} className="form-grid"><Select label="Origen" value={originId} onChange={setOrigin} items={data.locations}/><Select label="Destino" value={destinationId} onChange={setDestination} items={data.locations}/><Select label="Producto" value={productId} onChange={setProduct} items={data.products} caption={p=>p.sku+' — '+p.name}/><Quantity value={requested} onChange={setRequested}/><p className="muted full">Crear el traspaso no mueve inventario. La reserva se realiza por separado.</p><button disabled={busy} className="primary full">{busy?'Guardando...':'Crear traspaso'}</button></form>;
+import {
+  ProductLines,
+  readLines,
+} from '../../../shared/components/ProductLines';
+export function CreateTransfer({ data, busy, act }) {
+  function save(e) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    act(() =>
+      submit('/transfers', {
+        originId: f.get('originId'),
+        destinationId: f.get('destinationId'),
+        items: readLines(f, 'requested'),
+      }),
+    );
+  }
+  return (
+    <form className="form-grid" onSubmit={save}>
+      {[
+        ['Origen', 'originId'],
+        ['Destino', 'destinationId'],
+      ].map(([label, name], i) => (
+        <label key={name} className="field">
+          {label}
+          <select name={name} required defaultValue={data.locations[i]?.id}>
+            {data.locations.map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      ))}
+      <ProductLines products={data.products} field="requested" />
+      <button disabled={busy} className="primary full">
+        Crear traspaso
+      </button>
+    </form>
+  );
 }

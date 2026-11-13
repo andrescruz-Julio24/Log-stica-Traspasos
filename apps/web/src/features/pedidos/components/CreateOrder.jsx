@@ -1,9 +1,60 @@
 'use client';
-import { useState } from 'react';
 import { submit } from '../../../shared/services/apiClient';
-import { Quantity, Select } from '../../../shared/components/FormFields';
-
-export function CreateOrder({data,busy,act}){
-  const [customer,setCustomer]=useState(''),[destinationId,setDestination]=useState(data.locations[0]?.id||''),[productId,setProduct]=useState(data.products[0]?.id||''),[required,setRequired]=useState('10');
-  return <form onSubmit={e=>{e.preventDefault();act(()=>submit('/orders',{customer,destinationId,items:[{productId,required:Number(required)}]}))}} className="form-grid"><label className="field full"><span>Cliente</span><input required value={customer} onChange={e=>setCustomer(e.target.value)} placeholder="Nombre del cliente"/></label><Select label="Destino" value={destinationId} onChange={setDestination} items={data.locations}/><Select label="Producto" value={productId} onChange={setProduct} items={data.products} caption={p=>p.sku+' — '+p.name}/><Quantity value={required} onChange={setRequired}/><div className="full muted">MVP: una línea por operación; puedes crear más pedidos para otros productos.</div><button disabled={busy} className="primary full">{busy?'Guardando...':'Crear pedido'}</button></form>;
+import {
+  ProductLines,
+  readLines,
+} from '../../../shared/components/ProductLines';
+import { priorities } from '../data/priorities';
+export function CreateOrder({ data, busy, act }) {
+  function save(e) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    act(() =>
+      submit('/orders', {
+        customer: f.get('customer'),
+        destinationId: f.get('destinationId'),
+        priority: f.get('priority'),
+        ...(f.get('dueAt')
+          ? { dueAt: new Date(f.get('dueAt')).toISOString() }
+          : {}),
+        items: readLines(f, 'required'),
+      }),
+    );
+  }
+  return (
+    <form className="form-grid" onSubmit={save}>
+      <label className="field">
+        Cliente
+        <input required name="customer" placeholder="Nombre del cliente" />
+      </label>
+      <label className="field">
+        Destino
+        <select required name="destinationId">
+          {data.locations.map((l) => (
+            <option value={l.id} key={l.id}>
+              {l.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="field">
+        Prioridad
+        <select name="priority" defaultValue="NORMAL">
+          {Object.entries(priorities).map(([k, v]) => (
+            <option key={k} value={k}>
+              {v}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="field">
+        Fecha compromiso
+        <input type="datetime-local" name="dueAt" />
+      </label>
+      <ProductLines products={data.products} field="required" />
+      <button className="primary full" disabled={busy}>
+        Crear pedido
+      </button>
+    </form>
+  );
 }

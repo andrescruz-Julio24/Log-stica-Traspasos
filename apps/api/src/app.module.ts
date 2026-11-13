@@ -1,3 +1,5 @@
+import { GobiernoService } from './modules/gobierno/gobierno.service';
+import { GobiernoController } from './modules/gobierno/gobierno.controller';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -9,11 +11,19 @@ import { CatalogosModule } from './modules/catalogos/catalogos.module';
 import { AuditoriaModule } from './modules/auditoria/auditoria.module';
 
 @Module({
-  imports:[
-    ConfigModule.forRoot({isGlobal:true,envFilePath:['apps/api/.env','.env']}),
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['apps/api/.env', '.env'],
+    }),
     DatabaseModule,
-    PedidosModule,TraspasosModule,IncidenciasModule,CatalogosModule,AuditoriaModule
+    PedidosModule,
+    TraspasosModule,
+    IncidenciasModule,
+    CatalogosModule,
+    AuditoriaModule,
   ],
-  controllers:[AppController]
+  providers: [GobiernoService],
+  controllers: [AppController, GobiernoController],
 })
-export class AppModule{}
+export class AppModule {}

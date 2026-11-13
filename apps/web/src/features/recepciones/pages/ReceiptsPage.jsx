@@ -35,17 +35,23 @@ export function ReceiptsPage() {
         />
         <Metric
           label="Presentadas"
-          value={rows.reduce((n, x) => n + x.l.presented, 0)}
+          value={rows
+            .filter((x) => !x.l.reversed)
+            .reduce((n, x) => n + x.l.presented, 0)}
           detail="Cantidad física reportada"
         />
         <Metric
           label="Aceptadas"
-          value={rows.reduce((n, x) => n + x.l.accepted, 0)}
+          value={rows
+            .filter((x) => !x.l.reversed)
+            .reduce((n, x) => n + x.l.accepted, 0)}
           detail="Se incorpora al destino"
         />
         <Metric
           label="Rechazadas"
-          value={rows.reduce((n, x) => n + x.l.rejected, 0)}
+          value={rows
+            .filter((x) => !x.l.reversed)
+            .reduce((n, x) => n + x.l.rejected, 0)}
           detail="No aumenta inventario disponible"
         />
       </div>
@@ -65,6 +71,7 @@ export function ReceiptsPage() {
             'Presentado',
             'Aceptado',
             'Rechazado',
+            'Estado',
             'Destino',
             'Fecha',
           ]}
@@ -78,6 +85,7 @@ export function ReceiptsPage() {
                 {x.l.accepted}
               </span>,
               x.l.rejected,
+              x.l.reversed ? 'Compensada' : 'Vigente',
               x.t.destination.name,
               formatDate(x.r.createdAt),
             ],

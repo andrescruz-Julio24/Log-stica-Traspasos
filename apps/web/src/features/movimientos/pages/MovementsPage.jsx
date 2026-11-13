@@ -45,7 +45,7 @@ export function MovementsPage() {
       const receipts = t.receipts.flatMap((r) =>
         r.lines.map((l) => ({
           key: 'receipt:' + r.id + ':' + l.productId,
-          type: 'Recepción aceptada',
+          type: l.reversed ? 'Recepción compensada' : 'Recepción aceptada',
           sku:
             t.lines.find((x) => x.productId === l.productId)?.product.sku ||
             l.productId,
