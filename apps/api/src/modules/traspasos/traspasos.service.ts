@@ -1,100 +1,28 @@
-import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { createHash, randomUUID } from 'node:crypto';
-import { PrismaService } from './prisma.service';
-import { CreateIncidentDto, CreateOrderDto, CreateTransferDto, DispatchDto, ReceiveDto, ReserveDto } from './dto';
-
-type Tx = Prisma.TransactionClient;
-function ensure(condition: unknown, message: string): asserts condition {
-  if (!condition) throw new ConflictException(message);
-}
-function actorName(value?:string) { return (value || 'operador-demo').slice(0,80); }
-function uniqueItems(items:{productId:string}[]) {
-  if (new Set(items.map(x=>x.productId)).size !== items.length) throw new BadRequestException('No se permiten SKU duplicados en la misma operación');
-}
-function fingerprint(value: unknown) { return createHash('sha256').update(JSON.stringify(value)).digest('hex'); }
+import { Injectable,NotFoundException,BadRequestException } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+import { PrismaService } from '../../shared/database/prisma.service';
+import { TransactionService } from '../../shared/database/transaction.service';
+import { ensure, uniqueItems } from '../../shared/domain/assertions';
+import { CreateTransferDto, ReserveDto, DispatchDto, ReceiveDto } from './dto/traspasos.dto';
 
 @Injectable()
-export class DomainService {
-  constructor(private readonly db:PrismaService) {}
-  private async auditTx(tx:Tx,type:string,entity:string,entityId:string,actor?:string,data:unknown={}) {
-    await tx.auditEvent.create({data:{type,entity,entityId,actor:actorName(actor),data:data as Prisma.InputJsonValue}});
-  }
-  private async transaction<T>(fn:(tx:Tx)=>Promise<T>):Promise<T> {
-    for(let attempt=0; attempt<3;attempt++) {
-      try { return await this.db.$transaction(fn,{isolationLevel:Prisma.TransactionIsolationLevel.Serializable,timeout:15000}); }
-      catch(e:any) {
-        if(e.code==='P2034' && attempt<2) continue;
-        if(e.code==='P2002') throw new ConflictException('Folio o clave duplicada');
-        throw e;
-      }
-    }
-    throw new ConflictException('Conflicto de concurrencia: vuelve a intentar');
-  }
-  private async idempotent<T>(operation:string,key:string|undefined,payload:unknown,fn:(tx:Tx)=>Promise<T>):Promise<T> {
-    if(!key || key.length>120) throw new BadRequestException('Se requiere Idempotency-Key (máximo 120 caracteres)');
-    const id=operation+':'+key;
-    const hash=fingerprint(payload);
-    const cached=await this.db.idempotencyRecord.findUnique({where:{key:id}});
-    if(cached) {
-      const result=cached.result as any;
-      ensure(result.hash===hash,'Idempotency-Key reutilizada con contenido diferente');
-      return result.response as T;
-    }
-    for(let attempt=0;attempt<3;attempt++){
-      try {
-        return await this.db.$transaction(async tx=>{
-          const response=await fn(tx);
-          await tx.idempotencyRecord.create({data:{key:id,operation,result:{hash,response} as Prisma.InputJsonValue}});
-          return response;
-        },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable,timeout:15000});
-      }catch(e:any){
-        if(e.code==='P2002' || e.code==='P2034') {
-          const recorded=await this.db.idempotencyRecord.findUnique({where:{key:id}});
-          if(recorded){
-            const result=recorded.result as any;
-            ensure(result.hash===hash,'Idempotency-Key reutilizada con contenido diferente');
-            return result.response as T;
-          }
-          if(attempt<2)continue;
-          throw new ConflictException('Conflicto de concurrencia; reintenta la operación');
-        }
-        throw e;
-      }
-    }
-    throw new ConflictException('No se pudo confirmar la operación');
-  }
-  bootstrap() {return Promise.all([
-    this.db.product.findMany({orderBy:{name:'asc'}}),
-    this.db.location.findMany({orderBy:{name:'asc'}}),
-    this.db.stock.findMany({include:{product:true,location:true},orderBy:{location:{name:'asc'}}}),
-  ]).then(([products,locations,stocks])=>({products,locations,stocks}));}
-  orders() { return this.db.customerOrder.findMany({include:{destination:true,lines:{include:{product:true}}},orderBy:{createdAt:'desc'}}); }
-  transfers() { return this.db.transfer.findMany({include:{origin:true,destination:true,lines:{include:{product:true,reservations:true}},dispatches:{include:{lines:true}},receipts:{include:{lines:true}}},orderBy:{createdAt:'desc'}}); }
-  incidents() {return this.db.incident.findMany({orderBy:{createdAt:'desc'}});}
-  audit() {return this.db.auditEvent.findMany({orderBy:{createdAt:'desc'},take:200});}
+export class TraspasosService{
+  constructor(private readonly db:PrismaService,private readonly tx:TransactionService){}
 
-  async createOrder(body:CreateOrderDto,actor?:string) {
-    uniqueItems(body.items);
-    return this.transaction(async tx=>{
-      const place=await tx.location.findUnique({where:{id:body.destinationId}});
-      if(!place)throw new NotFoundException('Destino no encontrado');
-      const order=await tx.customerOrder.create({data:{code:'CL-'+randomUUID().slice(0,8).toUpperCase(),customer:body.customer,destinationId:body.destinationId,lines:{create:body.items.map(i=>({productId:i.productId,required:i.required}))}},include:{lines:true}});
-      await this.auditTx(tx,'ORDER_CREATED','CustomerOrder',order.id,actor,body);
-      return order;
-    });
-  }
+  transfers() { return this.db.transfer.findMany({include:{origin:true,destination:true,lines:{include:{product:true,reservations:true}},dispatches:{include:{lines:true}},receipts:{include:{lines:true}}},orderBy:{createdAt:'desc'}}); }
+
   async createTransfer(body:CreateTransferDto,actor?:string) {
     uniqueItems(body.items);
     ensure(body.originId!==body.destinationId,'Origen y destino deben ser distintos');
-    return this.transaction(async tx=>{
+    return this.tx.transaction(async tx=>{
       const transfer=await tx.transfer.create({data:{code:'TR-'+randomUUID().slice(0,8).toUpperCase(),originId:body.originId,destinationId:body.destinationId,lines:{create:body.items.map(i=>({productId:i.productId,requested:i.requested}))}},include:{lines:true}});
-      await this.auditTx(tx,'TRANSFER_CREATED','Transfer',transfer.id,actor,body);
+      await this.tx.auditTx(tx,'TRANSFER_CREATED','Transfer',transfer.id,actor,body);
       return transfer;
     });
   }
+
   async reserve(transferId:string,body:ReserveDto,actor?:string) {
-    return this.transaction(async tx=>{
+    return this.tx.transaction(async tx=>{
       const transfer=await tx.transfer.findUnique({where:{id:transferId}});
       if(!transfer)throw new NotFoundException('Traspaso no encontrado');
       ensure(transfer.status==='REQUESTED'||transfer.status==='PREPARING','El traspaso no admite nuevas reservas');
@@ -116,13 +44,14 @@ export class DomainService {
       ensure(changed.count===1,'Inventario modificado por otro usuario');
       const reservation=await tx.reservation.create({data:{stockId:stock.id,transferLineId:line.id,orderLineId:body.orderLineId,quantity:body.quantity}});
       await tx.transfer.update({where:{id:transferId},data:{status:'PREPARING'}});
-      await this.auditTx(tx,'STOCK_RESERVED','Reservation',reservation.id,actor,{transferId,...body});
+      await this.tx.auditTx(tx,'STOCK_RESERVED','Reservation',reservation.id,actor,{transferId,...body});
       return reservation;
     });
   }
+
   async dispatch(transferId:string,body:DispatchDto,key?:string,actor?:string) {
     uniqueItems(body.items);
-    return this.idempotent('dispatch:'+transferId,key,body,async tx=>{
+    return this.tx.idempotent('dispatch:'+transferId,key,body,async tx=>{
       const transfer=await tx.transfer.findUnique({where:{id:transferId},include:{lines:{include:{reservations:true}}}});
       if(!transfer)throw new NotFoundException('Traspaso no encontrado');
       ensure(['PREPARING','DISPATCHED','IN_TRANSIT'].includes(transfer.status),'Traspaso no disponible para despacho');
@@ -147,16 +76,17 @@ export class DomainService {
       }
       const dispatch=await tx.dispatch.create({data:{transferId,lines:{create:body.items.map(i=>({productId:i.productId,quantity:i.quantity}))}},include:{lines:true}});
       await tx.transfer.update({where:{id:transferId},data:{status:'IN_TRANSIT'}});
-      await this.auditTx(tx,'DISPATCH_CREATED','Dispatch',dispatch.id,actor,{transferId,items:body.items});
+      await this.tx.auditTx(tx,'DISPATCH_CREATED','Dispatch',dispatch.id,actor,{transferId,items:body.items});
       return dispatch;
     });
   }
+
   async receive(transferId:string,body:ReceiveDto,key?:string,actor?:string) {
     uniqueItems(body.items);
     for(const item of body.items){
       if(item.accepted+item.rejected!==item.presented)throw new BadRequestException('Aceptado + rechazado debe ser igual a presentado');
     }
-    return this.idempotent('receipt:'+transferId,key,body,async tx=>{
+    return this.tx.idempotent('receipt:'+transferId,key,body,async tx=>{
       const transfer=await tx.transfer.findUnique({where:{id:transferId},include:{lines:{include:{reservations:{include:{orderLine:{include:{order:true}}}}}}}});
       if(!transfer)throw new NotFoundException('Traspaso no encontrado');
       ensure(['IN_TRANSIT','RECEIVING'].includes(transfer.status),'No se puede recibir un traspaso sin despachar');
@@ -192,15 +122,8 @@ export class DomainService {
       const allLines=await tx.transferLine.findMany({where:{transferId}});
       const reconciled=allLines.every(x=>x.accepted===x.dispatched);
       await tx.transfer.update({where:{id:transferId},data:{status:reconciled?'CLOSED':'RECEIVING'}});
-      await this.auditTx(tx,'RECEIPT_VERIFIED','Receipt',receipt.id,actor,{transferId,items:body.items,administrativelyClosed:reconciled});
+      await this.tx.auditTx(tx,'RECEIPT_VERIFIED','Receipt',receipt.id,actor,{transferId,items:body.items,administrativelyClosed:reconciled});
       return receipt;
-    });
-  }
-  async incident(body:CreateIncidentDto,actor?:string){
-    return this.transaction(async tx=>{
-      const i=await tx.incident.create({data:body});
-      await this.auditTx(tx,'INCIDENT_OPENED','Incident',i.id,actor,body);
-      return i;
     });
   }
 }

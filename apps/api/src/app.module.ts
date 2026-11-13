@@ -1,18 +1,19 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
-import { DomainService } from './domain.service';
-import { PrismaService } from './prisma.service';
+import { DatabaseModule } from './shared/database/database.module';
+import { PedidosModule } from './modules/pedidos/pedidos.module';
+import { TraspasosModule } from './modules/traspasos/traspasos.module';
+import { IncidenciasModule } from './modules/incidencias/incidencias.module';
+import { CatalogosModule } from './modules/catalogos/catalogos.module';
+import { AuditoriaModule } from './modules/auditoria/auditoria.module';
 
 @Module({
-  imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      // Funciona tanto al ejecutar npm desde la raíz como desde apps/api.
-      envFilePath: ['apps/api/.env', '.env'],
-    }),
+  imports:[
+    ConfigModule.forRoot({isGlobal:true,envFilePath:['apps/api/.env','.env']}),
+    DatabaseModule,
+    PedidosModule,TraspasosModule,IncidenciasModule,CatalogosModule,AuditoriaModule
   ],
-  controllers: [AppController],
-  providers: [PrismaService, DomainService],
+  controllers:[AppController]
 })
-export class AppModule {}
+export class AppModule{}

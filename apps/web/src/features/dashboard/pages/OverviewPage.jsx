@@ -12,7 +12,7 @@ export default function OverviewPage({data,router}){
         </div>
         <div className="two-cols">
           <Panel title="Traspasos recientes" subtitle="Estado del movimiento y mercancía"><div className="stack">{data.transfers.slice(0,6).map(t=><button className="list-row" onClick={()=>router.push('/traspasos/'+t.id)} key={t.id}><div><strong>{t.code}</strong><small>{t.origin.name} → {t.destination.name}</small></div><Status value={t.status}/></button>)}{!data.transfers.length&&<Empty>Aún no hay traspasos.</Empty>}</div></Panel>
-          <Panel title="Pedidos por preparar" subtitle="Disponibilidad confirmada por cliente"><div className="stack">{data.orders.slice(0,6).map(o=><button className="list-row" onClick={()=>router.push('/pedidos/'+o.id} key={o.id}><div><strong>{o.code} · {o.customer}</strong><small>{o.lines.reduce((n,l)=>n+l.accepted,0)} / {o.lines.reduce((n,l)=>n+l.required,0)} unidades aceptadas</small></div><Status value={o.status}/></button>)}{!data.orders.length&&<Empty>Sin pedidos registrados.</Empty>}</div></Panel>
+          <Panel title="Pedidos por preparar" subtitle="Disponibilidad confirmada por cliente"><div className="stack">{data.orders.slice(0,6).map(o=><button className="list-row" onClick={()=>router.push('/pedidos/'+o.id)} key={o.id}><div><strong>{o.code} · {o.customer}</strong><small>{o.lines.reduce((n,l)=>n+l.accepted,0)} / {o.lines.reduce((n,l)=>n+l.required,0)} unidades aceptadas</small></div><Status value={o.status}/></button>)}{!data.orders.length&&<Empty>Sin pedidos registrados.</Empty>}</div></Panel>
         </div>
       </>);
 }
