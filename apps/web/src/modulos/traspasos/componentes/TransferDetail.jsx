@@ -83,7 +83,7 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
               onChange={(e) => setCustodian(e.target.value)}
             />
           </label>
-          <div className="actions full">
+          <div className={`${styles.actions} full`}>
             <button
               disabled={busy || !line || !Number.isSafeInteger(qty) || qty < 1}
               className="primary"
