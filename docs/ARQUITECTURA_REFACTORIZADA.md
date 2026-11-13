@@ -115,64 +115,39 @@ Autorizaciones compone ExceptionRequestForm y ExceptionDecisions. Los tipos est�
 
 ```text
 src/
-  app/
-    administracion/
-    alertas/
-    auditoria/
-    autorizaciones/
-    buscar/
-    cancelaciones/
-    clientes/
-    despachos/
-    incidencias/
-    inventario/
-    movimientos/
-    pedidos/
-      [id]/
-    preparacion/
-    recepciones/
-    reportes/
-    reservas/
-    transito/
-    traspasos/
-      [id]/
-  modulos/
-    incidencias/
-      componentes/
-      data/
-      paginas/
-      utils/
-    inventario/
-      data/
-      paginas/
-    pedidos/
-      componentes/
-      data/
-      paginas/
-      utils/
-    supervision/
-      data/
-      paginas/
-      styles/
-    traspasos/
-      componentes/
-      data/
-      hooks/
-      paginas/
-  shared/
-    componentes/
-    services/
-    styles/
-    ui/
-    utils/
-    workspace/
-      componentes/
-      contexts/
-      data/
-      hooks/
-      providers/
-      services/
-      styles/
+├── app/
+│   ├── (supervision)/        # /, /buscar, /reportes, /auditoria, /administracion
+│   ├── (pedidos)/           # /pedidos, /pedidos/[id], /clientes, /cancelaciones
+│   ├── (traspasos)/         # /traspasos, /traspasos/[id], /preparacion, /despachos, /transito, /recepciones
+│   ├── (inventario)/        # /inventario, /reservas, /movimientos
+│   └── (incidencias)/       # /incidencias, /alertas, /autorizaciones
+├── modulos/
+│   ├── pedidos/
+│   │   ├── componentes/  ├── paginas/  ├── hooks/
+│   │   ├── data/         ├── utils/   └── styles/
+│   ├── traspasos/
+│   │   ├── componentes/  ├── paginas/  ├── hooks/
+│   │   ├── data/         └── styles/
+│   ├── supervision/
+│   │   ├── componentes/  ├── paginas/  ├── hooks/
+│   │   ├── data/         ├── utils/   └── styles/
+│   ├── inventario/
+│   │   ├── paginas/      ├── hooks/   ├── utils/  └── data/
+│   └── incidencias/
+│       ├── componentes/  ├── paginas/ ├── hooks/
+│       ├── data/         └── utils/
+└── shared/
+    ├── componentes/         # DetailHeader y DetailLayout
+    │   └── styles/
+    ├── ui/
+    │   ├── componentes/     # Panel, Table, Status, etc.
+    │   └── styles/          # Cada componente con su *.module.css
+    ├── workspace/
+    │   ├── componentes/  ├── hooks/  ├── providers/
+    │   ├── contexts/     ├── data/   ├── services/  └── styles/
+    ├── services/
+    ├── styles/              # Fundamentos y utilidades verdaderamente globales
+    └── utils/
 ```
 
 
