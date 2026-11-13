@@ -1,8 +1,9 @@
-import Workspace from '../../features/workspace/components/Workspace';
-import { ReceiptsPage } from '../../features/recepciones/pages/ReceiptsPage';
+import { queries } from '../../modulos/traspasos/data/queries';
+import Workspace from '../../shared/workspace/componentes/Workspace';
+import { ReceiptsPage } from '../../modulos/traspasos/paginas/ReceiptsPage';
 export default function Page() {
   return (
-    <Workspace section="receipts">
+    <Workspace section="receipts" query={queries.receipts}>
       <ReceiptsPage />
     </Workspace>
   );

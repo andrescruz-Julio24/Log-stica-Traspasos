@@ -1,8 +1,9 @@
-import Workspace from '../../features/workspace/components/Workspace';
-import { AdministrationPage } from '../../features/administracion/pages/AdministrationPage';
+import { queries } from '../../modulos/supervision/data/queries';
+import Workspace from '../../shared/workspace/componentes/Workspace';
+import { AdministrationPage } from '../../modulos/supervision/paginas/AdministrationPage';
 export default function Page() {
   return (
-    <Workspace section="admin">
+    <Workspace section="admin" query={queries.admin}>
       <AdministrationPage />
     </Workspace>
   );

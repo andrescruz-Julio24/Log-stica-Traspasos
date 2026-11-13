@@ -1,0 +1,22 @@
+.bars {
+  padding: 22px;
+  display: grid;
+  gap: 21px;
+}
+.bar > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 9px;
+  font-size: 12px;
+}
+.bar strong {
+  font-weight: 600;
+}
+.bar span {
+  font-variant-numeric: tabular-nums;
+}
+.bar :global(.progress-track) {
+  width: 100%;
+  height: 12px;
+}

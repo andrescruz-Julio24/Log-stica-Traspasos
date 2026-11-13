@@ -22,11 +22,11 @@
 .progress{min-width:130px;display:flex;align-items:center;gap:12px;font-size:11px;color:#5a7687}
 .progress-track{height:9px;background:#e8eef2;border-radius:99px;flex:1;min-width:65px;overflow:hidden}
 .progress-track div{height:100%;background:#0d7479;border-radius:99px;min-width:0}
-.report-bars{padding:22px;display:grid;gap:21px}
-.report-bar>div:first-child{display:flex;justify-content:space-between;gap:15px;margin-bottom:9px;font-size:12px}
-.report-bar strong{font-weight:600}
-.report-bar span{font-variant-numeric:tabular-nums}
-.report-bar .progress-track{width:100%;height:12px}
+
+
+
+
+
 .policy-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;padding:20px}
 .policy-item{border:1px solid #dce7ec;background:#fafcfd;border-radius:9px;padding:19px}
 .policy-item strong{font-size:13px}

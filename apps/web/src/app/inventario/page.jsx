@@ -1,8 +1,9 @@
-import Workspace from '../../features/workspace/components/Workspace';
-import InventarioPage from '../../features/inventario/pages/InventarioPage';
+import { queries } from '../../modulos/inventario/data/queries';
+import Workspace from '../../shared/workspace/componentes/Workspace';
+import InventarioPage from '../../modulos/inventario/paginas/InventarioPage';
 export default function Page() {
   return (
-    <Workspace section="stock">
+    <Workspace section="stock" query={queries.stock}>
       <InventarioPage />
     </Workspace>
   );

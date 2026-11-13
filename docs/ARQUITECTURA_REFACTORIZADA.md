@@ -1,4 +1,4 @@
-# Arquitectura refactorizada SGTL — 12 de noviembre de 2026
+# Arquitectura refactorizada SGTL — 13 de noviembre de 2026
 
 ## Principios de la intervención
 - Se reorganizó el código existente por dominio, sin crear carpetas vacías ni proveedores de estado innecesarios.
@@ -9,21 +9,21 @@
 
 ## Estructura y flujo de datos
 
-Cada URL de App Router tiene un page.jsx que compone el dominio correspondiente. Workspace dibuja la estructura de la página en el servidor. La lista de todas las páginas ya no se importa desde un componente cliente. El catálogo features/workspace/data/navigation.js agrupa enlaces del lateral y enlaces locales por área.
+Cada URL de App Router tiene un page.jsx que compone el dominio correspondiente. Workspace dibuja la estructura de la página en el servidor. La lista de todas las páginas ya no se importa desde un componente cliente. El catálogo shared/workspace/data/navigation.js agrupa enlaces del lateral y enlaces locales por área.
 
-WorkspaceProvider crea una instancia de useWorkspaceData por pantalla. El hook consulta las claves declaradas en data/queries.js a través de services/workspace.service.js y el cliente HTTP compartido. El botón Actualizar, la página, los avisos y el diálogo de creación consumen el mismo estado mediante useWorkspace. Refrescar después de guardar actualiza la tabla que ya está montada. Selecciones de fila, filtros y cantidades pertenecen al componente que los edita.
+WorkspaceProvider crea una instancia de useWorkspaceData por pantalla. El hook consulta los recursos que la ruta importa de modulos/<dominio>/data/queries.js a través de services/workspace.service.js y el cliente HTTP compartido. El botón Actualizar, la página, los avisos y el diálogo de creación consumen el mismo estado mediante useWorkspace. Refrescar después de guardar actualiza la tabla que ya está montada. Selecciones de fila, filtros y cantidades pertenecen al componente que los edita.
 
 | Responsabilidad | Archivo o carpeta bajo apps/web/src |
 | --- | --- |
 | Entradas de URL | app/**/page.jsx |
-| Estructura, navegación, mensajes y diálogo reutilizable | features/workspace/components/ |
-| Definición, proveedor y consumo del contexto | features/workspace/contexts/, providers/ y hooks/ |
-| Configuración de navegación y recursos de cada vista | features/workspace/data/ |
-| Consultas paralelas a la API | features/workspace/services/ |
-| Reintentos y escrituras durante la operación del traspaso | features/traspasos/hooks/useTransferMovements.js |
-| Detalle comercial y detalle logístico | features/pedidos/pages/OrderDetailPage.jsx y features/traspasos/pages/TransferTracePage.jsx |
-| Encabezado y retorno desde los detalles | features/trazabilidad/components/DetailHeader.jsx |
-| Controles de formulario, tablas e indicadores | shared/components/ y shared/ui/ |
+| Estructura, navegación, mensajes y diálogo reutilizable | shared/workspace/componentes/ |
+| Definición, proveedor y consumo del contexto | shared/workspace/contexts/, providers/ y hooks/ |
+| Configuración de navegación y recursos de cada vista | shared/workspace/data/navigation.js y modulos/<dominio>/data/queries.js |
+| Consultas paralelas a la API | shared/workspace/services/ |
+| Reintentos y escrituras durante la operación del traspaso | modulos/traspasos/hooks/useTransferMovements.js |
+| Detalle comercial y detalle logístico | modulos/pedidos/paginas/OrderDetailPage.jsx y modulos/traspasos/paginas/TransferTracePage.jsx |
+| Encabezado y retorno desde los detalles | shared/componentes/DetailHeader.jsx |
+| Controles de formulario, tablas e indicadores | shared/componentes/ y shared/ui/ |
 | Cálculos de presentación reutilizables | shared/utils/quantities.js |
 
 Para agregar una vista, crear la página de dominio y la ruta que la compone, registrar sus consultas y añadir un enlace en su área. Para añadir un campo que afecta únicamente un formulario, mantener su estado dentro de ese formulario. Una regla que cambia saldos o acepta operaciones corresponde al servicio de NestJS.
@@ -56,11 +56,44 @@ Para agregar una vista, crear la página de dominio y la ruta que la compone, re
 - POST /api/transfers/:id/reservations, /dispatches, /receipts.
 - El frontend no realiza escrituras directas en PostgreSQL.
 
-## Comprobaciones
-- GitHub Actions ejecuta instalación, generación de Prisma Client, pruebas Vitest, ESLint frontend y compilación de NestJS/Next.js (ver último run).
-- Se incorporaron escenarios de integración con PostgreSQL de prueba para reserva concurrente, despacho, recepción, idempotencia y auditoría; sus resultados dependen del último workflow de CI. No se ejecutaron pruebas E2E de interfaz ni validaciones de UX con usuarios.
-- Las pruebas con servicios simulados revisan negativas de reservas, despachos y recepciones. Se agregó un conjunto independiente contra PostgreSQL para verificar transacciones; aún faltan E2E completos por usuario y sucursal.
-- No existe configuración de linter backend independiente en esta versión; TypeScript se comprueba en el build.
+## Segunda fase: problemas y decisiones
+
+1. Una consulta rechazada descartaba la carga completa. Cada dominio declara sus dependencias de lectura. El proveedor suscribe, agrupa y cancela las solicitudes por recurso en el ámbito de su pantalla.
+2. Alertas y Búsqueda admiten datos parciales. La UI identifica fuentes pendientes o fallidas y ofrece reintento individual. Los indicadores sin fuente muestran un guion. Pedidos requiere la colección de pedidos para listar y requiere también el catálogo para habilitar escrituras. En vistas transaccionales que cruzan registros se exige el conjunto declarado completo.
+3. La lista de pedidos y el impacto de reabastecimiento se calculaban en el mismo render. Ahora cada panel tiene su propio límite de recuperación. AlertsPage usa una transformación pura para las alertas. El detalle de pedido ya delega sus relaciones a orderTrace; el detalle de traspaso conserva su contrato. ModuleKit mantiene la interfaz de importación existente y delega formatDate a una utilidad pura. Las cinco reglas exclusivas de barras de reportes pertenecen al CSS Module de Supervisión.
+4. Cancelaciones consultaba traspasos sin consumirlos. Ahora consulta solo pedidos. Inventario recibe TransferLink desde Traspasos y Traspasos lee el catálogo de prioridades de Pedidos. Son las dependencias directas entre módulos. Los componentes de workspace no importan módulos de negocio.
+5. La API de Nest valida escrituras mediante DTO y servicios transaccionales. Se revisaron los recursos HTTP y sus consumidores. Esta fase solo cambia el cliente y sus verificaciones.
+
+## Propiedad y ciclo de vida
+
+| Estado | Propietario y consumidores | Duración y sincronización |
+| --- | --- | --- |
+| Pedidos, traspasos, incidencias, catálogo y demás recursos | API como fuente; useWorkspaceData alimenta vista, formulario y cabecera | Una instancia por pantalla, estado independiente por recurso. Reintentar una lectura pendiente reutiliza la promesa. Un refresco conserva los datos previos y señala su estado. Un error 401/403 descarta el valor de esa fuente. |
+| Resultado de escritura, busy y aviso | act del proveedor; botones, modal y avisos | Una acción explícita. Tras confirmación refresca las fuentes de la pantalla. Las escrituras no se reintentan automáticamente. |
+| Captura, filtro, selección, diálogo | Formulario o panel que lo dibuja | Local mientras permanece montado. La ruta identifica el módulo o folio. |
+| Claves de reintento de comandos | apiClient y API | sessionStorage de la pestaña hasta confirmación y registro de idempotencia en PostgreSQL. |
+
+No se conserva una caché de saldos al navegar entre módulos. El coste es una nueva lectura al entrar; evita que una vista operativa presente como vigente una consulta hecha antes de una operación en otra pantalla. El catálogo de endpoints compartidos tiene un único transporte. Cada dominio mantiene su política de dependencias.
+
+## Aislamiento y recuperación
+
+Las lecturas tienen límite de 15 segundos y cancelación al desmontar. Los errores de lectura muestran el recurso y un reintento. Las respuestas sin la colección requerida se rechazan antes del render. Una escritura inválida conserva el formulario. La respuesta de un comando confirmado y el estado de su refresco se muestran por separado.
+
+ViewBoundary protege la vista. En Pedidos también protege independientemente tabla e impacto comercial. app/error.jsx y app/global-error.jsx cubren excepciones de segmento y de raíz, respectivamente. Un fallo compartido de infraestructura todavía puede impedir la lectura de varias fuentes.
+
+## Pruebas reproducibles
+
+Desde la raíz, ejecutar npm test, npm run test -w @sgtl/web, npm run lint -w @sgtl/web y npm run build. El workflow levanta PostgreSQL aislado, aplica migraciones, corre la integración de la API, carga las semillas y arranca Nest y Next en localhost. npm run test:e2e -w @sgtl/web requiere SGTL_INTEGRATION_TEST_DB=1 y Chromium de Playwright. El recorrido crea datos solo en la instalación local de prueba.
+
+La suite E2E comprueba consulta y alta de pedido, validación nativa de formulario, rechazo HTTP y nuevo envío manual, detalle por folio, alta de traspaso, reserva, consulta de recepciones, alta de incidencia y bandeja de autorizaciones. Fuerza desconexión, catálogo malformado, excepción de tabla, demora y cambio de página durante la lectura. Ejercita el hook y el proveedor a través de componentes reales. Los límites raíz/segmento se compilan; la prueba de excepción inyectada corresponde al panel. No sustituye una prueba de UX con operadores ni un ejercicio de caída completa de infraestructura.
+
+## Organización de los módulos
+
+- **incidencias**: AlertsPage, AuthorizationsPage, IncidenciasPage.
+- **inventario**: InventarioPage, MovementsPage, ReservationsPage.
+- **pedidos**: CancellationsPage, ClientsPage, OrderDetailPage, PedidosPage.
+- **supervision**: AdministrationPage, AuditoriaPage, OverviewPage, ReportsPage, SearchPage.
+- **traspasos**: DispatchesPage, PreparationPage, ReceiptsPage, TransferTracePage, TransitPage, TraspasosPage.
 
 ## Decisiones abiertas
 1. Autoridad definitiva del inventario (sistema/ERP).
@@ -68,6 +101,76 @@ Para agregar una vista, crear la página de dominio y la ruta que la compone, re
 3. Política de cancelación, permisos, custodia, firmas y evidencias.
 4. Autenticación real, autorización por sucursal y auditoría de actor autenticado.
 5. Paginación y APIs de detalle; aún se consultan listas completas para algunos detalles.
-6. CI con PostgreSQL aislado, fixtures y validación E2E.
+6. Aceptación con personal de almacén, recepción y ventas.
 
 **Estado:** refactorización estructural; pendiente la validación funcional de negocio y las decisiones anteriores.
+
+## Mapa de dependencias
+
+La ruta en app compone Workspace y la página de dominio. WorkspaceProvider posee el estado remoto y usa useWorkspaceData para coordinar consultas, avisos y refrescos. Las páginas y controles consumen ese estado con useWorkspace. Los formularios conservan su captura local. El servicio workspace.service interpreta el catálogo de recursos y usa apiClient. Los controladores Nest reciben los comandos y los servicios de dominio ejecutan las transacciones en PostgreSQL.
+
+Autorizaciones compone ExceptionRequestForm y ExceptionDecisions. Los tipos están en data/exceptionTypes y la selección de registros en utils/exceptionTargets. TransferDetail comparte el SKU seleccionado con ReceiptControls, que conserva su conteo e inspección locales. Pedidos deriva reservas y faltantes relacionados mediante utils/orderTrace. Pedidos y Traspasos comparten DetailHeader. El catálogo de inventario y la validación de reservas usan la misma política de vigencia ERP en el backend.
+
+## Árbol de carpetas del frontend
+
+```text
+src/
+  app/
+    administracion/
+    alertas/
+    auditoria/
+    autorizaciones/
+    buscar/
+    cancelaciones/
+    clientes/
+    despachos/
+    incidencias/
+    inventario/
+    movimientos/
+    pedidos/
+      [id]/
+    preparacion/
+    recepciones/
+    reportes/
+    reservas/
+    transito/
+    traspasos/
+      [id]/
+  modulos/
+    incidencias/
+      componentes/
+      data/
+      paginas/
+      utils/
+    inventario/
+      data/
+      paginas/
+    pedidos/
+      componentes/
+      data/
+      paginas/
+      utils/
+    supervision/
+      data/
+      paginas/
+      styles/
+    traspasos/
+      componentes/
+      data/
+      hooks/
+      paginas/
+  shared/
+    componentes/
+    services/
+    styles/
+    ui/
+    utils/
+    workspace/
+      componentes/
+      contexts/
+      data/
+      hooks/
+      providers/
+      services/
+      styles/
+```

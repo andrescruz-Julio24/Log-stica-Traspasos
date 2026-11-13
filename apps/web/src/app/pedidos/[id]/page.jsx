@@ -1,11 +1,12 @@
-import OrderDetailPage from '../../../features/pedidos/pages/OrderDetailPage';
-import { WorkspaceProvider } from '../../../features/workspace/providers/WorkspaceProvider';
-import { WorkspaceContent } from '../../../features/workspace/components/WorkspaceContent';
-import { BackLink } from '../../../features/trazabilidad/components/DetailHeader';
+import { queries } from '../../../modulos/pedidos/data/queries';
+import OrderDetailPage from '../../../modulos/pedidos/paginas/OrderDetailPage';
+import { WorkspaceProvider } from '../../../shared/workspace/providers/WorkspaceProvider';
+import { WorkspaceContent } from '../../../shared/workspace/componentes/WorkspaceContent';
+import { BackLink } from '../../../shared/componentes/DetailHeader';
 export default async function Page({ params }) {
   const { id } = await params;
   return (
-    <WorkspaceProvider section="orderDetail">
+    <WorkspaceProvider query={queries.orderDetail}>
       <WorkspaceContent fallback={<BackLink href="/pedidos" label="pedidos" />}>
         <OrderDetailPage id={id} />
       </WorkspaceContent>

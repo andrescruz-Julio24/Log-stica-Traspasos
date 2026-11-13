@@ -1,3 +1,4 @@
+import {hasFreshInventory} from '../../shared/domain/inventory-freshness';
 import { finishInspection, receive } from './recepcion';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
@@ -136,15 +137,7 @@ export class TraspasosService {
         },
       });
       ensure(stock, 'No existe inventario de origen');
-      if (process.env.SGTL_INVENTORY_SOURCE === 'ERP') {
-        const maxAge =
-          Number(process.env.SGTL_ERP_MAX_AGE_MINUTES || 15) * 60000;
-        ensure(
-          stock.sourceCheckedAt &&
-            Date.now() - stock.sourceCheckedAt.getTime() <= maxAge,
-          'Existencia ERP pendiente de verificación o desactualizada',
-        );
-      }
+      ensure(hasFreshInventory(stock.sourceCheckedAt),'Existencia ERP pendiente de verificación o desactualizada');
       ensure(
         stock.physical - stock.blocked - stock.reserved >= body.quantity,
         'Inventario insuficiente para reservar',

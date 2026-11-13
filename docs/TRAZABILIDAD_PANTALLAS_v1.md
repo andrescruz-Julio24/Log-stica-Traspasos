@@ -19,9 +19,7 @@ Versión: ampliación MVP 2026-11-12. Base: árbol de conocimiento SGTL v6.0. La
 
 - Workspace.jsx: shell, navegación y mensajes; OverviewPage.jsx: resumen; useWorkspaceData.js: estado remoto por sección.
 - CreateOrder.jsx, CreateTransfer.jsx, CreateIncident.jsx y TransferDetail.jsx: formularios por dominio; FormFields.jsx: controles comunes.
-- Páginas individuales bajo features/reservas, preparacion, despachos, transito, recepciones, cancelaciones y movimientos.
-- Páginas individuales bajo features/alertas, autorizaciones y administracion.
-- Páginas individuales bajo features/reportes, clientes y buscar.
+- Las vistas se agrupan en modulos/pedidos, traspasos, inventario, incidencias y supervision. El detalle de cada responsabilidad está en ARQUITECTURA_REFACTORIZADA.md.
 - OrderDetailPage.jsx y TransferTracePage.jsx: trazabilidad por dominio con encabezado y ciclo de consulta compartidos.
 - ModuleKit.jsx: tablas, estados, indicadores, progreso, vacíos, avisos y búsqueda reutilizables.
 - Rutas Next.js dedicadas con parámetros para detalle.

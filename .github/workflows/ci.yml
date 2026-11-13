@@ -48,3 +48,18 @@ jobs:
         env:
           DATABASE_URL: postgresql://sgtl:sgtl_local@localhost:5432/sgtl?schema=public
           API_INTERNAL_URL: http://localhost:5200
+      - name: Frontend unit tests
+        run: npm run test -w @sgtl/web
+      - name: Browser regression with isolated database
+        env:
+          SGTL_INTEGRATION_TEST_DB: '1'
+        run: |
+          npx playwright install --with-deps chromium
+          node --import tsx apps/api/prisma/seed.ts
+          node apps/api/dist/main.js > /tmp/sgtl-api.log 2>&1 &
+          api_pid=$!
+          npm run start -w @sgtl/web > /tmp/sgtl-web.log 2>&1 &
+          web_pid=$!
+          trap 'kill "$api_pid" "$web_pid" || true' EXIT
+          curl --retry 30 --retry-delay 1 --retry-connrefused -fsS http://127.0.0.1:3000/api/health
+          npm run test:e2e -w @sgtl/web
