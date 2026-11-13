@@ -1,6 +1,5 @@
 'use client';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
-import { useState } from 'react';
 import {
   Hint,
   Metric,
@@ -10,33 +9,12 @@ import {
   Table,
   formatDate,
 } from '../../../shared/ui/ModuleKit';
-import { sumField } from '../../../shared/utils/quantities';
 import { TransferLink } from '../../traspasos/componentes/TransferLink';
-const locationRows = (data) => data.stocks || [];
+import { useReservations } from '../hooks/useReservations';
 
 export function ReservationsPage() {
   const { data } = useWorkspace();
-  const [q, setQ] = useState('');
-  const rows = (data.transfers || [])
-    .flatMap((t) =>
-      t.lines.flatMap((line) =>
-        line.reservations.map((r) => ({
-          key: r.id,
-          transfer: t,
-          product: line.product,
-          quantity: r.quantity,
-          active: r.quantity - r.released,
-          orderLineId: r.orderLineId,
-          createdAt: r.createdAt,
-        })),
-      ),
-    )
-    .filter((r) =>
-      (r.transfer.code + ' ' + r.product.sku + ' ' + r.transfer.origin.name)
-        .toLowerCase()
-        .includes(q.toLowerCase()),
-    );
-  const active = sumField(rows, 'active');
+  const { q, setQ, rows, active, linked, locations } = useReservations(data);
   return (
     <>
       <div className="stats">
@@ -52,12 +30,12 @@ export function ReservationsPage() {
         />
         <Metric
           label="Reservas vinculadas a clientes"
-          value={rows.filter((r) => r.orderLineId).length}
+          value={linked}
           detail="Asignaciones asociadas a líneas de pedido"
         />
         <Metric
           label="Ubicaciones con stock"
-          value={new Set(locationRows(data).map((s) => s.locationId)).size}
+          value={locations}
           detail="Alcance de la consulta actual"
         />
       </div>
