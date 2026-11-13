@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/AlertsPage.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import Link from 'next/link';
 import { useAlerts } from '../hooks/useAlerts';
@@ -22,7 +23,7 @@ export function AlertsPage() {
         confirmación de lectura ni acciones de resolución independientes de los
         registros originales.
       </Hint>
-      <div className="stats">
+      <div className={`stats ${styles.metrics}`}>
         <Metric
           label={
             complete ? 'Alertas calculadas' : 'Alertas de fuentes disponibles'

@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/MovementsPage.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import Link from 'next/link';
 import { useMovements } from '../hooks/useMovements';
@@ -27,7 +28,7 @@ export function MovementsPage() {
         description="Eventos consultables por traspaso y SKU."
         actions={<NextStep label="Abrir operación de traspasos" />}
       >
-        <div className="module-toolbar">
+        <div className={`module-toolbar ${styles.toolbar}`}>
           <SearchField
             value={q}
             onChange={setQ}

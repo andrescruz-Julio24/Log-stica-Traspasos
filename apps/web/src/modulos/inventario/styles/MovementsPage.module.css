@@ -1,0 +1,2 @@
+.toolbar { min-width: 0; }
+.toolbar :global(.search-field) { max-width: 100%; }

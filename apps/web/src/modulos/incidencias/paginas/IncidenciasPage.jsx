@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/IncidenciasPage.module.css';
 import { submit } from '../../../shared/services/apiClient';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { CreateRecordAction } from '../../../shared/workspace/componentes/CreateRecordAction';
@@ -39,7 +40,7 @@ export default function IncidenciasPage() {
             transferNames.get(incident.transferId) || 'General',
             formatDate(incident.createdAt),
             <Status key="estado" value={incident.status} />,
-            <div key="seguimiento">
+            <div key="seguimiento" className={styles.followup}>
               {[
                 incident.sku,
                 incident.quantity,

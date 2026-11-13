@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/ReservationsPage.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import {
   Hint,
@@ -49,7 +50,7 @@ export function ReservationsPage() {
         description="Consulta de unidades comprometidas y cantidad liberada."
         actions={<NextStep label="Registrar una reserva" />}
       >
-        <div className="module-toolbar">
+        <div className={`module-toolbar ${styles.toolbar}`}>
           <SearchField value={q} onChange={setQ} />
         </div>
         <Table

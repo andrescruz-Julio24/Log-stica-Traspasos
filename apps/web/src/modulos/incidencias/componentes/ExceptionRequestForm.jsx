@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/ExceptionRequestForm.module.css';
 import { useState } from 'react';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { Panel } from '../../../shared/ui/ModuleKit';
@@ -25,7 +26,7 @@ export function ExceptionRequestForm() {
   }
   return (
     <Panel title="Solicitar una excepción">
-      <form className="form-grid" onSubmit={send}>
+      <form className={`form-grid ${styles.form}`} onSubmit={send}>
         <label className="field">
           Operación
           <select

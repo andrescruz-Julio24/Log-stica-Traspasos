@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/CreateIncident.module.css';
 import { useState } from 'react';
 import { submit } from '../../../shared/services/apiClient';
 export function CreateIncident({ data, busy, act }) {
@@ -14,7 +15,7 @@ export function CreateIncident({ data, busy, act }) {
     act(() => submit('/incidents', { ...b, blocking: f.has('blocking') }));
   }
   return (
-    <form className="form-grid" onSubmit={save}>
+    <form className={`form-grid ${styles.form}`} onSubmit={save}>
       <label className="field">
         Tipo
         <select

@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/ExceptionDecisions.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { Panel, Table } from '../../../shared/ui/ModuleKit';
 import { submit } from '../../../shared/services/apiClient';
@@ -18,6 +19,7 @@ export function ExceptionDecisions() {
             r.reason,
             r.status === 'PENDING' ? (
               <form
+                className={styles.decisionForm}
                 key="decision"
                 onSubmit={(e) => {
                   e.preventDefault();
