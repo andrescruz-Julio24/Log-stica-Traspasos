@@ -191,8 +191,8 @@ Se reemplazaron los archivos agregadores `shared/styles/base.css` y `shared/styl
 - `shared/styles/`: fundamentos y reglas responsivas globales.
 - `shared/workspace/styles/`: shell, navegación y layout general.
 - `shared/ui/styles/`: controles, tablas, estados, formularios y paneles compartidos.
-- `modulos/pedidos/styles/list.module.css`: presentación exclusiva de líneas de pedidos.
-- `modulos/traspasos/styles/transferDetail.module.css`: interfaz operativa del detalle de traspaso.
+- `modulos/pedidos/styles/OrderListPanel.module.css`: presentación exclusiva de líneas de pedidos.
+- `modulos/traspasos/styles/TransferDetail.module.css`: interfaz operativa del detalle de traspaso.
 - `modulos/supervision/styles/`: reportes y reglas propias de administración.
 
 Se conservaron las reglas reutilizables en shared y el orden global de imports para minimizar diferencias visuales. La existencia de estilos compartidos no implica mezclar las reglas de cada módulo.
@@ -213,3 +213,33 @@ Se conservaron las reglas reutilizables en shared y el orden global de imports p
 ### Validación
 
 La confirmación del build y las pruebas depende de la ejecución de CI y de las verificaciones posteriores a estos commits. Esta nota describe cambios implementados, no sustituye pruebas funcionales ni visuales.
+
+
+## Organización de estilos por componente — 13 de noviembre de 2026
+
+### Convención definitiva
+
+- Un componente con reglas propias importa `NombreDelComponente.module.css` desde `styles/` del **mismo módulo**. Las importaciones se escriben en el JSX dueño del estilo, nunca en `app/globals.css`.
+- Los componentes reutilizables de `shared/ui/componentes/` tienen CSS Modules homónimos en `shared/ui/styles/`, sin duplicar los estilos en cada consumidor.
+- Los componentes estructurales de Workspace utilizan `shared/workspace/styles/Workspace.module.css`, `WorkspaceNavigation.module.css` y `CreateRecordAction.module.css`.
+- `shared/componentes/styles/DetailLayout.module.css` es compartido deliberadamente entre detalles de Pedidos y Traspasos. `DetailHeader.module.css` y `modulos/traspasos/styles/TransferTracePage.module.css` cubren sus estilos específicos.
+- Los estilos de formulario genéricos, botones, disposición de métricas, responsive y accesibilidad que **usan varias funcionalidades** permanecen en las hojas globales acotadas de `shared/ui/styles/` y `shared/styles/`. No se copian por módulo.
+- No se crean archivos de estilos vacíos o con reglas decorativas artificiales para componentes que solo componen otros componentes estilizados.
+
+### Mapa de estilos implementados
+
+| Módulo | Componentes y sus estilos |
+| --- | --- |
+| `pedidos` | `OrderListPanel → styles/OrderListPanel.module.css` |
+| `traspasos` | `TransferDetail → styles/TransferDetail.module.css`; `TransferTracePage → styles/TransferTracePage.module.css` |
+| `supervision` | `OverviewPage`, `AuditoriaPage`, `AdministrationPage`, `ReportsPage` y `ReportBar` → archivos CSS Module homónimos en `styles/` |
+| `shared/ui` | `Panel`, `Metric`, `Status`, `Table`, `Progress`, `Empty`, `Hint`, `SearchField`, `Unavailable` → archivos CSS Module homónimos |
+| `shared/workspace` | `Workspace`, `WorkspaceNavigation`, `CreateRecordAction` → CSS Module propio |
+
+`ModuleKit.jsx` mantiene las exportaciones públicas y delega el código a `shared/ui/componentes/`. Esta fachada evita reescribir los consumidores de todos los módulos.
+
+### Protección contra regresiones de estilo
+
+La prueba `apps/web/tests/component-styles.test.mjs` comprueba que los estilos específicos son importados por sus componentes, que los archivos existen, que `globals.css` importa solo estilos compartidos y que no quedan referencias a los archivos CSS globales sustituidos.
+
+Los resultados de CI se deben consultar en el Pull Request; no sustituye la comprobación visual de cada módulo en diferentes resoluciones de pantalla.
