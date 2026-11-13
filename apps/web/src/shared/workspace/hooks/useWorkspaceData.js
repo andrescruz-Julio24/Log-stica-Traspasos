@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { emptyWorkspaceData } from '../data/queries';
 import { loadResource } from '../services/workspace.service';
 
@@ -72,10 +72,9 @@ export function useWorkspaceData(query) {
     if (error) throw error.reason;
   }
   const complete = keys.every((key) => resources[key]?.status === 'success');
-  const data = Object.assign(
-    {},
-    emptyWorkspaceData,
-    ...keys.map((key) => resources[key]?.value),
+  const data = useMemo(
+    () => Object.assign({}, emptyWorkspaceData, ...keys.map((key) => resources[key]?.value)),
+    [keys, resources],
   );
   const required = query.required ?? (query.partial ? [] : keys);
   const missingRequired = required.some(
