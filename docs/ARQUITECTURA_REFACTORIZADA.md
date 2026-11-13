@@ -218,3 +218,12 @@ La confirmación del build y las pruebas depende de la ejecución de CI y de las
 La prueba `apps/web/tests/component-styles.test.mjs` comprueba que los estilos específicos son importados por sus componentes, que los archivos existen, que `globals.css` importa solo estilos compartidos y que no quedan referencias a los archivos CSS globales sustituidos.
 
 Los resultados de CI se deben consultar en el Pull Request; no sustituye la comprobación visual de cada módulo en diferentes resoluciones de pantalla.
+
+
+## Cobertura completa de CSS Modules por módulo — 13-nov-2026
+
+**Criterio solicitado:** cada JSX situado dentro de `modulos/<dominio>/componentes/` o `modulos/<dominio>/paginas/` tiene un CSS Module homónimo dentro de `modulos/<dominio>/styles/` e importa dicho módulo explícitamente. Esto se implementa en los cinco dominios: incidencias (6 JSX / 6 CSS Modules), inventario (3/3), pedidos (9/9), supervisión (6/6) y traspasos (11/11). Total: **35 JSX / 35 CSS Modules**.
+
+La vista de Preparación tenía `PickForm` definido dentro de `PreparationPage.jsx`; ahora es un componente independiente en `traspasos/componentes/PickForm.jsx` con `traspasos/styles/PickForm.module.css`. De esta manera, estilos y componentes son rastreables por nombre. Los componentes continúan consumiendo las clases genéricas compartidas para controles, botones, tablas y layout sin duplicar implementaciones.
+
+Se añade `apps/web/tests/module-styles-coverage.test.mjs` para detectar nuevas páginas o componentes sin estilos de módulo propios, y módulos CSS que no se correspondan con un componente del módulo. Esta convención se aplica solo a `componentes/` y `paginas/`; hooks, datos, providers y utilidades no requieren estilos.
