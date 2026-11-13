@@ -38,6 +38,17 @@ export function AlertsPage() {
         href: '/recepciones',
       })),
     ...data.orders
+      .filter((o) => o.status === 'BLOCKED')
+      .map((o) => ({
+        key: 'held:' + o.id,
+        kind: 'Pedido retenido',
+        title: o.code + ' · ' + o.customer,
+        detail: 'Revisar unidades y responsable por SKU',
+        level: 'Bloqueante',
+        when: o.createdAt,
+        href: '/pedidos/' + o.id,
+      })),
+    ...data.orders
       .filter((o) => o.status === 'PARTIAL')
       .map((o) => ({
         key: 'order:' + o.id,

@@ -23,6 +23,13 @@ export class CreateTransferDto {
   @Type(() => TransferItemDto)
   items!: TransferItemDto[];
 }
+export class PickDto {
+  @IsString() @IsNotEmpty() transferLineId!: string;
+  @IsInt() @Min(0) quantity!: number;
+  @IsInt() @Min(0) version!: number;
+  @IsString() @IsNotEmpty() location!: string;
+  @IsOptional() @IsString() note?: string;
+}
 export class ReserveDto {
   @IsString() @IsNotEmpty() transferLineId!: string;
   @IsInt() @Min(1) quantity!: number;

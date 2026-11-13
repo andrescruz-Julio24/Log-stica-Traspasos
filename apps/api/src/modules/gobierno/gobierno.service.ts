@@ -121,6 +121,15 @@ export class GobiernoService {
       include: { lines: { include: { reservations: true } } },
     });
     ensure(o.status !== 'CANCELLED', 'Pedido ya cancelado');
+    ensure(
+      !(await tx.incident.count({
+        where: {
+          status: 'OPEN',
+          allocation: { reservation: { orderLine: { orderId: id } } },
+        },
+      })),
+      'Resolver retenciones antes de cancelar',
+    );
     for (const l of o.lines) {
       for (const r of l.reservations) {
         const pending = r.quantity - r.released;
@@ -130,6 +139,20 @@ export class GobiernoService {
             data: {
               reserved: { decrement: pending },
               version: { increment: 1 },
+            },
+          });
+          const line = await tx.transferLine.findUniqueOrThrow({
+            where: { id: r.transferLineId },
+            include: { reservations: true },
+          });
+          const active =
+            line.reservations.reduce((n, x) => n + x.quantity - x.released, 0) -
+            pending;
+          await tx.transferLine.update({
+            where: { id: line.id },
+            data: {
+              picked: Math.min(active, line.picked),
+              pickVersion: { increment: 1 },
             },
           });
           await tx.reservation.update({

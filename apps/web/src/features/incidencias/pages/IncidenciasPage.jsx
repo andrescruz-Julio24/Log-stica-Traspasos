@@ -45,6 +45,8 @@ export default function IncidenciasPage() {
                 incident.quantity,
                 incident.location,
                 incident.custodian,
+                incident.assignedTo,
+                incident.disposition,
                 incident.evidence,
               ]
                 .filter(Boolean)
@@ -53,19 +55,63 @@ export default function IncidenciasPage() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    const reason = new FormData(e.currentTarget).get('reason');
+                    const f = new FormData(e.currentTarget);
+                    const reason = f.get('reason');
+                    const disposition = f.get('disposition');
                     act(() =>
                       submit('/incidents/' + incident.id + '/resolve', {
                         reason,
+                        ...(disposition ? { disposition } : {}),
                       }),
                     );
                   }}
                 >
+                  {incident.allocationId && (
+                    <label>
+                      Destino
+                      <select name="disposition" defaultValue="" required>
+                        <option value="">Seleccionar</option>
+                        <option value="RELEASE">Liberar para preparar</option>
+                        <option value="QUARANTINE">
+                          Separar en cuarentena y reabastecer
+                        </option>
+                      </select>
+                    </label>
+                  )}
                   <input name="reason" required aria-label="Resolución" />
                   <button disabled={busy}>Resolver</button>
                 </form>
               ) : (
-                incident.resolution
+                <>
+                  {incident.resolution}
+                  {incident.disposition === 'QUARANTINE' &&
+                    (incident.returnedAt ? (
+                      <small>Devuelta: {formatDate(incident.returnedAt)}</small>
+                    ) : (
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const reason = new FormData(e.currentTarget).get(
+                            'reason',
+                          );
+                          act(() =>
+                            submit('/incidents/' + incident.id + '/return', {
+                              reason,
+                            }),
+                          );
+                        }}
+                      >
+                        <input
+                          required
+                          name="reason"
+                          aria-label="Destino, receptor y evidencia de entrega"
+                        />
+                        <button disabled={busy}>
+                          Confirmar entrega de devolución
+                        </button>
+                      </form>
+                    ))}
+                </>
               )}
             </div>,
           ],

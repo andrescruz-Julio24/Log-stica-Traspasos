@@ -40,7 +40,7 @@ export function ReportsPage() {
     (a, t) => a + sumField(t.lines, 'accepted'),
     0,
   );
-  const statuses = ['PENDING', 'PARTIAL', 'READY', 'CANCELLED'];
+  const statuses = ['PENDING', 'PARTIAL', 'BLOCKED', 'READY', 'CANCELLED'];
   const totalOrders = orders.length;
   return (
     <>
@@ -85,6 +85,7 @@ export function ReportsPage() {
                   {
                     PENDING: 'Pendientes',
                     PARTIAL: 'Parciales',
+                    BLOCKED: 'Retenidos',
                     READY: 'Listos',
                     CANCELLED: 'Cancelados',
                   }[s]

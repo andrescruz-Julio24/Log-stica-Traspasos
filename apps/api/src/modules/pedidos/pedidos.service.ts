@@ -24,7 +24,31 @@ export class PedidosService {
   }
   orders() {
     return this.db.customerOrder.findMany({
-      include: { destination: true, lines: { include: { product: true } } },
+      include: {
+        destination: true,
+        lines: {
+          include: {
+            product: true,
+            reservations: {
+              select: {
+                allocations: {
+                  select: {
+                    holds: {
+                      where: { status: 'OPEN' },
+                      select: {
+                        id: true,
+                        notes: true,
+                        assignedTo: true,
+                        quantity: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
       orderBy: [
         { priority: 'desc' },
         { dueAt: { sort: 'asc', nulls: 'last' } },

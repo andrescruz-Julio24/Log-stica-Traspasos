@@ -1,3 +1,5 @@
+import { holdDetails, quarantine } from './holds';
+import { refreshOrderState } from '../pedidos/readiness';
 import { ensure } from '../../shared/domain/assertions';
 import { reconcileTransfer } from '../traspasos/allocation';
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -12,14 +14,33 @@ export class IncidenciasService {
     private readonly tx: TransactionService,
   ) {}
 
-  resolve(id: string, reason: string, actor: string) {
+  resolve(id: string, reason: string, actor: string, disposition?: string) {
     return this.tx.transaction(async (tx) => {
       const i = await tx.incident.findUniqueOrThrow({ where: { id } });
       ensure(i.status === 'OPEN', 'Incidencia ya resuelta');
+      if (i.allocationId) {
+        ensure(
+          disposition === 'RELEASE' || disposition === 'QUARANTINE',
+          'Indica el destino de la retención',
+        );
+        if (disposition === 'QUARANTINE')
+          await quarantine(tx, i.allocationId, i.quantity!);
+      } else
+        ensure(
+          !disposition,
+          'El destino de retención solo aplica a mercancía asignada',
+        );
       const result = await tx.incident.update({
         where: { id },
-        data: { status: 'RESOLVED', resolution: reason },
+        data: { status: 'RESOLVED', resolution: reason, disposition },
       });
+      if (i.allocationId) {
+        const a = await tx.dispatchAllocation.findUniqueOrThrow({
+          where: { id: i.allocationId },
+          include: { reservation: { include: { orderLine: true } } },
+        });
+        await refreshOrderState(tx, a.reservation.orderLine!.orderId);
+      }
       if (i.transferId) {
         const t = await tx.transfer.findUniqueOrThrow({
           where: { id: i.transferId },
@@ -29,6 +50,52 @@ export class IncidenciasService {
       await this.tx.auditTx(tx, 'INCIDENT_RESOLVED', 'Incident', id, actor, {
         transferId: i.transferId,
         reason,
+        disposition: disposition ?? null,
+      });
+      return result;
+    });
+  }
+  returnQuarantine(id: string, reason: string, actor: string) {
+    return this.tx.transaction(async (tx) => {
+      const i = await tx.incident.findUniqueOrThrow({
+        where: { id },
+        include: {
+          allocation: {
+            include: {
+              reservation: {
+                include: { orderLine: { include: { order: true } } },
+              },
+            },
+          },
+        },
+      });
+      const line = i.allocation?.reservation.orderLine;
+      ensure(
+        i.disposition === 'QUARANTINE' && i.quantity && line && !i.returnedAt,
+        'No existe cuarentena pendiente de devolución',
+      );
+      const stock = await tx.stock.updateMany({
+        where: {
+          productId: line.productId,
+          locationId: line.order.destinationId,
+          blocked: { gte: i.quantity },
+          physical: { gte: i.quantity },
+        },
+        data: {
+          blocked: { decrement: i.quantity },
+          physical: { decrement: i.quantity },
+          version: { increment: 1 },
+        },
+      });
+      ensure(stock.count === 1, 'Saldo de cuarentena insuficiente');
+      const result = await tx.incident.update({
+        where: { id },
+        data: { returnedAt: new Date() },
+      });
+      await this.tx.auditTx(tx, 'QUARANTINE_RETURNED', 'Incident', id, actor, {
+        transferId: i.transferId,
+        quantity: i.quantity,
+        handover: reason,
       });
       return result;
     });
@@ -72,6 +139,11 @@ export class IncidenciasService {
             body.custodian,
           'Indica despacho, SKU observado, cantidad, ubicación y custodio',
         );
+      ensure(
+        (body.type === 'RETENCION') === Boolean(body.allocationId),
+        'Vincula la retención a una asignación aceptada',
+      );
+      const hold = body.allocationId ? await holdDetails(tx, body) : null;
       if (body.transferId && body.blocking !== false)
         await tx.transfer.updateMany({
           where: {
@@ -81,7 +153,10 @@ export class IncidenciasService {
           },
           data: { status: 'RECEIVING' },
         });
-      const i = await tx.incident.create({ data: body });
+      const i = await tx.incident.create({
+        data: { ...body, ...(hold ? { sku: hold.sku } : {}) },
+      });
+      if (hold) await refreshOrderState(tx, hold.line.orderId);
       await this.tx.auditTx(
         tx,
         'INCIDENT_OPENED',

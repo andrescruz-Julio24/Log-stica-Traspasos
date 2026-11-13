@@ -3,11 +3,18 @@ import {
   IsString,
   IsNotEmpty,
   IsBoolean,
+  IsIn,
   IsInt,
   Min,
   Matches,
 } from 'class-validator';
+export class ResolveIncidentDto {
+  @IsString() @Matches(/\S/) reason!: string;
+  @IsOptional() @IsIn(['RELEASE', 'QUARANTINE']) disposition?: string;
+}
 export class CreateIncidentDto {
+  @IsOptional() @IsString() allocationId?: string;
+  @IsOptional() @IsString() assignedTo?: string;
   @IsOptional() @IsString() transferId?: string;
   @IsOptional() @IsString() dispatchId?: string;
   @IsOptional() @IsString() sku?: string;

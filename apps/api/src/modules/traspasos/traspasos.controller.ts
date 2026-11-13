@@ -5,6 +5,7 @@ import {
   CreateTransferDto,
   ReserveDto,
   DispatchDto,
+  PickDto,
   ReceiveDto,
 } from './dto/traspasos.dto';
 
@@ -26,6 +27,13 @@ export class TraspasosController {
     @Headers('x-demo-actor') actor?: string,
   ) {
     return this.service.reserve(id, body, actor);
+  }
+  @Post(':id/picking') pick(
+    @Param('id') id: string,
+    @Body() body: PickDto,
+    @Headers('x-demo-actor') actor?: string,
+  ) {
+    return this.service.pick(id, body, actor);
   }
   @Post(':id/dispatches') dispatch(
     @Param('id') id: string,

@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { submit } from '../../../shared/services/apiClient';
 export function CreateIncident({ data, busy, act }) {
   const [transferId, select] = useState('');
+  const [type, setType] = useState('FALTANTE'),
+    [dispatchId, setDispatch] = useState('');
   const transfer = data.transfers.find((t) => t.id === transferId);
   function save(e) {
     e.preventDefault();
@@ -15,9 +17,14 @@ export function CreateIncident({ data, busy, act }) {
     <form className="form-grid" onSubmit={save}>
       <label className="field">
         Tipo
-        <select name="type">
+        <select
+          name="type"
+          value={type}
+          onChange={(e) => setType(e.target.value)}
+        >
           {[
             'FALTANTE',
+            'RETENCION',
             'EXCEDENTE',
             'PRODUCTO_INCORRECTO',
             'VARIANTE_INCORRECTA',
@@ -34,7 +41,10 @@ export function CreateIncident({ data, busy, act }) {
         <select
           name="transferId"
           value={transferId}
-          onChange={(e) => select(e.target.value)}
+          onChange={(e) => {
+            select(e.target.value);
+            setDispatch('');
+          }}
         >
           <option value="">General</option>
           {data.transfers.map((t) => (
@@ -46,13 +56,58 @@ export function CreateIncident({ data, busy, act }) {
       </label>
       <label className="field">
         Despacho
-        <select name="dispatchId" key={transferId}>
+        <select
+          name="dispatchId"
+          value={dispatchId}
+          onChange={(e) => setDispatch(e.target.value)}
+        >
           <option value="">Sin despacho</option>
           {transfer?.dispatches.map((d) => (
             <option key={d.id}>{d.id}</option>
           ))}
         </select>
       </label>
+      {type === 'RETENCION' && (
+        <>
+          <label className="field">
+            Pedido y asignación aceptada
+            <select
+              name="allocationId"
+              required
+              defaultValue=""
+              key={dispatchId}
+            >
+              <option value="">Seleccionar</option>
+              {transfer?.dispatches
+                .find((d) => d.id === dispatchId)
+                ?.lines.flatMap((l) =>
+                  l.allocations
+                    .filter((a) => a.accepted && a.reservation.orderLineId)
+                    .map((a) => {
+                      const o = data.orders.find((o) =>
+                        o.lines.some((x) => x.id === a.reservation.orderLineId),
+                      );
+                      return (
+                        <option key={a.id} value={a.id}>
+                          {o?.code} · {o?.customer} ·{' '}
+                          {
+                            transfer.lines.find(
+                              (x) => x.productId === l.productId,
+                            )?.product.sku
+                          }{' '}
+                          · {a.accepted} aceptadas
+                        </option>
+                      );
+                    }),
+                )}
+            </select>
+          </label>
+          <label className="field">
+            Responsable de liberar
+            <input name="assignedTo" required />
+          </label>
+        </>
+      )}
       {[
         ['SKU observado', 'sku'],
         ['Cantidad observada', 'quantity'],

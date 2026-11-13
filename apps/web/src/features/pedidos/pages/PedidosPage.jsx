@@ -1,6 +1,7 @@
 'use client';
 import { useWorkspace } from '../../workspace/hooks/useWorkspace';
 import { OrderPlan } from '../components/OrderPlan';
+import { replenishmentImpact, lineHolds } from '../utils/impact';
 import Link from 'next/link';
 import { CreateRecordAction } from '../../workspace/components/CreateRecordAction';
 import { CreateOrder } from '../components/CreateOrder';
@@ -30,7 +31,12 @@ export default function PedidosPage() {
       <div key="lineas">
         {order.lines.map((line) => (
           <div key={line.id} className="subline">
-            {line.product.sku}: {line.required} u.
+            {line.product.sku}: {line.required} u.{' '}
+            {lineHolds(line).map((h) => (
+              <small key={h.id}>
+                {h.quantity} retenidas · {h.notes} · {h.assignedTo}
+              </small>
+            ))}
           </div>
         ))}
       </div>,
@@ -43,30 +49,59 @@ export default function PedidosPage() {
     ],
   }));
   return (
-    <Panel
-      title="Pedidos de clientes"
-      description="Listos sólo cuando todas las líneas cumplen la cantidad aceptada"
-      actions={
-        <CreateRecordAction
-          label=" Nuevo pedido"
-          title=" Nuevo pedido"
-          form={CreateOrder}
+    <>
+      <Panel
+        title="Pedidos de clientes"
+        description="Listos sólo cuando todas las líneas cumplen la cantidad aceptada"
+        actions={
+          <CreateRecordAction
+            label=" Nuevo pedido"
+            title=" Nuevo pedido"
+            form={CreateOrder}
+          />
+        }
+      >
+        <Table
+          headers={[
+            'Folio',
+            'Cliente',
+            'Prioridad y compromiso',
+            'Destino',
+            'Productos',
+            'Progreso',
+            'Estado',
+          ]}
+          rows={rows}
+          empty="No hay pedidos. Registra el primero."
         />
-      }
-    >
-      <Table
-        headers={[
-          'Folio',
-          'Cliente',
-          'Prioridad y compromiso',
-          'Destino',
-          'Productos',
-          'Progreso',
-          'Estado',
-        ]}
-        rows={rows}
-        empty="No hay pedidos. Registra el primero."
-      />
-    </Panel>
+      </Panel>
+      <Panel
+        title="Impacto del reabastecimiento"
+        description="Pedidos que podrían completarse si se aceptan y asignan todas las unidades faltantes de ese SKU en su destino."
+      >
+        <Table
+          headers={[
+            'SKU',
+            'Destino',
+            'Unidades faltantes',
+            'Pedidos',
+            'Urgentes',
+            'Folios',
+          ]}
+          rows={replenishmentImpact(data.orders).map((g) => ({
+            key: g.key,
+            cells: [
+              g.sku,
+              g.destination,
+              g.units,
+              g.orders.length,
+              g.urgent,
+              g.orders.join(', '),
+            ],
+          }))}
+          empty="Ningún pedido activo depende de un único SKU."
+        />
+      </Panel>
+    </>
   );
 }

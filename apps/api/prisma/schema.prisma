@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum OrderStatus {
+  BLOCKED
   PENDING
   PARTIAL
   READY
@@ -113,6 +114,8 @@ model Transfer {
 }
 
 model TransferLine {
+  picked       Int           @default(0)
+  pickVersion  Int           @default(0)
   id           String        @id @default(cuid())
   transferId   String
   productId    String
@@ -183,6 +186,7 @@ model ReceiptLine {
 }
 
 model DispatchAllocation {
+  holds          Incident[]
   id             String       @id @default(cuid())
   dispatchLineId String
   reservationId  String
@@ -196,20 +200,27 @@ model DispatchAllocation {
 }
 
 model Incident {
-  blocking   Boolean        @default(true)
-  dispatchId String?
-  sku        String?
-  quantity   Int?
-  custodian  String?
-  location   String?
-  evidence   String?
-  resolution String?
-  id         String         @id @default(cuid())
-  transferId String?
-  type       String
-  notes      String
-  status     IncidentStatus @default(OPEN)
-  createdAt  DateTime       @default(now())
+  allocationId String?
+  allocation   DispatchAllocation? @relation(fields: [allocationId], references: [id])
+  assignedTo   String?
+  disposition  String?
+  returnedAt   DateTime?
+  blocking     Boolean             @default(true)
+  dispatchId   String?
+  sku          String?
+  quantity     Int?
+  custodian    String?
+  location     String?
+  evidence     String?
+  resolution   String?
+  id           String              @id @default(cuid())
+  transferId   String?
+  type         String
+  notes        String
+  status       IncidentStatus      @default(OPEN)
+  createdAt    DateTime            @default(now())
+
+  @@index([allocationId, status])
 }
 
 model AuditEvent {

@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { submit } from '../../../shared/services/apiClient';
 import { priorities } from '../../pedidos/data/priorities';
 import { activeReserved } from '../../../shared/utils/quantities';
@@ -108,7 +109,13 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
               1. Reservar
             </button>
             <button
-              disabled={busy || !line || !Number.isSafeInteger(qty) || qty < 1}
+              disabled={
+                busy ||
+                !line ||
+                !Number.isSafeInteger(qty) ||
+                qty < 1 ||
+                qty > line.picked
+              }
               className="secondary"
               onClick={() =>
                 onAction(() =>
@@ -123,6 +130,10 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
               2. Despachar
             </button>
           </div>
+          <p className="full">
+            Unidades separadas del SKU: {line?.picked ?? 0}.{' '}
+            <Link href="/preparacion">Confirmar surtido en Preparación</Link>
+          </p>
           <label className="field full">
             Despacho a inspeccionar
             <select

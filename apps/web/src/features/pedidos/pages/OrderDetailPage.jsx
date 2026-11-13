@@ -1,5 +1,6 @@
 'use client';
 import { OrderHistory } from '../components/OrderHistory';
+import { lineHolds } from '../utils/impact';
 import Link from 'next/link';
 import {
   Empty,
@@ -74,9 +75,9 @@ export default function OrderDetailPage({ id }) {
       </div>
       <OrderHistory id={id} />
       <Hint title="Disponibilidad comercial">
-        Este pedido solamente figura listo cuando todas sus líneas alcanzan la
-        cantidad aceptada; la entrega final al cliente y los permisos de
-        liberación no forman parte del MVP.
+        Un pedido está listo cuando todas sus líneas tienen unidades utilizables
+        asignadas y se han liberado las retenciones. Consulta abajo el motivo y
+        responsable por SKU.
       </Hint>
       <Panel
         title="Productos solicitados"
@@ -89,6 +90,7 @@ export default function OrderDetailPage({ id }) {
             'Requerido',
             'Aceptado',
             'Faltante',
+            'Retenciones abiertas',
             'Progreso',
           ]}
           rows={order.lines.map((l) => ({
@@ -99,6 +101,11 @@ export default function OrderDetailPage({ id }) {
               l.required,
               l.accepted,
               Math.max(0, l.required - l.accepted),
+              lineHolds(l)
+                .map(
+                  (h) => h.quantity + ' u. · ' + h.notes + ' · ' + h.assignedTo,
+                )
+                .join('; ') || '—',
               <Progress
                 key="column-2"
                 actual={l.accepted}

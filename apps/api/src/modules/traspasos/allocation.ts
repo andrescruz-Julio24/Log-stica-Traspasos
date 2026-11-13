@@ -1,3 +1,4 @@
+import { refreshOrderState } from '../pedidos/readiness';
 import { Priority } from '@prisma/client';
 import { Tx } from '../../shared/database/transaction.service';
 
@@ -50,23 +51,17 @@ export async function applyAllocation(
     where: { id: stockId },
     data: { reserved: { increment: units }, version: { increment: 1 } },
   });
-  const lines = await tx.orderLine.findMany({
-    where: { orderId: line.orderId },
-  });
-  await tx.customerOrder.update({
-    where: { id: line.orderId },
-    data: {
-      status: lines.every((l) => l.accepted === l.required)
-        ? 'READY'
-        : 'PARTIAL',
-    },
-  });
+  await refreshOrderState(tx, line.orderId);
   return id;
 }
 export async function reconcileTransfer(tx: Tx, transferId: string) {
   const lines = await tx.transferLine.findMany({ where: { transferId } });
   const open = await tx.incident.count({
-    where: { transferId, blocking: true, status: 'OPEN' },
+    where: {
+      transferId,
+      blocking: true,
+      OR: [{ status: 'OPEN' }, { disposition: 'QUARANTINE' }],
+    },
   });
   const closed =
     !open &&

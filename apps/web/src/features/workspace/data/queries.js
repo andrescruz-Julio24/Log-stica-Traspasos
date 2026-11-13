@@ -13,7 +13,7 @@ export const queriesBySection = {
   dispatches: ['transfers'],
   transit: ['transfers'],
   receipts: ['transfers'],
-  incidents: ['incidents', 'transfers'],
+  incidents: ['incidents', 'transfers', 'orders'],
   cancellations: ['orders', 'transfers'],
   authorizations: ['orders', 'transfers', 'authorizations'],
   alerts: ['incidents', 'orders', 'transfers'],

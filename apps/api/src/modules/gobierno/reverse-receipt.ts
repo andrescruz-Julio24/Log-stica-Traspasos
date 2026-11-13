@@ -1,3 +1,4 @@
+import { refreshOrderState } from '../pedidos/readiness';
 import {
   TransactionService,
   Tx,
@@ -70,6 +71,15 @@ export async function reverseReceipt(
     quantity: number;
   }[];
   let reserved = 0;
+  ensure(
+    !(await tx.incident.count({
+      where: {
+        allocationId: { in: entries.map((a) => a.allocationId) },
+        OR: [{ status: 'OPEN' }, { disposition: 'QUARANTINE' }],
+      },
+    })),
+    'Conciliar retenciones de la asignación antes de compensar',
+  );
   for (const a of entries) {
     await tx.dispatchAllocation.update({
       where: { id: a.allocationId },
@@ -87,13 +97,7 @@ export async function reverseReceipt(
       });
       if (ol.order.status !== 'CANCELLED') {
         reserved += a.quantity;
-        const partial = await tx.orderLine.count({
-          where: { orderId: ol.orderId, accepted: { gt: 0 } },
-        });
-        await tx.customerOrder.update({
-          where: { id: ol.orderId },
-          data: { status: partial ? 'PARTIAL' : 'PENDING' },
-        });
+        await refreshOrderState(tx, ol.orderId);
       }
     }
   }

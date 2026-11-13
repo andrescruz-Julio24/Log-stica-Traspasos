@@ -9,6 +9,7 @@ import {
   CreateTransferDto,
   ReserveDto,
   DispatchDto,
+  PickDto,
   ReceiveDto,
 } from './dto/traspasos.dto';
 
@@ -181,6 +182,48 @@ export class TraspasosService {
     });
   }
 
+  pick(transferId: string, body: PickDto, actor?: string) {
+    return this.tx.transaction(async (tx) => {
+      const line = await tx.transferLine.findUniqueOrThrow({
+        where: { id: body.transferLineId },
+        include: { transfer: true, reservations: true },
+      });
+      ensure(
+        line.transferId === transferId &&
+          !['CLOSED', 'CANCELLED'].includes(line.transfer.status),
+        'Línea no disponible para surtido',
+      );
+      const active = line.reservations.reduce(
+        (sum, r) => sum + r.quantity - r.released,
+        0,
+      );
+      ensure(body.quantity <= active, 'Conteo superior a la reserva activa');
+      ensure(
+        body.quantity === active || body.note?.trim(),
+        'Explica la diferencia con la reserva',
+      );
+      const updated = await tx.transferLine.updateMany({
+        where: { id: line.id, pickVersion: body.version },
+        data: { picked: body.quantity, pickVersion: { increment: 1 } },
+      });
+      ensure(updated.count === 1, 'El conteo cambió; actualiza la pantalla');
+      await this.tx.auditTx(
+        tx,
+        'PICK_CONFIRMED',
+        'TransferLine',
+        line.id,
+        actor,
+        {
+          transferId,
+          productId: line.productId,
+          previous: line.picked,
+          reserved: active,
+          ...body,
+        },
+      );
+      return { picked: body.quantity, version: body.version + 1 };
+    });
+  }
   async dispatch(
     transferId: string,
     body: DispatchDto,
@@ -236,6 +279,10 @@ export class TraspasosService {
             active >= item.quantity,
             'Se requiere una reserva de origen antes del despacho',
           );
+          ensure(
+            line.picked >= item.quantity,
+            'Falta confirmar el surtido físico antes de despachar',
+          );
           const stock = await tx.stock.findUnique({
             where: {
               productId_locationId: {
@@ -280,7 +327,11 @@ export class TraspasosService {
           }
           await tx.transferLine.update({
             where: { id: line.id },
-            data: { dispatched: { increment: item.quantity } },
+            data: {
+              dispatched: { increment: item.quantity },
+              picked: { decrement: item.quantity },
+              pickVersion: { increment: 1 },
+            },
           });
         }
 
