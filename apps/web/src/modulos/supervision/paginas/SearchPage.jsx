@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Empty, Panel, SearchField, Table } from '../../../shared/ui/ModuleKit';
 
 export function SearchPage() {
-  const { data } = useWorkspace();
+  const { data, complete } = useWorkspace();
   const [q, setQ] = useState('');
   const normalized = q.toLocaleLowerCase('es-MX').trim();
   const entries = [
@@ -72,7 +72,11 @@ export function SearchPage() {
               </Link>,
             ],
           }))}
-          empty="Sin coincidencias para la búsqueda."
+          empty={
+            complete
+              ? 'Sin coincidencias para la búsqueda.'
+              : 'Sin coincidencias en las fuentes disponibles.'
+          }
         />
       ) : (
         <Empty message="Introduce al menos un término para buscar en los registros del SGTL." />

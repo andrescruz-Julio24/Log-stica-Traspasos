@@ -1,4 +1,5 @@
 'use client';
+import { deriveAlerts } from '../utils/alerts';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -12,64 +13,9 @@ import {
 } from '../../../shared/ui/ModuleKit';
 
 export function AlertsPage() {
-  const { data } = useWorkspace();
+  const { data, resources, complete } = useWorkspace();
   const [q, setQ] = useState('');
-  const alerts = [
-    ...data.incidents
-      .filter((i) => i.status === 'OPEN')
-      .map((i) => ({
-        key: 'incident:' + i.id,
-        kind: 'Incidencia abierta',
-        title: i.type,
-        detail: i.notes,
-        level: 'Crítica',
-        when: i.createdAt,
-        href: '/incidencias',
-      })),
-    ...data.transfers
-      .filter((t) => t.status === 'RECEIVING')
-      .map((t) => ({
-        key: 'receiving:' + t.id,
-        kind: 'Recepción por conciliar',
-        title: t.code,
-        detail: t.origin.name + ' → ' + t.destination.name,
-        level: 'Revisión',
-        when: t.createdAt,
-        href: '/recepciones',
-      })),
-    ...data.orders
-      .filter((o) => o.status === 'BLOCKED')
-      .map((o) => ({
-        key: 'held:' + o.id,
-        kind: 'Pedido retenido',
-        title: o.code + ' · ' + o.customer,
-        detail: 'Revisar unidades y responsable por SKU',
-        level: 'Bloqueante',
-        when: o.createdAt,
-        href: '/pedidos/' + o.id,
-      })),
-    ...data.orders
-      .filter((o) => o.status === 'PARTIAL')
-      .map((o) => ({
-        key: 'order:' + o.id,
-        kind: 'Abastecimiento parcial',
-        title: o.code + ' · ' + o.customer,
-        detail:
-          'Faltantes: ' +
-          o.lines.reduce(
-            (n, l) => n + Math.max(0, l.required - l.accepted),
-            0,
-          ) +
-          ' unidades',
-        level: 'Pendiente',
-        when: o.createdAt,
-        href: '/pedidos',
-      })),
-  ].filter((a) =>
-    (a.kind + ' ' + a.title + ' ' + a.detail)
-      .toLowerCase()
-      .includes(q.toLowerCase()),
-  );
+  const alerts = deriveAlerts(data, q);
   return (
     <>
       <Hint title="Alertas derivadas, no notificaciones persistidas">
@@ -80,23 +26,37 @@ export function AlertsPage() {
       </Hint>
       <div className="stats">
         <Metric
-          label="Alertas calculadas"
+          label={
+            complete ? 'Alertas calculadas' : 'Alertas de fuentes disponibles'
+          }
           value={alerts.length}
           detail="Incidencias, recepciones y pedidos parciales"
         />
         <Metric
           label="Incidencias abiertas"
-          value={data.incidents.filter((i) => i.status === 'OPEN').length}
+          value={
+            resources.incidents?.status !== 'success'
+              ? '—'
+              : data.incidents.filter((i) => i.status === 'OPEN').length
+          }
           detail="Requieren investigación"
         />
         <Metric
           label="Recepciones pendientes"
-          value={data.transfers.filter((t) => t.status === 'RECEIVING').length}
+          value={
+            resources.transfers?.status !== 'success'
+              ? '—'
+              : data.transfers.filter((t) => t.status === 'RECEIVING').length
+          }
           detail="Con diferencia o verificación incompleta"
         />
         <Metric
           label="Pedidos parcialmente surtidos"
-          value={data.orders.filter((o) => o.status === 'PARTIAL').length}
+          value={
+            resources.orders?.status !== 'success'
+              ? '—'
+              : data.orders.filter((o) => o.status === 'PARTIAL').length
+          }
           detail="No aptos para envío"
         />
       </div>
@@ -133,7 +93,11 @@ export function AlertsPage() {
               </Link>,
             ],
           }))}
-          empty="No existen alertas derivadas que coincidan con el filtro."
+          empty={
+            complete
+              ? 'No existen alertas derivadas que coincidan con el filtro.'
+              : 'Sin coincidencias entre las fuentes disponibles.'
+          }
         />
       </Panel>
     </>

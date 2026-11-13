@@ -1,27 +1,3 @@
-// Cada pantalla solicita únicamente los recursos que utiliza.
-export const queriesBySection = {
-  orderDetail: ['orders', 'transfers','incidents'],
-  transferDetail: ['transfers', 'incidents', 'audit'],
-  dashboard: ['orders', 'transfers', 'incidents'],
-  orders: ['bootstrap', 'orders'],
-  clients: ['orders'],
-  transfers: ['bootstrap', 'orders', 'transfers'],
-  movements: ['transfers'],
-  stock: ['bootstrap'],
-  reservations: ['bootstrap', 'transfers'],
-  preparation: ['transfers'],
-  dispatches: ['transfers'],
-  transit: ['transfers'],
-  receipts: ['transfers'],
-  incidents: ['incidents', 'transfers', 'orders'],
-  cancellations: ['orders', 'transfers'],
-  authorizations: ['orders', 'transfers', 'authorizations'],
-  alerts: ['incidents', 'orders', 'transfers'],
-  audit: ['audit'],
-  reports: ['orders', 'transfers'],
-  search: ['bootstrap', 'orders', 'transfers', 'incidents'],
-  admin: ['bootstrap'],
-};
 export const emptyWorkspaceData = {
   products: [],
   locations: [],
@@ -31,4 +7,14 @@ export const emptyWorkspaceData = {
   incidents: [],
   authorizations: [],
   audit: [],
+};
+
+// Vistas de lectura que identifican explícitamente sus fuentes incompletas.
+export const resourceNames = {
+  orders: 'Pedidos',
+  transfers: 'Traspasos',
+  incidents: 'Incidencias',
+  bootstrap: 'Catálogo e inventario',
+  audit: 'Auditoría',
+  authorizations: 'Autorizaciones',
 };

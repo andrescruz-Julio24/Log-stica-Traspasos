@@ -111,13 +111,7 @@ export function NextStep({ href = '/traspasos', label = 'Ir a traspasos' }) {
     </Link>
   );
 }
-export function formatDate(value) {
-  if (!value) return '—';
-  const d = new Date(value);
-  return Number.isNaN(d.getTime())
-    ? '—'
-    : d.toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' });
-}
+export { formatDate } from '../utils/formatDate';
 export function Progress({ actual, total }) {
   const pct = percentage(actual, total);
   return (

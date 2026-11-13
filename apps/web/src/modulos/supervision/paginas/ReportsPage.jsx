@@ -1,5 +1,6 @@
 'use client';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
+import styles from '../styles/reports.module.css';
 import Link from 'next/link';
 import {
   Hint,
@@ -13,7 +14,7 @@ import { sumField } from '../../../shared/utils/quantities';
 
 function SimpleBar({ label, value, total }) {
   return (
-    <div className="report-bar">
+    <div className={styles.bar}>
       <div>
         <strong>{label}</strong>
         <span>{value}</span>
@@ -77,7 +78,7 @@ export function ReportsPage() {
           title="Abastecimiento de clientes"
           description="Conteos por estado de pedido."
         >
-          <div className="report-bars">
+          <div className={styles.bars}>
             {statuses.map((s) => (
               <SimpleBar
                 key={s}
@@ -100,7 +101,7 @@ export function ReportsPage() {
           title="Volúmenes del flujo logístico"
           description="Solicitado, enviado y aceptado no representan lo mismo."
         >
-          <div className="report-bars">
+          <div className={styles.bars}>
             {[
               ['Solicitado', requested],
               ['Despachado', dispatched],

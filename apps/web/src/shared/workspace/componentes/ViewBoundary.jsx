@@ -10,7 +10,7 @@ export class ViewBoundary extends Component {
     if (!this.state.failed) return this.props.children;
     return (
       <section className="message error" role="alert">
-        Esta vista no pudo mostrar sus datos.
+        {this.props.label || 'Esta vista'} no pudo mostrar sus datos.
         <button
           className="secondary"
           onClick={async () => {

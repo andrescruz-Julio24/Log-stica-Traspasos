@@ -3,13 +3,13 @@ import { WorkspaceProvider } from '../providers/WorkspaceProvider';
 import { Sidebar, SectionNavigation } from './WorkspaceNavigation';
 import { WorkspaceContent, RefreshButton } from './WorkspaceContent';
 import { areaFor } from '../data/navigation';
-export default function Workspace({ section, children }) {
+export default function Workspace({ section, query, children }) {
   const area = areaFor(section);
   const current = area.find((item) => item.key === section);
   return (
     <div className="shell">
       <Sidebar area={area} section={section} />
-      <WorkspaceProvider key={section} section={section}>
+      <WorkspaceProvider key={section} query={query}>
         <main className="main">
           <header className="topbar">
             <div>

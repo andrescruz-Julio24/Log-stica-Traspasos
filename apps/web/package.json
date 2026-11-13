@@ -6,16 +6,19 @@
     "dev": "next dev --port 3000",
     "build": "next build",
     "start": "next start --port 3000",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "test": "node --test tests/derived-data.test.mjs",
+    "test:e2e": "node tests/workspace.e2e.mjs"
   },
   "dependencies": {
+    "lucide-react": "^0.468.0",
     "next": "^16.0.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "lucide-react": "^0.468.0"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "eslint": "^9.34.0",
-    "eslint-config-next": "^16.0.0"
+    "eslint-config-next": "^16.0.0",
+    "playwright": "1.62.1"
   }
 }

@@ -1,116 +1,123 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { emptyWorkspaceData } from '../data/queries';
-import { fetchWorkspaceSection } from '../services/workspace.service';
+import { loadResource } from '../services/workspace.service';
 
-export function useWorkspaceData(section) {
-  const [snapshot, setSnapshot] = useState({
-    section: null,
-    data: emptyWorkspaceData,
-    error: '',
-  });
-  const [action, setAction] = useState({
-    section: null,
-    error: '',
-    notice: '',
-  });
+export function useWorkspaceData(query) {
+  const keys = query.resources;
+  const [resources, setResources] = useState({});
+  const [action, setAction] = useState({ error: '', notice: '' });
   const [busy, setBusy] = useState(false);
-  const latestRequest = useRef(0);
-  const activeController = useRef(null);
-  useEffect(() => {
-    const request = ++latestRequest.current;
-    activeController.current?.abort();
+  const requests = useRef(new Map());
+  const mounted = useRef(false);
+
+  const read = useCallback((key, force = false) => {
+    const pending = requests.current.get(key);
+    if (pending && !force) return pending.promise;
+    pending?.controller.abort();
     const controller = new AbortController();
-    activeController.current = controller;
-    let mounted = true;
-    fetchWorkspaceSection(section, controller.signal)
-      .then((data) => {
-        if (mounted && request === latestRequest.current)
-          setSnapshot({ section, data, error: '' });
+    setResources((previous) => ({
+      ...previous,
+      [key]: { ...previous[key], status: 'loading', error: '' },
+    }));
+    const promise = loadResource(key, controller.signal)
+      .then((value) => {
+        if (!controller.signal.aborted)
+          setResources((previous) => ({
+            ...previous,
+            [key]: { status: 'success', value },
+          }));
+        return value;
       })
-      .catch((err) => {
-        if (mounted && request === latestRequest.current)
-          setSnapshot({
-            section,
-            data: emptyWorkspaceData,
-            error: err.message,
-          });
+      .catch((error) => {
+        if (!controller.signal.aborted) {
+          setResources((previous) => ({
+            ...previous,
+            [key]: {
+              value: [401, 403].includes(error.status)
+                ? undefined
+                : previous[key]?.value,
+              status: 'error',
+              error: error.message,
+            },
+          }));
+          throw error;
+        }
+      })
+      .finally(() => {
+        if (requests.current.get(key)?.controller === controller)
+          requests.current.delete(key);
       });
+    requests.current.set(key, { controller, promise });
+    return promise;
+  }, []);
+  useEffect(() => {
+    mounted.current = true;
+    const pending = requests.current;
+    keys.forEach((key) => {
+      read(key).catch(() => {});
+    });
     return () => {
-      mounted = false;
-      activeController.current?.abort();
+      mounted.current = false;
+      for (const request of pending.values()) request.controller.abort();
+      pending.clear();
     };
-  }, [section]);
-  const loading = snapshot.section !== section;
-  const data = loading ? emptyWorkspaceData : snapshot.data;
-  const error =
-    action.section === section && action.error
-      ? action.error
-      : loading
-        ? ''
-        : snapshot.error;
-  const notice = action.section === section ? action.notice : '';
-  const setError = (message) =>
-    setAction((prev) => ({ ...prev, section, error: message }));
-  const setNotice = (message) =>
-    setAction((prev) => ({ ...prev, section, notice: message }));
-  async function reload() {
-    const request = ++latestRequest.current;
-    activeController.current?.abort();
-    const controller = new AbortController();
-    activeController.current = controller;
-    try {
-      const result = await fetchWorkspaceSection(section, controller.signal);
-      if (controller.signal.aborted || request !== latestRequest.current) return result;
-      setSnapshot({ section, data: result, error: '' });
-      setAction((prev) => ({ ...prev, section, error: '' }));
-      return result;
-    } catch (err) {
-      if (controller.signal.aborted || request !== latestRequest.current) return;
-      setSnapshot({ section, data: emptyWorkspaceData, error: err.message });
-      throw err;
-    }
+  }, [keys, read]);
+
+  async function reload(force = false) {
+    const results = await Promise.allSettled(
+      keys.map((key) => read(key, force)),
+    );
+    const error = results.find((result) => result.status === 'rejected');
+    if (error) throw error.reason;
   }
+  const complete = keys.every((key) => resources[key]?.status === 'success');
+  const data = Object.assign(
+    {},
+    emptyWorkspaceData,
+    ...keys.map((key) => resources[key]?.value),
+  );
+  const required = query.required ?? (query.partial ? [] : keys);
+  const missingRequired = required.some(
+    (key) => !resources[key]?.value || resources[key].status === 'error',
+  );
+  const anyValid = keys.some((key) => resources[key]?.value);
+  const loading =
+    (missingRequired || !anyValid) &&
+    keys.some((key) => !resources[key] || resources[key].status === 'loading');
+  const loadFailed = !loading && (missingRequired || !anyValid);
+
   async function act(task, onSuccess) {
+    if (!complete) return false;
     setBusy(true);
-    setAction({ section, error: '', notice: '' });
+    setAction({ error: '', notice: '' });
     try {
       await task();
+      if (!mounted.current) return true;
       onSuccess?.();
-      try {
-        await reload();
-      } catch (err) {
-        setAction({
-          section,
-          error:
-            'Operación confirmada. Falló la actualización de la vista: ' +
-            err.message,
-          notice: '',
-        });
-        return true;
-      }
-      setAction({
-        section,
-        error: '',
-        notice: 'Operación confirmada por el servidor.',
-      });
+      setAction({ error: '', notice: 'Operación confirmada por el servidor.' });
+      await reload(true).catch(() => {}); // Cada lectura publica su propio error y reintento.
       return true;
     } catch (err) {
-      setAction({ section, error: err.message, notice: '' });
+      if (mounted.current) setAction({ error: err.message, notice: '' });
       return false;
     } finally {
-      setBusy(false);
+      if (mounted.current) setBusy(false);
     }
   }
   return {
     data,
+    resources,
+    keys,
+    complete,
     loading,
-    loadFailed: !!snapshot.error,
-    busy,
-    error,
-    notice,
-    setError,
-    setNotice,
+    loadFailed,
+    saving: busy,
+    busy: busy || !complete,
+    ...action,
+    setError: (error) => setAction((previous) => ({ ...previous, error })),
+    setNotice: (notice) => setAction((previous) => ({ ...previous, notice })),
+    retry: (key) => read(key),
     reload,
     act,
   };
