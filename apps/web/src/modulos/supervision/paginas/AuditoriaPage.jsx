@@ -1,6 +1,7 @@
 'use client';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { Panel, Empty, formatDate } from '../../../shared/ui/ModuleKit';
+import styles from '../styles/AuditoriaPage.module.css';
 export default function AuditoriaPage() {
   const { data } = useWorkspace();
   return (
@@ -8,10 +9,10 @@ export default function AuditoriaPage() {
       title="Bitácora de auditoría"
       subtitle="Eventos históricos inmutables registrados por el servidor"
     >
-      <div className="timeline">
+      <div className={styles.timeline}>
         {data.audit.map((a) => (
-          <div className="audit-event" key={a.id}>
-            <span className="timeline-dot" />
+          <div className={styles.event} key={a.id}>
+            <span className={styles.dot} />
             <div>
               <strong>{a.type}</strong>
               <p>

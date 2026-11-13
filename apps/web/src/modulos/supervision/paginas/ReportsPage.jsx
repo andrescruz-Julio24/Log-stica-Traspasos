@@ -1,6 +1,6 @@
 'use client';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
-import styles from '../styles/reports.module.css';
+import styles from '../styles/ReportsPage.module.css';
 import Link from 'next/link';
 import {
   Hint,

@@ -2,6 +2,7 @@
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { useRouter } from 'next/navigation';
 import { Status, Panel, Empty } from '../../../shared/ui/ModuleKit';
+import styles from '../styles/OverviewPage.module.css';
 
 export default function OverviewPage() {
   const { data } = useWorkspace();
@@ -36,10 +37,10 @@ export default function OverviewPage() {
           title="Traspasos recientes"
           subtitle="Estado del movimiento y mercancía"
         >
-          <div className="stack">
+          <div className={styles.stack}>
             {data.transfers.slice(0, 6).map((t) => (
               <button
-                className="list-row"
+                className={styles.row}
                 onClick={() => router.push('/traspasos/' + t.id)}
                 key={t.id}
               >
@@ -59,10 +60,10 @@ export default function OverviewPage() {
           title="Pedidos por preparar"
           subtitle="Disponibilidad confirmada por cliente"
         >
-          <div className="stack">
+          <div className={styles.stack}>
             {data.orders.slice(0, 6).map((o) => (
               <button
-                className="list-row"
+                className={styles.row}
                 onClick={() => router.push('/pedidos/' + o.id)}
                 key={o.id}
               >

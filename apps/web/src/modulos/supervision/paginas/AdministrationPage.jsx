@@ -10,6 +10,7 @@ import {
   stockAvailable,
 } from '../../../shared/ui/ModuleKit';
 import { sumField } from '../../../shared/utils/quantities';
+import styles from '../styles/AdministrationPage.module.css';
 
 export function AdministrationPage() {
   const { data } = useWorkspace();
@@ -26,7 +27,7 @@ export function AdministrationPage() {
         control visual suplanta la autorización del backend.
       </Hint>
       <div
-        className="module-tabs"
+        className={styles.tabs}
         role="tablist"
         aria-label="Secciones de administración"
       >
@@ -35,7 +36,7 @@ export function AdministrationPage() {
             role="tab"
             aria-selected={tab === k}
             key={k}
-            className={tab === k ? 'active' : ''}
+            className={tab === k ? styles.active : undefined}
             onClick={() => setTab(k)}
           >
             {

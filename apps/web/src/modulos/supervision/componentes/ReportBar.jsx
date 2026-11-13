@@ -1,6 +1,6 @@
 'use client';
 import { percentage } from '../../../shared/utils/quantities';
-import styles from '../styles/reports.module.css';
+import styles from '../styles/ReportBar.module.css';
 
 export function ReportBar({ label, value, total }) {
   return (
@@ -9,7 +9,7 @@ export function ReportBar({ label, value, total }) {
         <strong>{label}</strong>
         <span>{value}</span>
       </div>
-      <div className="progress-track">
+      <div className={styles.track}>
         <div style={{ width: percentage(value, total) + '%' }} />
       </div>
     </div>
