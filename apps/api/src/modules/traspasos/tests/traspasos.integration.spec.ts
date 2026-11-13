@@ -339,12 +339,13 @@ describe('Aceptación de operación y prioridades', () => {
       t.id,
       d.id,
       'Conteo definitivo',
-      'recepcion',
+      'recepcion','Coordinación',
     );
     await service.finishInspection(t.id, d.id, 'Mismo cierre', 'recepcion');
     const issues = await db.incident.findMany({ where: { transferId: t.id } });
     expect(issues).toHaveLength(1);
     expect(issues[0].quantity).toBe(5);
+    expect(issues[0].assignedTo).toBe('Coordinación');
     const req = await gov.request(
       { kind: 'CLOSE_DIFFERENCE', targetId: t.id, reason: 'Merma' },
       'almacen',
@@ -729,4 +730,19 @@ it('retiene solo al cliente afectado, libera o pone en cuarentena y registra la 
     incidents.returnQuarantine(second.id, 'Reintento', 'sup'),
   ).rejects.toThrow();
   expect(await stock()).toMatchObject({ physical: 9, reserved: 9, blocked: 0 });
+});
+
+it('deduplica altas y reservas concurrentes y permite otra intención independiente', async () => {
+  const s=await scenario();
+  const body={customer:'Duplicado QA',destinationId:s.destination.id,items:[{productId:s.product.id,required:2}]};
+  const key=randomUUID();
+  const [first,retry]=await Promise.all([orders.createOrder(body,'QA',key),orders.createOrder(body,'QA',key)]);
+  expect(first.id).toBe(retry.id);
+  await expect(orders.createOrder({...body,customer:'Otro'},'QA',key)).rejects.toThrow('contenido diferente');
+  const t=await s.create(), reservation={transferLineId:t.lines[0].id,quantity:2};
+  const create=(k:string)=>service.reserve(t.id,reservation,'QA',k);
+  const [a,b]=await Promise.all([create(key),create(key)]);
+  expect(a.id).toBe(b.id);
+  expect((await db.stock.findUniqueOrThrow({where:{id:s.stock.id}})).reserved).toBe(2);
+  expect((await create(randomUUID())).id).not.toBe(a.id);
 });

@@ -1,5 +1,5 @@
 'use client';
-import { submit } from '../../../shared/services/apiClient';
+import { submitOnce } from '../../../shared/services/apiClient';
 import {
   ProductLines,
   readLines,
@@ -10,7 +10,7 @@ export function CreateOrder({ data, busy, act }) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     act(() =>
-      submit('/orders', {
+      submitOnce('/orders', {
         customer: f.get('customer'),
         destinationId: f.get('destinationId'),
         priority: f.get('priority'),

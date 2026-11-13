@@ -62,6 +62,10 @@ export class TransactionService {
     }
     throw new ConflictException('Conflicto de concurrencia: vuelve a intentar');
   }
+  // Las llamadas internas se ejecutan en una transacción; los comandos HTTP requieren clave.
+  command<T>(operation:string,key:string|undefined,payload:unknown,fn:(tx:Tx)=>Promise<T>){
+    return key===undefined?this.transaction(fn):this.idempotent(operation,key,payload,fn);
+  }
   async idempotent<T>(
     operation: string,
     key: string | undefined,

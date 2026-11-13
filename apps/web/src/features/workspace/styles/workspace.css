@@ -30,3 +30,8 @@
 .record-dialog::backdrop {
   background: #0d2736a8;
 }
+
+@media (max-width: 760px) {
+  .topbar, .top-actions { flex-wrap: wrap; }
+  .top-actions, .top-actions form, .main, .field { min-width: 0; max-width: 100%; }
+}

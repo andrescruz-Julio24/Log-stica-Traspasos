@@ -77,9 +77,9 @@ export class PedidosService {
     });
   }
 
-  async createOrder(body: CreateOrderDto, actor?: string) {
+  async createOrder(body: CreateOrderDto, actor?: string,key?:string) {
     uniqueItems(body.items);
-    return this.tx.transaction(async (tx) => {
+    return this.tx.command('order:'+JSON.stringify(actor||'operador-demo'),key,body,async (tx) => {
       const place = await tx.location.findUnique({
         where: { id: body.destinationId },
       });

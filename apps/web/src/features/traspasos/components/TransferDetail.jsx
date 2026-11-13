@@ -13,6 +13,7 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
     [orderLineId, setOrderLine] = useState(''),
     [presented, setPresented] = useState('1'),
     [accepted, setAccepted] = useState('1');
+  const [assignedTo,setAssignedTo]=useState('');
   const [allocationId, setAllocation] = useState('');
   const [dispatchId, setDispatch] = useState(''),
     [notes, setNotes] = useState(''),
@@ -220,6 +221,10 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
             3. Registrar recepción verificada
           </button>
           <label className="field full">
+            Responsable de seguimiento si hay faltantes
+            <input value={assignedTo} onChange={e=>setAssignedTo(e.target.value)} />
+          </label>
+          <label className="field full">
             Conclusión de la inspección
             <input value={notes} onChange={(e) => setNotes(e.target.value)} />
           </label>
@@ -234,12 +239,12 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
                     '/dispatches/' +
                     dispatchId +
                     '/finish',
-                  { reason: notes },
+                  { reason: notes, assignedTo:assignedTo.trim() },
                 ),
               ).then((ok) => {
                 if (ok) {
                   setDispatch('');
-                  setNotes('');
+                  setNotes('');setAssignedTo('');
                 }
               })
             }

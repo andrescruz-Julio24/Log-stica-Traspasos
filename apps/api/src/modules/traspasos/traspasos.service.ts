@@ -79,8 +79,8 @@ export class TraspasosService {
     });
   }
 
-  async reserve(transferId: string, body: ReserveDto, actor?: string) {
-    return this.tx.transaction(async (tx) => {
+  async reserve(transferId: string, body: ReserveDto, actor?: string,key?:string) {
+    return this.tx.command('reserve:'+JSON.stringify([transferId,actor||'operador-demo']),key,body,async (tx) => {
       const transfer = await tx.transfer.findUnique({
         where: { id: transferId },
       });
@@ -374,9 +374,9 @@ export class TraspasosService {
     transferId: string,
     dispatchId: string,
     reason: string,
-    actor?: string,
+    actor?: string,assignedTo?:string,
   ) {
-    return finishInspection(this.tx, transferId, dispatchId, reason, actor);
+    return finishInspection(this.tx, transferId, dispatchId, reason, actor,assignedTo);
   }
   receive(transferId: string, body: ReceiveDto, key?: string, actor?: string) {
     return receive(this.tx, transferId, body, key, actor);

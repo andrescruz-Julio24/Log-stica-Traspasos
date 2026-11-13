@@ -23,6 +23,10 @@ export class CreateTransferDto {
   @Type(() => TransferItemDto)
   items!: TransferItemDto[];
 }
+import {ReasonDto} from '../../gobierno/gobierno.dto';
+export class FinishInspectionDto extends ReasonDto {
+  @IsOptional() @IsString() assignedTo?:string;
+}
 export class PickDto {
   @IsString() @IsNotEmpty() transferLineId!: string;
   @IsInt() @Min(0) quantity!: number;

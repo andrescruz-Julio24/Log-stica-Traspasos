@@ -20,8 +20,9 @@ export class PedidosController {
   }
   @Post() createOrder(
     @Body() body: CreateOrderDto,
+    @Headers('idempotency-key') key?:string,
     @Headers('x-demo-actor') actor?: string,
   ) {
-    return this.service.createOrder(body, actor);
+    return this.service.createOrder(body, actor,key??'');
   }
 }

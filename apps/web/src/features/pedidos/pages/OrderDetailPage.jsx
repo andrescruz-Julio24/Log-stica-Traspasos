@@ -35,6 +35,13 @@ export default function OrderDetailPage({ id }) {
         .map((r) => ({ t, l, r })),
     ),
   );
+  const orderLines=new Set(order.lines.map(line=>line.id));
+  const shortages=data.transfers.flatMap(t=>t.dispatches.flatMap(d=>d.lines.flatMap(l=>{
+    const missing=l.allocations.filter(a=>orderLines.has(a.reservation.orderLineId)&&a.quantity>a.accepted);
+    if(!missing.length)return [];
+    const sku=t.lines.find(x=>x.productId===l.productId)?.product.sku;
+    return data.incidents.filter(i=>i.status==='OPEN'&&i.type==='FALTANTE'&&i.dispatchId===d.id&&i.sku===sku).map(i=>({key:i.id,cells:[t.code,sku,i.quantity,i.assignedTo||'Pendiente de asignar',i.notes]}));
+  })));
   const req = sumField(order.lines, 'required'),
     accepted = sumField(order.lines, 'accepted');
   return (
@@ -73,6 +80,7 @@ export default function OrderDetailPage({ id }) {
           detail="Calculado desde el registro"
         />
       </div>
+      {shortages.length>0&&<Panel title="Seguimiento de faltantes del despacho"><Table headers={['Traspaso','SKU','Faltante total del despacho','Responsable','Observación']} rows={shortages}/></Panel>}
       <OrderHistory id={id} />
       <Hint title="Disponibilidad comercial">
         Un pedido está listo cuando todas sus líneas tienen unidades utilizables

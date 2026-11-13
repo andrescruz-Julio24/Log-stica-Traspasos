@@ -45,7 +45,7 @@ export default function IncidenciasPage() {
                 incident.quantity,
                 incident.location,
                 incident.custodian,
-                incident.assignedTo,
+                incident.assignedTo && 'Seguimiento: '+incident.assignedTo,
                 incident.disposition,
                 incident.evidence,
               ]

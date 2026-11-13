@@ -1,4 +1,4 @@
-import { ReasonDto } from '../gobierno/gobierno.dto';
+import { FinishInspectionDto } from './dto/traspasos.dto';
 import { Body, Controller, Get, Headers, Param, Post } from '@nestjs/common';
 import { TraspasosService } from './traspasos.service';
 import {
@@ -24,9 +24,10 @@ export class TraspasosController {
   @Post(':id/reservations') reserve(
     @Param('id') id: string,
     @Body() body: ReserveDto,
+    @Headers('idempotency-key') key?:string,
     @Headers('x-demo-actor') actor?: string,
   ) {
-    return this.service.reserve(id, body, actor);
+    return this.service.reserve(id, body, actor,key??'');
   }
   @Post(':id/picking') pick(
     @Param('id') id: string,
@@ -46,10 +47,10 @@ export class TraspasosController {
   @Post(':id/dispatches/:dispatchId/finish') finish(
     @Param('id') id: string,
     @Param('dispatchId') d: string,
-    @Body() body: ReasonDto,
+    @Body() body: FinishInspectionDto,
     @Headers('x-demo-actor') actor?: string,
   ) {
-    return this.service.finishInspection(id, d, body.reason, actor);
+    return this.service.finishInspection(id, d, body.reason, actor,body.assignedTo);
   }
   @Post(':id/receipts') receive(
     @Param('id') id: string,

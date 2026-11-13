@@ -6,7 +6,7 @@ import { TransactionService } from '../../../shared/database/transaction.service
 import { PrismaService } from '../../../shared/database/prisma.service';
 
 const makeService=(tx:any)=>{
-  const transaction={transaction:vi.fn(async(fn:any)=>fn(tx)),idempotent:vi.fn(async(_op:any,_key:any,_payload:any,fn:any)=>fn(tx))};
+  const transaction={command:vi.fn(async(_op:any,_key:any,_payload:any,fn:any)=>fn(tx)),transaction:vi.fn(async(fn:any)=>fn(tx)),idempotent:vi.fn(async(_op:any,_key:any,_payload:any,fn:any)=>fn(tx))};
   return {service:new TraspasosService({} as PrismaService,transaction as unknown as TransactionService),transaction};
 };
 

@@ -1,6 +1,6 @@
 // Cada pantalla solicita únicamente los recursos que utiliza.
 export const queriesBySection = {
-  orderDetail: ['orders', 'transfers'],
+  orderDetail: ['orders', 'transfers','incidents'],
   transferDetail: ['transfers', 'incidents', 'audit'],
   dashboard: ['orders', 'transfers', 'incidents'],
   orders: ['bootstrap', 'orders'],

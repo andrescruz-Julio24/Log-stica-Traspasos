@@ -8,7 +8,7 @@ export function finishInspection(
   transferId: string,
   dispatchId: string,
   reason: string,
-  actor?: string,
+  actor?: string,assignedTo?:string,
 ) {
   return transactions.transaction(async (tx) => {
     const d = await tx.dispatch.findFirstOrThrow({
@@ -37,12 +37,13 @@ export function finishInspection(
             data: { unfulfilled: { increment: missing } },
           });
       }
-      if (presented < line.quantity)
+      if (presented < line.quantity) {
+        ensure(assignedTo?.trim(),'Indica el responsable de seguimiento del faltante');
         await tx.incident.create({
           data: {
             transferId,
             dispatchId,
-            type: 'FALTANTE',
+            type: 'FALTANTE',assignedTo:assignedTo!.trim(),
             sku: (
               await tx.product.findUniqueOrThrow({
                 where: { id: line.productId },
@@ -56,6 +57,7 @@ export function finishInspection(
               (d.custodian || 'desconocido'),
           },
         });
+      }
     }
     const result = await tx.dispatch.update({
       where: { id: dispatchId },
