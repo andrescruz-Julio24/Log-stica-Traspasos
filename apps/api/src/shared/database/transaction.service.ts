@@ -18,7 +18,11 @@ export class TransactionService{
     for(let attempt=0; attempt<3;attempt++) {
       try { return await this.db.$transaction(fn,{isolationLevel:Prisma.TransactionIsolationLevel.Serializable,timeout:15000}); }
       catch(e:any) {
-        if(e.code==='P2034' && attempt<2) continue;
+        if(e.code==='P2034') {
+          if(attempt<2) continue;
+          throw new ConflictException('Conflicto de concurrencia: vuelve a intentar');
+        }
+        if(e.code==='P2003') throw new BadRequestException('Una referencia indicada no existe');
         if(e.code==='P2002') throw new ConflictException('Folio o clave duplicada');
         throw e;
       }
@@ -38,8 +42,10 @@ export class TransactionService{
     for(let attempt=0;attempt<3;attempt++){
       try {
         return await this.db.$transaction(async tx=>{
+          // Reclamar la clave antes de evaluar saldos que el primer intento pudo modificar.
+          await tx.idempotencyRecord.create({data:{key:id,operation,result:{hash}}});
           const response=await fn(tx);
-          await tx.idempotencyRecord.create({data:{key:id,operation,result:{hash,response} as Prisma.InputJsonValue}});
+          await tx.idempotencyRecord.update({where:{key:id},data:{result:{hash,response} as Prisma.InputJsonValue}});
           return response;
         },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable,timeout:15000});
       }catch(e:any){

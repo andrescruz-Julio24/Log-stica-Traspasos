@@ -5,6 +5,8 @@ import { TransactionService } from '../../shared/database/transaction.service';
 import { ensure, uniqueItems } from '../../shared/domain/assertions';
 import { CreateTransferDto, ReserveDto, DispatchDto, ReceiveDto } from './dto/traspasos.dto';
 
+// Despacho y recepción consumen la misma secuencia de reservas por línea.
+const reservationOrder = [{ createdAt: 'asc' }, { id: 'asc' }] as const;
 @Injectable()
 export class TraspasosService{
   constructor(private readonly db:PrismaService,private readonly tx:TransactionService){}
@@ -25,7 +27,7 @@ export class TraspasosService{
     return this.tx.transaction(async tx=>{
       const transfer=await tx.transfer.findUnique({where:{id:transferId}});
       if(!transfer)throw new NotFoundException('Traspaso no encontrado');
-      ensure(transfer.status==='REQUESTED'||transfer.status==='PREPARING','El traspaso no admite nuevas reservas');
+      ensure(!['CLOSED','CANCELLED'].includes(transfer.status),'El traspaso no admite nuevas reservas');
       const line=await tx.transferLine.findUnique({where:{id:body.transferLineId}});
       ensure(line?.transferId===transferId,'La línea no pertenece al traspaso');
       const already=await tx.reservation.aggregate({where:{transferLineId:line.id},_sum:{quantity:true}});
@@ -35,7 +37,7 @@ export class TraspasosService{
         ensure(orderLine?.productId===line.productId && orderLine.order.destinationId===transfer.destinationId,'El pedido de cliente y destino deben coincidir');
         ensure(orderLine.order.status!=='CANCELLED','Pedido cancelado');
         const committed=await tx.reservation.aggregate({where:{orderLineId:body.orderLineId},_sum:{quantity:true}});
-        ensure((committed._sum.quantity||0)+body.quantity<=orderLine.required-orderLine.accepted,'Asignación prevista supera el faltante del cliente');
+        ensure((committed._sum.quantity||0)+body.quantity<=orderLine.required,'Asignación prevista supera el faltante del cliente');
       }
       const stock=await tx.stock.findUnique({where:{productId_locationId:{productId:line.productId,locationId:transfer.originId}}});
       ensure(stock,'No existe inventario de origen');
@@ -43,7 +45,7 @@ export class TraspasosService{
       const changed=await tx.stock.updateMany({where:{id:stock.id,version:stock.version},data:{reserved:{increment:body.quantity},version:{increment:1}}});
       ensure(changed.count===1,'Inventario modificado por otro usuario');
       const reservation=await tx.reservation.create({data:{stockId:stock.id,transferLineId:line.id,orderLineId:body.orderLineId,quantity:body.quantity}});
-      await tx.transfer.update({where:{id:transferId},data:{status:'PREPARING'}});
+      if (transfer.status === 'REQUESTED') await tx.transfer.update({where:{id:transferId},data:{status:'PREPARING'}});
       await this.tx.auditTx(tx,'STOCK_RESERVED','Reservation',reservation.id,actor,{transferId,...body});
       return reservation;
     });
@@ -52,9 +54,9 @@ export class TraspasosService{
   async dispatch(transferId:string,body:DispatchDto,key?:string,actor?:string) {
     uniqueItems(body.items);
     return this.tx.idempotent('dispatch:'+transferId,key,body,async tx=>{
-      const transfer=await tx.transfer.findUnique({where:{id:transferId},include:{lines:{include:{reservations:true}}}});
+      const transfer=await tx.transfer.findUnique({where:{id:transferId},include:{lines:{include:{reservations:{orderBy:[...reservationOrder]}}}}});
       if(!transfer)throw new NotFoundException('Traspaso no encontrado');
-      ensure(['PREPARING','DISPATCHED','IN_TRANSIT'].includes(transfer.status),'Traspaso no disponible para despacho');
+      ensure(['PREPARING','DISPATCHED','IN_TRANSIT','RECEIVING'].includes(transfer.status),'Traspaso no disponible para despacho');
       for(const item of body.items) {
         const line=transfer.lines.find(x=>x.productId===item.productId);
         ensure(line,'Producto ajeno al traspaso');
@@ -87,7 +89,7 @@ export class TraspasosService{
       if(item.accepted+item.rejected!==item.presented)throw new BadRequestException('Aceptado + rechazado debe ser igual a presentado');
     }
     return this.tx.idempotent('receipt:'+transferId,key,body,async tx=>{
-      const transfer=await tx.transfer.findUnique({where:{id:transferId},include:{lines:{include:{reservations:{include:{orderLine:{include:{order:true}}}}}}}});
+      const transfer=await tx.transfer.findUnique({where:{id:transferId},include:{lines:{include:{reservations:{orderBy:[...reservationOrder],include:{orderLine:{include:{order:true}}}}}}}});
       if(!transfer)throw new NotFoundException('Traspaso no encontrado');
       ensure(['IN_TRANSIT','RECEIVING'].includes(transfer.status),'No se puede recibir un traspaso sin despachar');
       for(const item of body.items){
@@ -99,16 +101,22 @@ export class TraspasosService{
         if(item.accepted>0){
           const stock=await tx.stock.upsert({where:{productId_locationId:{productId:item.productId,locationId:transfer.destinationId}},create:{productId:item.productId,locationId:transfer.destinationId,physical:item.accepted},update:{physical:{increment:item.accepted},version:{increment:1}}});
           let remaining=item.accepted;
+          // Las unidades aceptadas previamente ya consumieron el primer tramo despachado.
+          let previouslyAccepted = line.accepted;
           for(const reservation of line.reservations){
+            const consumed = Math.min(previouslyAccepted, reservation.released);
+            previouslyAccepted -= consumed;
+            const received = Math.min(remaining, reservation.released - consumed);
+            remaining -= received;
+            if (!received) continue;
             if(!reservation.orderLineId || !reservation.orderLine || reservation.orderLine.order.status==='CANCELLED')continue;
             const ol=await tx.orderLine.findUnique({where:{id:reservation.orderLineId}});
             if(!ol)continue;
             const alreadyAtDest=ol.accepted;
-            const allow=Math.max(0,Math.min(remaining,reservation.quantity-alreadyAtDest,ol.required-alreadyAtDest));
+            const allow=Math.max(0,Math.min(received,ol.required-alreadyAtDest));
             if(allow>0){
               await tx.orderLine.update({where:{id:ol.id},data:{accepted:{increment:allow}}});
               await tx.stock.update({where:{id:stock.id},data:{reserved:{increment:allow},version:{increment:1}}});
-              remaining-=allow;
               const orderLines=await tx.orderLine.findMany({where:{orderId:ol.orderId}});
               const complete=orderLines.every(x=>x.accepted>=x.required);
               await tx.customerOrder.update({where:{id:ol.orderId},data:{status:complete?'READY':'PARTIAL'}});
@@ -120,9 +128,9 @@ export class TraspasosService{
       }
       const receipt=await tx.receipt.create({data:{transferId,lines:{create:body.items.map(i=>({productId:i.productId,presented:i.presented,accepted:i.accepted,rejected:i.rejected}))}},include:{lines:true}});
       const allLines=await tx.transferLine.findMany({where:{transferId}});
-      const reconciled=allLines.every(x=>x.accepted===x.dispatched);
+      const reconciled=allLines.every(x=>x.accepted===x.dispatched && x.dispatched===x.requested);
       await tx.transfer.update({where:{id:transferId},data:{status:reconciled?'CLOSED':'RECEIVING'}});
-      await this.tx.auditTx(tx,'RECEIPT_VERIFIED','Receipt',receipt.id,actor,{transferId,items:body.items,administrativelyClosed:reconciled});
+      await this.tx.auditTx(tx,'RECEIPT_VERIFIED','Receipt',receipt.id,actor,{transferId,items:body.items,fullyReceived:reconciled,administrativelyClosed:false});
       return receipt;
     });
   }

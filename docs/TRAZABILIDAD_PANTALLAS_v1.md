@@ -22,7 +22,7 @@ Versión: ampliación MVP 2026-11-12. Base: árbol de conocimiento SGTL v6.0. La
 - Páginas individuales bajo features/reservas, preparacion, despachos, transito, recepciones, cancelaciones y movimientos.
 - Páginas individuales bajo features/alertas, autorizaciones y administracion.
 - Páginas individuales bajo features/reportes, clientes y buscar.
-- features/trazabilidad/pages/EntityDetail.jsx: trazabilidad individual compartida entre pedidos y traspasos.
+- OrderDetailPage.jsx y TransferTracePage.jsx: trazabilidad por dominio con encabezado y ciclo de consulta compartidos.
 - ModuleKit.jsx: tablas, estados, indicadores, progreso, vacíos, avisos y búsqueda reutilizables.
 - Rutas Next.js dedicadas con parámetros para detalle.
 

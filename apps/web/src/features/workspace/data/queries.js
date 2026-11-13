@@ -1,19 +1,33 @@
 // Cada pantalla solicita únicamente los recursos que utiliza.
-export const queriesBySection={
-  dashboard:['orders','transfers','incidents'],
-  orders:['bootstrap','orders'],clients:['orders'],
-  transfers:['bootstrap','orders','transfers'],
-  movements:['transfers'],stock:['bootstrap'],
-  reservations:['bootstrap','transfers'],preparation:['transfers'],
-  dispatches:['transfers'],transit:['transfers'],receipts:['transfers'],
-  incidents:['incidents','transfers'],
-  cancellations:['orders','transfers'],
-  authorizations:[],
-  alerts:['incidents','orders','transfers'],
-  audit:['audit'],reports:['orders','transfers'],
-  search:['bootstrap','orders','transfers','incidents'],
-  admin:['bootstrap']
+export const queriesBySection = {
+  orderDetail: ['orders', 'transfers'],
+  transferDetail: ['transfers', 'incidents', 'audit'],
+  dashboard: ['orders', 'transfers', 'incidents'],
+  orders: ['bootstrap', 'orders'],
+  clients: ['orders'],
+  transfers: ['bootstrap', 'orders', 'transfers'],
+  movements: ['transfers'],
+  stock: ['bootstrap'],
+  reservations: ['bootstrap', 'transfers'],
+  preparation: ['transfers'],
+  dispatches: ['transfers'],
+  transit: ['transfers'],
+  receipts: ['transfers'],
+  incidents: ['incidents', 'transfers'],
+  cancellations: ['orders', 'transfers'],
+  authorizations: [],
+  alerts: ['incidents', 'orders', 'transfers'],
+  audit: ['audit'],
+  reports: ['orders', 'transfers'],
+  search: ['bootstrap', 'orders', 'transfers', 'incidents'],
+  admin: ['bootstrap'],
 };
-export const emptyWorkspaceData={
-  products:[],locations:[],stocks:[],orders:[],transfers:[],incidents:[],audit:[]
+export const emptyWorkspaceData = {
+  products: [],
+  locations: [],
+  stocks: [],
+  orders: [],
+  transfers: [],
+  incidents: [],
+  audit: [],
 };

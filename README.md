@@ -20,7 +20,7 @@ Dashboard, clientes, pedidos, traspasos, inventario por ubicación, reserva de s
 Crear un pedido de cliente para Punto de Venta Centro con SKU-001, crear un traspaso desde Almacén Central al mismo destino, reservar con la línea del pedido, despachar, registrar aceptación, y revisar Inventario, Pedidos y Auditoría.
 
 ## Límites y riesgos
-No existe autenticación empresarial, RBAC, permisos por sucursal, integración ERP, evidencia, cancelaciones, cierres excepcionales, conciliación de incidencias ni idempotencia para reservas. El backend no inicia con NODE_ENV=production. El valor de cabecera x-demo-actor NO es identidad verificable. Las reglas de autorización y políticas definitivas no están implementadas. Cierre mostrado significa que aceptado iguala despachado, NO cierre administrativo autorizado. No desplegar públicamente.
+No existe autenticación empresarial, RBAC, permisos por sucursal, integración ERP, evidencia, cancelaciones, cierres excepcionales, conciliación de incidencias ni idempotencia para reservas. El backend no inicia con NODE_ENV=production. El valor de cabecera x-demo-actor NO es identidad verificable. Las reglas de autorización y políticas definitivas no están implementadas. Cierre mostrado significa que lo aceptado, despachado y solicitado coinciden en cada línea, NO cierre administrativo autorizado. No desplegar públicamente.
 
 El seed inicial muestra existencias reservadas para demostrar el cálculo de disponible; esas reservas iniciales no tienen documentos relacionados y no son adecuadas para una contabilidad productiva. Para uso real se requiere migrarlas a registros individualizados.
 
@@ -32,13 +32,13 @@ Ver docs/MVP_SCOPE.md para pendientes y criterios de validación.
 ## Convenciones de código
 
 - `apps/web/src/app/**/*.jsx`, `features/**/*.jsx` y `shared/ui/**/*.jsx`: componentes y páginas React que renderizan JSX.
-- `apps/web/src/shared/api/client.js`: utilidades JavaScript sin JSX (se conserva `.js`).
+- `apps/web/src/shared/services/apiClient.js`: utilidades JavaScript sin JSX (se conserva `.js`).
 - `apps/api/src/**/*.ts`: backend NestJS con TypeScript.
 - Se preservan imports sin extensión para permitir resolución automática de `.jsx` por Next.js.
 
 ## Arquitectura modular (frontend JSX / backend TypeScript)
 
-El código se organiza por dominio y responsabilidad. Lee `docs/ARQUITECTURA_REFACTORIZADA.md` para el árbol real, archivos migrados y validaciones. No se han creado providers ni contextos globales porque las pantallas actuales sólo necesitan estado de consulta local. Se conservó Prisma `schema.prisma` sin migraciones nuevas.
+El código se organiza por dominio y responsabilidad. Lee `docs/ARQUITECTURA_REFACTORIZADA.md` para la distribución por responsabilidad, el flujo de datos y la navegación. WorkspaceProvider comparte las consultas y acciones dentro de cada pantalla. Los formularios y filtros mantienen su propio estado. Se conservó Prisma `schema.prisma` sin migraciones nuevas.
 
 ## Validación de integración con PostgreSQL
 

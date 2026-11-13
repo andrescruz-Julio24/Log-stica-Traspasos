@@ -24,7 +24,7 @@ export class DispatchDto {
 }
 export class ReceiptItemDto {
   @IsString() @IsNotEmpty() productId!: string;
-  @IsInt() @Min(0) presented!: number;
+  @IsInt() @Min(1) presented!: number;
   @IsInt() @Min(0) accepted!: number;
   @IsInt() @Min(0) rejected!: number;
 }

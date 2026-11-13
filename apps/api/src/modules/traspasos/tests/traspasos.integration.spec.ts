@@ -70,4 +70,51 @@ describe('PostgreSQL — integridad transaccional de traspasos',()=>{
     expect(stock.reserved).toBe(7);
     expect(stock.physical-stock.reserved-stock.blocked).toBe(3);
   });
+
+  it('acredita dos entregas del mismo pedido y mantiene disponible el despacho pendiente', async () => {
+    const s = await scenario();
+    const transfer = await s.create();
+    const order = await db.customerOrder.create({
+      data: {code: randomUUID(), customer: 'QA', destinationId: s.destination.id,
+        lines: {create: {productId: s.product.id, required: 10}}},
+      include: {lines: true}
+    });
+    const reservation = {transferLineId: transfer.lines[0].id, orderLineId: order.lines[0].id, quantity: 5};
+    for (const expected of [5, 10]) {
+      await service.reserve(transfer.id, reservation);
+      const body = {items: [{productId: s.product.id, quantity: 5}]};
+      const key = randomUUID();
+      const [first, replay] = await Promise.all([
+        service.dispatch(transfer.id, body, key), service.dispatch(transfer.id, body, key)
+      ]);
+      expect(replay.id).toBe(first.id);
+      await service.receive(transfer.id, {items: [{productId: s.product.id, presented: 5, accepted: 5, rejected: 0}]}, randomUUID());
+      const line = await db.orderLine.findUniqueOrThrow({where: {id: order.lines[0].id}, include: {order: true}});
+      expect(line.accepted).toBe(expected);
+      expect(line.order.status).toBe(expected === 10 ? 'READY' : 'PARTIAL');
+      const actual = await db.transfer.findUniqueOrThrow({where: {id: transfer.id}});
+      expect(actual.status).toBe(expected === 10 ? 'CLOSED' : 'RECEIVING');
+    }
+    const dest = await db.stock.findUniqueOrThrow({where: {productId_locationId: {productId: s.product.id, locationId: s.destination.id}}});
+    expect([dest.physical, dest.reserved]).toEqual([10, 10]);
+  });
+
+  it('respeta la reserva sin cliente anterior al asignar una recepción parcial', async () => {
+    const s = await scenario();
+    const transfer = await s.create();
+    const transferLineId = transfer.lines[0].id;
+    const productId = s.product.id;
+    const order = await db.customerOrder.create({
+      data: {code: randomUUID(), customer: 'Segundo tramo', destinationId: s.destination.id,
+        lines: {create: {productId, required: 4}}}, include: {lines: true}
+    });
+    await service.reserve(transfer.id, {transferLineId, quantity: 6});
+    await service.reserve(transfer.id, {transferLineId, quantity: 4, orderLineId: order.lines[0].id});
+    await service.dispatch(transfer.id, {items: [{productId, quantity: 10}]}, randomUUID());
+    for (const [quantity, expected] of [[5, 0], [3, 2], [2, 4]]) {
+      await service.receive(transfer.id, {items: [{productId, presented: quantity, accepted: quantity, rejected: 0}]}, randomUUID());
+      const line = await db.orderLine.findUniqueOrThrow({where: {id: order.lines[0].id}});
+      expect(line.accepted).toBe(expected);
+    }
+  });
 });
