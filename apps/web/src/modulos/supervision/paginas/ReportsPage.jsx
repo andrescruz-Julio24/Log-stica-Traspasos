@@ -8,41 +8,15 @@ import {
   Panel,
   Status,
   Table,
-  percentage,
 } from '../../../shared/ui/ModuleKit';
 import { sumField } from '../../../shared/utils/quantities';
+import { ReportBar } from '../componentes/ReportBar';
+import { useReportMetrics } from '../hooks/useReportMetrics';
+import { reportStatuses } from '../data/reportStatuses';
 
-function SimpleBar({ label, value, total }) {
-  return (
-    <div className={styles.bar}>
-      <div>
-        <strong>{label}</strong>
-        <span>{value}</span>
-      </div>
-      <div className="progress-track">
-        <div style={{ width: percentage(value, total) + '%' }} />
-      </div>
-    </div>
-  );
-}
 export function ReportsPage() {
   const { data } = useWorkspace();
-  const orders = data.orders;
-  const transfers = data.transfers;
-  const requested = transfers.reduce(
-    (a, t) => a + sumField(t.lines, 'requested'),
-    0,
-  );
-  const dispatched = transfers.reduce(
-    (a, t) => a + sumField(t.lines, 'dispatched'),
-    0,
-  );
-  const accepted = transfers.reduce(
-    (a, t) => a + sumField(t.lines, 'accepted'),
-    0,
-  );
-  const statuses = ['PENDING', 'PARTIAL', 'BLOCKED', 'READY', 'CANCELLED'];
-  const totalOrders = orders.length;
+  const { orders, transfers, requested, dispatched, accepted, totalOrders, statusCounts } = useReportMetrics(data);
   return (
     <>
       <Hint title="Reporte descriptivo del estado actual">
@@ -59,7 +33,7 @@ export function ReportsPage() {
         />
         <Metric
           label="Pedidos listos"
-          value={orders.filter((o) => o.status === 'READY').length}
+          value={statusCounts.READY}
           detail="Según recepción aceptada en el MVP"
         />
         <Metric
@@ -79,19 +53,11 @@ export function ReportsPage() {
           description="Conteos por estado de pedido."
         >
           <div className={styles.bars}>
-            {statuses.map((s) => (
-              <SimpleBar
-                key={s}
-                label={
-                  {
-                    PENDING: 'Pendientes',
-                    PARTIAL: 'Parciales',
-                    BLOCKED: 'Retenidos',
-                    READY: 'Listos',
-                    CANCELLED: 'Cancelados',
-                  }[s]
-                }
-                value={orders.filter((o) => o.status === s).length}
+            {reportStatuses.map((s) => (
+              <ReportBar
+                key={s.key}
+                label={s.label}
+                value={statusCounts[s.key]}
                 total={Math.max(1, totalOrders)}
               />
             ))}
@@ -107,7 +73,7 @@ export function ReportsPage() {
               ['Despachado', dispatched],
               ['Aceptado', accepted],
             ].map(([label, value]) => (
-              <SimpleBar
+              <ReportBar
                 key={label}
                 label={label}
                 value={value}
