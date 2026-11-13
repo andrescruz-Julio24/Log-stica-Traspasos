@@ -1,5 +1,5 @@
-import { sumField } from '../../../shared/utils/quantities';
-import { reportStatuses } from '../data/reportStatuses';
+import { sumField } from '../../../shared/utils/quantities.js';
+import { reportStatuses } from '../data/reportStatuses.js';
 
 export function reportMetrics(orders, transfers) {
   const requested = transfers.reduce((total, t) => total + sumField(t.lines, 'requested'), 0);

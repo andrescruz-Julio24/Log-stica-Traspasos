@@ -1,4 +1,4 @@
-import { sumField } from '../../../shared/utils/quantities';
+import { sumField } from '../../../shared/utils/quantities.js';
 
 /** Calcula cantidades y relaciones visibles respetando el filtro seleccionado. */
 export function reservationSummary(data, q) {
