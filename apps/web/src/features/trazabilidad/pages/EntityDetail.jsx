@@ -1,8 +1,8 @@
 'use client';
 import { useEffect,useState } from 'react';
 import Link from 'next/link';
-import { api } from '../../shared/api/client';
-import { Empty,Hint,Metric,Panel,Progress,Status,Table,formatDate } from '../../shared/ui/ModuleKit';
+import { api } from '../../../shared/services/apiClient';
+import { Empty,Hint,Metric,Panel,Progress,Status,Table,formatDate } from '../../../shared/ui/ModuleKit';
 
 const total=(arr,key)=>arr.reduce((n,x)=>n+(Number(x[key])||0),0);
 function BackLink({href,label}){return <Link href={href} className="secondary">← Volver a {label}</Link>}

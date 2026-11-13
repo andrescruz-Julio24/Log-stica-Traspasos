@@ -1,2 +1,2 @@
-import Dashboard from '../features/dashboard/Dashboard';
-export default function Home(){return <Dashboard/>}
+import Workspace from '../features/workspace/components/Workspace';
+export default function Home(){return <Workspace/>}

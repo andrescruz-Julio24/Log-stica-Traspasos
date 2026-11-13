@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import Dashboard from '../../features/dashboard/Dashboard';
+import Workspace from '../../features/workspace/components/Workspace';
 
 const validModules=new Set([
   'pedidos','clientes','traspasos','movimientos','inventario','reservas',
@@ -11,5 +11,5 @@ export function generateStaticParams(){return Array.from(validModules).map(modul
 export default async function ModulePage({params}){
   const {module}=await params;
   if(!validModules.has(module))notFound();
-  return <Dashboard/>;
+  return <Workspace/>;
 }

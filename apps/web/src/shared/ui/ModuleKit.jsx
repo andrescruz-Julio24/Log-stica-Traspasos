@@ -1,5 +1,7 @@
 'use client';
 import Link from 'next/link';
+import { percentage } from '../utils/quantities';
+export { stockAvailable, percentage } from '../utils/quantities';
 
 const stateLabels={
   PENDING:'Pendiente', PARTIAL:'Parcial', READY:'Listo para preparar',
@@ -12,14 +14,14 @@ export function Status({value}){
   const tone=['READY','RESOLVED'].includes(value)?'good':['OPEN','PARTIAL','RECEIVING'].includes(value)?'warn':'neutral';
   return <span className={'pill '+tone}>{label}</span>;
 }
-export function Panel({title,description,actions,children}){
+export function Panel({title,description,subtitle,actions,action,children}){
   return <section className="panel">
-    <div className="panel-head"><div><h2>{title}</h2>{description&&<p>{description}</p>}</div>{actions&&<div className="module-actions">{actions}</div>}</div>
+    <div className="panel-head"><div><h2>{title}</h2>{(description||subtitle)&&<p>{description||subtitle}</p>}</div>{(actions||action)&&<div className="module-actions">{actions||action}</div>}</div>
     {children}
   </section>;
 }
-export function Empty({message='No hay registros para esta vista.'}){
-  return <div className="empty" role="status">{message}</div>;
+export function Empty({message='No hay registros para esta vista.',children}){
+  return <div className="empty" role="status">{children||message}</div>;
 }
 export function Hint({title,children,warning=false}){
   return <div className={'module-hint '+(warning?'is-warning':'')} role="note">
@@ -43,8 +45,6 @@ export function formatDate(value){
   const d=new Date(value);
   return Number.isNaN(d.getTime())?'—':d.toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'});
 }
-export function stockAvailable(s){return Math.max(0,s.physical-s.reserved-s.blocked);}
-export function percentage(actual,total){return total>0?Math.min(100,Math.round(actual/total*100)):0;}
 export function Progress({actual,total}){
   const pct=percentage(actual,total);
   return <div className="progress" aria-label={actual+' de '+total+' unidades'}><div className="progress-track"><div style={{width:pct+'%'}}/></div><span>{actual} / {total} ({pct}%)</span></div>;
