@@ -1,0 +1,6 @@
+.page{min-height:100vh;background:#f4f7fa;padding:32px max(22px,calc((100vw - 1370px)/2))}
+
+.loading{display:grid;justify-content:center;align-content:center;text-align:center;gap:16px;min-height:70vh;color:#5d788a}
+.loading .secondary{width:max-content;justify-self:center;text-decoration:none}
+
+@media(max-width:760px){.page{padding:19px}}

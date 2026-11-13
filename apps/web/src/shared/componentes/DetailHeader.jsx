@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import styles from './styles/DetailHeader.module.css';
 export function BackLink({ href, label }) {
   return (
     <Link href={href} className="secondary">
@@ -8,7 +9,7 @@ export function BackLink({ href, label }) {
 }
 export function DetailHeader({ title, subtitle, href, backLabel }) {
   return (
-    <header className="detail-page-header">
+    <header className={styles.header}>
       <div>
         <span className="eyebrow">Operaciones / Detalle</span>
         <h1>{title}</h1>

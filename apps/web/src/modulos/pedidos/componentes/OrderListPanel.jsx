@@ -3,7 +3,7 @@ import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { OrderPlan } from '../componentes/OrderPlan';
 import { lineHolds } from '../utils/impact';
 import Link from 'next/link';
-import styles from '../styles/list.module.css';
+import styles from '../styles/OrderListPanel.module.css';
 import { CreateRecordAction } from '../../../shared/workspace/componentes/CreateRecordAction';
 import { CreateOrder } from '../componentes/CreateOrder';
 import {

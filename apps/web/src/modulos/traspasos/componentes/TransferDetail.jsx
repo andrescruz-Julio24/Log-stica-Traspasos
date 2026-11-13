@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import styles from '../styles/transferDetail.module.css';
+import styles from '../styles/TransferDetail.module.css';
 import { ReceiptControls } from './ReceiptControls';
 import { priorities } from '../../pedidos/data/priorities';
 import { activeReserved } from '../../../shared/utils/quantities';
