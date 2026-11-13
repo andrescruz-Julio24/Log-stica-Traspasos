@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/OrderPlan.module.css';
 import { priorities } from '../data/priorities';
 import { submit } from '../../../shared/services/apiClient';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
@@ -18,7 +19,7 @@ export function OrderPlan({ order }) {
     );
   }
   return (
-    <details>
+    <details className={styles.plan}>
       <summary>
         {priorities[order.priority]} ·{' '}
         {order.dueAt

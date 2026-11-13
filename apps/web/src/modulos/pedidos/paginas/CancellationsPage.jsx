@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/CancellationsPage.module.css';
 import { Panel, Table } from '../../../shared/ui/ModuleKit';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { submit } from '../../../shared/services/apiClient';
@@ -21,6 +22,7 @@ export function CancellationsPage() {
               'Cancelado'
             ) : (
               <form
+                className={styles.request}
                 key="solicitar"
                 onSubmit={(e) => {
                   e.preventDefault();

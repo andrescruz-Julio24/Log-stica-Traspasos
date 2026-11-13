@@ -1,11 +1,13 @@
 'use client';
+import styles from '../styles/OrderHistory.module.css';
 import { Panel, Table, formatDate } from '../../../shared/ui/ModuleKit';
 import { priorities } from '../data/priorities';
 import { useOrderHistory } from '../hooks/useOrderHistory';
 export function OrderHistory({ id }) {
   const { events, error } = useOrderHistory(id);
   return (
-    <Panel title="Historial de compromisos y prioridades">
+    <div className={styles.history}>
+      <Panel title="Historial de compromisos y prioridades">
       {error ? (
         <p role="alert">{error}</p>
       ) : (
@@ -32,6 +34,7 @@ export function OrderHistory({ id }) {
           })}
         />
       )}
-    </Panel>
+      </Panel>
+    </div>
   );
 }

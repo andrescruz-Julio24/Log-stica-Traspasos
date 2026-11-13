@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/OrderDetailPage.module.css';
 import detailStyles from '../../../shared/componentes/styles/DetailLayout.module.css';
 import { OrderHistory } from '../componentes/OrderHistory';
 import { lineHolds } from '../utils/impact';
@@ -34,7 +35,7 @@ export default function OrderDetailPage({ id }) {
   const req = sumField(order.lines, 'required'),
     accepted = sumField(order.lines, 'accepted');
   return (
-    <main className={detailStyles.page}>
+    <main className={`${detailStyles.page} ${styles.page}`}>
       <DetailHeader
         title={order.code}
         subtitle={

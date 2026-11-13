@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/ClientsPage.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -41,7 +42,7 @@ export function ClientsPage() {
           </Link>
         }
       >
-        <div className="module-toolbar">
+        <div className={`module-toolbar ${styles.toolbar}`}>
           <SearchField value={q} onChange={setQ} placeholder="Buscar cliente" />
         </div>
         <Table
