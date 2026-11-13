@@ -39,3 +39,9 @@ Ver docs/MVP_SCOPE.md para pendientes y criterios de validación.
 ## Arquitectura modular (frontend JSX / backend TypeScript)
 
 El código se organiza por dominio y responsabilidad. Lee `docs/ARQUITECTURA_REFACTORIZADA.md` para el árbol real, archivos migrados y validaciones. No se han creado providers ni contextos globales porque las pantallas actuales sólo necesitan estado de consulta local. Se conservó Prisma `schema.prisma` sin migraciones nuevas.
+
+## Validación de integración con PostgreSQL
+
+GitHub Actions levanta un PostgreSQL temporal, crea el esquema mediante Prisma y ejecuta pruebas de reserva concurrente, despacho, recepción parcial, auditoría e idempotencia. Las pruebas unitarias aisladas se ejecutan con `npm test`.
+
+La integración local **sólo** debe ejecutarse sobre una base de datos de pruebas separada de cualquier base con información real, configurando `DATABASE_URL` y `SGTL_INTEGRATION_TEST_DB=1`, y ejecutando `npm run test:integration -w @sgtl/api`. El comando modifica esa base insertando fixtures de prueba.

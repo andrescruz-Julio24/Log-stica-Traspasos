@@ -1,5 +1,19 @@
 'use client';
-import { Status, Panel, Empty } from '../../../shared/ui/ModuleKit';
+import { Panel,Table,stockAvailable } from '../../../shared/ui/ModuleKit';
+
 export default function InventarioPage({data}){
-  return (<Panel title="Inventario por ubicación" subtitle="Existencia física ≠ disponible para nuevas reservas"><div className="table-scroll"><table><thead><tr><th>SKU</th><th>Producto</th><th>Ubicación</th><th>Físico</th><th>Reservado</th><th>Bloqueado</th><th>Disponible</th></tr></thead><tbody>{data.stocks.map(s=><tr key={s.id}><td><strong>{s.product.sku}</strong></td><td>{s.product.name}</td><td>{s.location.name}</td><td>{s.physical}</td><td>{s.reserved}</td><td>{s.blocked}</td><td><strong className="positive">{s.physical-s.reserved-s.blocked}</strong></td></tr>)}</tbody></table>{!data.stocks.length&&<Empty>Sin registros de inventario.</Empty>}</div></Panel>);
+  return <Panel title="Inventario por ubicación"
+    description="Existencia física ≠ existencia disponible para nuevas reservas">
+    <Table headers={['SKU','Producto','Ubicación','Físico','Reservado','Bloqueado','Disponible']}
+      rows={data.stocks.map(stock=>({
+        key:stock.id,
+        cells:[
+          <strong key="sku">{stock.product.sku}</strong>,
+          stock.product.name,stock.location.name,
+          stock.physical,stock.reserved,stock.blocked,
+          <strong key="disponible" className="positive">{stockAvailable(stock)}</strong>
+        ]
+      }))}
+      empty="Sin registros de inventario."/>
+  </Panel>;
 }

@@ -29,6 +29,7 @@ API/modules/pedidos/pedidos.module.ts
 API/modules/pedidos/pedidos.service.ts
 API/modules/traspasos/dto/traspasos.dto.ts
 API/modules/traspasos/tests/logistica.spec.ts
+API/modules/traspasos/tests/traspasos.integration.spec.ts
 API/modules/traspasos/tests/traspasos.service.spec.ts
 API/modules/traspasos/traspasos.controller.ts
 API/modules/traspasos/traspasos.module.ts
@@ -102,7 +103,7 @@ WEB/shared/utils/quantities.js
 | api/src/domain.spec.ts | modules/traspasos/tests/logistica.spec.ts | Ubicar pruebas junto al módulo |
 
 ## Reutilización
-- ModuleKit.jsx: tablas, estados, indicadores, paneles, estados vacíos, avisos, búsqueda y barras de progreso.
+- ModuleKit.jsx: tablas usadas también por Pedidos, Inventario, Traspasos e Incidencias; estados, indicadores, paneles, estados vacíos, avisos, búsqueda y barras de progreso.
 - FormFields.jsx: Quantity y Select (inputs de los formularios).
 - TransferLink.jsx: vínculo consistente entre traspasos y módulos.
 - quantities.js: sumas, disponibilidad calculada y porcentajes puros.
@@ -118,8 +119,8 @@ WEB/shared/utils/quantities.js
 
 ## Comprobaciones
 - GitHub Actions ejecuta instalación, generación de Prisma Client, pruebas Vitest, ESLint frontend y compilación de NestJS/Next.js (ver último run).
-- No se realizaron pruebas E2E ni de concurrencia contra PostgreSQL real; tampoco se verificó el diseño mediante pruebas con usuarios.
-- Las pruebas con servicios simulados revisan negativas de reservas, despachos y recepciones; no sustituyen la integración transaccional.
+- Se incorporaron escenarios de integración con PostgreSQL de prueba para reserva concurrente, despacho, recepción, idempotencia y auditoría; sus resultados dependen del último workflow de CI. No se ejecutaron pruebas E2E de interfaz ni validaciones de UX con usuarios.
+- Las pruebas con servicios simulados revisan negativas de reservas, despachos y recepciones. Se agregó un conjunto independiente contra PostgreSQL para verificar transacciones; aún faltan E2E completos por usuario y sucursal.
 - No existe configuración de linter backend independiente en esta versión; TypeScript se comprueba en el build.
 
 ## Decisiones abiertas

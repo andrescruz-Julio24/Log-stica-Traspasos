@@ -33,3 +33,5 @@ Los módulos sin endpoint de escritura no presentan acciones ficticias. El MVP n
 La referencia original del árbol es SGTL v6.0: preservar las decisiones D-01 y las políticas aún pendientes.
 
 Backend: `modules/pedidos`, `modules/traspasos`, `modules/incidencias`, `modules/catalogos`, `modules/auditoria`, y `shared/database` para Prisma y transacciones. Los endpoints originales se mantienen.
+
+Las páginas de pedidos, inventario, traspasos e incidencias reutilizan el componente de tabla `ModuleKit.Table`; se conservan configuraciones y reglas de cada módulo, sin multiplicar implementaciones visuales de celdas.
