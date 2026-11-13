@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/DispatchesPage.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import {
   Metric,
@@ -24,7 +25,7 @@ export function DispatchesPage() {
     .sort((a, b) => new Date(b.d.createdAt) - new Date(a.d.createdAt));
   return (
     <>
-      <div className="stats">
+      <div className={`stats ${styles.summary}`}>
         <Metric
           label="Despachos registrados"
           value={rows.length}

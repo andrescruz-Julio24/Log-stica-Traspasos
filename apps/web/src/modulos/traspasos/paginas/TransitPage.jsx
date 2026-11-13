@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/TransitPage.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import {
   Hint,
@@ -32,7 +33,7 @@ export function TransitPage() {
     )
     .filter((r) => r.l.dispatched > 0);
   return (
-    <>
+    <div className={styles.content}>
       <Hint title="Seguimiento físico aún incompleto" warning>
         El saldo agrupa por producto las salidas y recepciones vigentes. El
         custodio y el conteo se registran por despacho. La ubicación física
@@ -68,6 +69,6 @@ export function TransitPage() {
           empty="No hay traspasos con tránsito pendiente según el estado registrado."
         />
       </Panel>
-    </>
+    </div>
   );
 }

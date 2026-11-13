@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/ReceiptsPage.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import {
   Hint,
@@ -81,7 +82,7 @@ export function ReceiptsPage() {
               <TransferLink key="column-1" t={x.t} />,
               x.product?.sku || x.l.productId,
               x.l.presented,
-              <span key="column-2" className="positive">
+              <span key="column-2" className={styles.accepted}>
                 {x.l.accepted}
               </span>,
               x.l.rejected,

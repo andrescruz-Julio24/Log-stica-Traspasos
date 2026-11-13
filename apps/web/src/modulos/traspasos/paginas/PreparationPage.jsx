@@ -3,48 +3,9 @@ import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { activeReserved } from '../../../shared/utils/quantities';
 import { Panel, Table } from '../../../shared/ui/ModuleKit';
 import { TransferLink } from '../componentes/TransferLink';
-import { submit } from '../../../shared/services/apiClient';
+import { PickForm } from '../componentes/PickForm';
+import styles from '../styles/PreparationPage.module.css';
 
-function PickForm({ transfer, line }) {
-  const { act, busy } = useWorkspace();
-  function save(e) {
-    e.preventDefault();
-    const fields = new FormData(e.currentTarget);
-    act(() =>
-      submit('/transfers/' + transfer.id + '/picking', {
-        transferLineId: line.id,
-        quantity: Number(fields.get('quantity')),
-        version: line.pickVersion,
-        location: fields.get('location'),
-        note: fields.get('note'),
-      }),
-    );
-  }
-  return (
-    <form className="stack" onSubmit={save}>
-      <label>
-        Unidades separadas ahora
-        <input
-          name="quantity"
-          type="number"
-          min="0"
-          max={activeReserved(line)}
-          required
-          defaultValue={line.picked}
-        />
-      </label>
-      <label>
-        Ubicación de picking
-        <input name="location" required placeholder="Pasillo o anaquel" />
-      </label>
-      <label>
-        Motivo si hay diferencia
-        <input name="note" />
-      </label>
-      <button disabled={busy || !activeReserved(line)}>Confirmar conteo</button>
-    </form>
-  );
-}
 export function PreparationPage() {
   const { data } = useWorkspace();
   const rows = data.transfers
@@ -65,7 +26,8 @@ export function PreparationPage() {
         })),
     );
   return (
-    <Panel
+    <div className={styles.page}>
+      <Panel
       title="Preparación física"
       description="Cuenta las unidades separadas que siguen en origen. Cada despacho consume el conteo confirmado."
     >
@@ -80,6 +42,7 @@ export function PreparationPage() {
         ]}
         rows={rows}
       />
-    </Panel>
+      </Panel>
+    </div>
   );
 }

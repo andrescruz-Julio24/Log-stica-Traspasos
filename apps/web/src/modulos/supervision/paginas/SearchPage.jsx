@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/SearchPage.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import Link from 'next/link';
 import { useGlobalSearch } from '../hooks/useGlobalSearch';
@@ -12,7 +13,7 @@ export function SearchPage() {
       title="Búsqueda global"
       description="Busca por SKU, folio, cliente o descripción. Los resultados se limitan a los registros disponibles en la API."
     >
-      <div className="module-toolbar">
+      <div className={`module-toolbar ${styles.toolbar}`}>
         <SearchField
           value={q}
           onChange={setQ}

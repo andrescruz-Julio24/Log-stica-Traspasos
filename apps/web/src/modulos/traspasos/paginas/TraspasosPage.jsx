@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/TraspasosPage.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -45,7 +46,7 @@ export default function TraspasosPage() {
             </div>,
             <div key="ruta">
               {transfer.origin.name}
-              <span className="muted"> → {transfer.destination.name}</span>
+              <span className={`muted ${styles.route}`}> → {transfer.destination.name}</span>
             </div>,
             sumField(transfer.lines, 'requested'),
             sumField(transfer.lines, 'dispatched'),
