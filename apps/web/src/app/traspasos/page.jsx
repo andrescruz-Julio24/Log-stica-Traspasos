@@ -1,5 +1,5 @@
-import Workspace from '../../features/workspace/components/Workspace';
-import TraspasosPage from '../../features/traspasos/pages/TraspasosPage';
+import Workspace from '../../shared/workspace/componentes/Workspace';
+import TraspasosPage from '../../modulos/traspasos/paginas/TraspasosPage';
 export default function Page() {
   return (
     <Workspace section="transfers">

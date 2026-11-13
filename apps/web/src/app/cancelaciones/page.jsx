@@ -1,5 +1,5 @@
-import Workspace from '../../features/workspace/components/Workspace';
-import { CancellationsPage } from '../../features/cancelaciones/pages/CancellationsPage';
+import Workspace from '../../shared/workspace/componentes/Workspace';
+import { CancellationsPage } from '../../modulos/pedidos/paginas/CancellationsPage';
 export default function Page() {
   return (
     <Workspace section="cancellations">

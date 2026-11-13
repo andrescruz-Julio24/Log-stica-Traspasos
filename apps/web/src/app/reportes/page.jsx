@@ -1,5 +1,5 @@
-import Workspace from '../../features/workspace/components/Workspace';
-import { ReportsPage } from '../../features/reportes/pages/ReportsPage';
+import Workspace from '../../shared/workspace/componentes/Workspace';
+import { ReportsPage } from '../../modulos/supervision/paginas/ReportsPage';
 export default function Page() {
   return (
     <Workspace section="reports">

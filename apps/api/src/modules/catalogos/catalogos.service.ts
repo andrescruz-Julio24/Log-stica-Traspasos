@@ -1,3 +1,4 @@
+import {inventorySource,hasFreshInventory} from '../../shared/domain/inventory-freshness';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../shared/database/prisma.service';
 
@@ -16,15 +17,8 @@ export class CatalogosService {
     ]).then(([products, locations, stocks]) => ({
       products,
       locations,
-      inventorySource:
-        process.env.SGTL_INVENTORY_SOURCE === 'ERP' ? 'ERP' : 'SGTL',
-      stocks: stocks.map((stock) => ({
-        ...stock,
-        stale:
-          process.env.SGTL_INVENTORY_SOURCE === 'ERP' &&
-          (!stock.sourceCheckedAt ||
-            Date.now() - stock.sourceCheckedAt.getTime() >
-              Number(process.env.SGTL_ERP_MAX_AGE_MINUTES || 15) * 60000),
+      inventorySource:inventorySource(),
+      stocks:stocks.map(stock=>({...stock,stale:!hasFreshInventory(stock.sourceCheckedAt)
       })),
     }));
   }

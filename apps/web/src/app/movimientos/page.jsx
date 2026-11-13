@@ -1,5 +1,5 @@
-import Workspace from '../../features/workspace/components/Workspace';
-import { MovementsPage } from '../../features/movimientos/pages/MovementsPage';
+import Workspace from '../../shared/workspace/componentes/Workspace';
+import { MovementsPage } from '../../modulos/inventario/paginas/MovementsPage';
 export default function Page() {
   return (
     <Workspace section="movements">

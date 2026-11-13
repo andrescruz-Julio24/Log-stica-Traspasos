@@ -1,5 +1,5 @@
-import Workspace from '../../features/workspace/components/Workspace';
-import { SearchPage } from '../../features/buscar/pages/SearchPage';
+import Workspace from '../../shared/workspace/componentes/Workspace';
+import { SearchPage } from '../../modulos/supervision/paginas/SearchPage';
 export default function Page() {
   return (
     <Workspace section="search">

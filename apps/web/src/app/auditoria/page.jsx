@@ -1,5 +1,5 @@
-import Workspace from '../../features/workspace/components/Workspace';
-import AuditoriaPage from '../../features/auditoria/pages/AuditoriaPage';
+import Workspace from '../../shared/workspace/componentes/Workspace';
+import AuditoriaPage from '../../modulos/supervision/paginas/AuditoriaPage';
 export default function Page() {
   return (
     <Workspace section="audit">

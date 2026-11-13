@@ -1,5 +1,5 @@
-import Workspace from '../../features/workspace/components/Workspace';
-import InventarioPage from '../../features/inventario/pages/InventarioPage';
+import Workspace from '../../shared/workspace/componentes/Workspace';
+import InventarioPage from '../../modulos/inventario/paginas/InventarioPage';
 export default function Page() {
   return (
     <Workspace section="stock">

@@ -23,7 +23,7 @@ Ver docs/MVP_SCOPE.md para pendientes y criterios de validación.
 
 ## Convenciones de código
 
-- `apps/web/src/app/**/*.jsx`, `features/**/*.jsx` y `shared/ui/**/*.jsx`: componentes y páginas React que renderizan JSX.
+- `apps/web/src/app/**/*.jsx`, `modulos/**/*.jsx` y `shared/ui/**/*.jsx`: componentes y páginas React que renderizan JSX.
 - `apps/web/src/shared/services/apiClient.js`: utilidades JavaScript sin JSX (se conserva `.js`).
 - `apps/api/src/**/*.ts`: backend NestJS con TypeScript.
 - Se preservan imports sin extensión para permitir resolución automática de `.jsx` por Next.js.

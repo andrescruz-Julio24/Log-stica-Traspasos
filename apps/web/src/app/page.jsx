@@ -1,5 +1,5 @@
-import Workspace from '../features/workspace/components/Workspace';
-import OverviewPage from '../features/dashboard/pages/OverviewPage';
+import Workspace from '../shared/workspace/componentes/Workspace';
+import OverviewPage from '../modulos/supervision/paginas/OverviewPage';
 export default function Page() {
   return (
     <Workspace section="dashboard">

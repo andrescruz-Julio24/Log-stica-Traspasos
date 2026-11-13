@@ -1,5 +1,5 @@
-import Workspace from '../../features/workspace/components/Workspace';
-import { PreparationPage } from '../../features/preparacion/pages/PreparationPage';
+import Workspace from '../../shared/workspace/componentes/Workspace';
+import { PreparationPage } from '../../modulos/traspasos/paginas/PreparationPage';
 export default function Page() {
   return (
     <Workspace section="preparation">

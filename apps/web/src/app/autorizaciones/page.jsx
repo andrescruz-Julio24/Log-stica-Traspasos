@@ -1,5 +1,5 @@
-import Workspace from '../../features/workspace/components/Workspace';
-import { AuthorizationsPage } from '../../features/autorizaciones/pages/AuthorizationsPage';
+import Workspace from '../../shared/workspace/componentes/Workspace';
+import { AuthorizationsPage } from '../../modulos/incidencias/paginas/AuthorizationsPage';
 export default function Page() {
   return (
     <Workspace section="authorizations">

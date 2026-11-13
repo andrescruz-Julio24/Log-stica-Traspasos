@@ -1,5 +1,5 @@
-import Workspace from '../../features/workspace/components/Workspace';
-import PedidosPage from '../../features/pedidos/pages/PedidosPage';
+import Workspace from '../../shared/workspace/componentes/Workspace';
+import PedidosPage from '../../modulos/pedidos/paginas/PedidosPage';
 export default function Page() {
   return (
     <Workspace section="orders">
