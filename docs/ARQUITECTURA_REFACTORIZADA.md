@@ -115,62 +115,115 @@ Autorizaciones compone ExceptionRequestForm y ExceptionDecisions. Los tipos est�
 
 ```text
 src/
-  app/
-    administracion/
-    alertas/
-    auditoria/
-    autorizaciones/
-    buscar/
-    cancelaciones/
-    clientes/
-    despachos/
-    incidencias/
-    inventario/
-    movimientos/
-    pedidos/
-      [id]/
-    preparacion/
-    recepciones/
-    reportes/
-    reservas/
-    transito/
-    traspasos/
-      [id]/
-  modulos/
-    incidencias/
-      componentes/
-      data/
-      paginas/
-      utils/
-    inventario/
-      data/
-      paginas/
-    pedidos/
-      componentes/
-      data/
-      paginas/
-      utils/
-    supervision/
-      data/
-      paginas/
-      styles/
-    traspasos/
-      componentes/
-      data/
-      hooks/
-      paginas/
-  shared/
-    componentes/
-    services/
-    styles/
-    ui/
-    utils/
-    workspace/
-      componentes/
-      contexts/
-      data/
-      hooks/
-      providers/
-      services/
-      styles/
+├── app/
+│   ├── (supervision)/        # /, /buscar, /reportes, /auditoria, /administracion
+│   ├── (pedidos)/           # /pedidos, /pedidos/[id], /clientes, /cancelaciones
+│   ├── (traspasos)/         # /traspasos, /traspasos/[id], /preparacion, /despachos, /transito, /recepciones
+│   ├── (inventario)/        # /inventario, /reservas, /movimientos
+│   └── (incidencias)/       # /incidencias, /alertas, /autorizaciones
+├── modulos/
+│   ├── pedidos/
+│   │   ├── componentes/  ├── paginas/  ├── hooks/
+│   │   ├── data/         ├── utils/   └── styles/
+│   ├── traspasos/
+│   │   ├── componentes/  ├── paginas/  ├── hooks/
+│   │   ├── data/         └── styles/
+│   ├── supervision/
+│   │   ├── componentes/  ├── paginas/  ├── hooks/
+│   │   ├── data/         ├── utils/   └── styles/
+│   ├── inventario/
+│   │   ├── paginas/      ├── hooks/   ├── utils/  └── data/
+│   └── incidencias/
+│       ├── componentes/  ├── paginas/ ├── hooks/
+│       ├── data/         └── utils/
+└── shared/
+    ├── componentes/         # DetailHeader y DetailLayout
+    │   └── styles/
+    ├── ui/
+    │   ├── componentes/     # Panel, Table, Status, etc.
+    │   └── styles/          # Cada componente con su *.module.css
+    ├── workspace/
+    │   ├── componentes/  ├── hooks/  ├── providers/
+    │   ├── contexts/     ├── data/   ├── services/  └── styles/
+    ├── services/
+    ├── styles/              # Fundamentos y utilidades verdaderamente globales
+    └── utils/
 ```
+
+
+## Iteración 13-nov-2026 — carpetas y responsabilidades del frontend
+
+Esta iteración trabaja sobre una rama separada para facilitar la revisión sin alterar la rama base.
+
+### Route Groups sin cambios de URL
+
+Los archivos de entrada `app/**/page.jsx` se agruparon bajo `app/(supervision)/`, `app/(pedidos)/`, `app/(traspasos)/`, `app/(inventario)/` y `app/(incidencias)/`. Las carpetas entre paréntesis no participan en las URLs de Next.js: `/buscar`, `/pedidos/[id]`, `/traspasos/[id]` y las demás rutas conservan sus direcciones. Los imports de estas páginas usan el alias `@/` configurado en `apps/web/jsconfig.json`.
+
+### Estilos
+
+Se reemplazaron los archivos agregadores `shared/styles/base.css` y `shared/styles/modules.css` por hojas más pequeñas y organizadas:
+
+- `shared/styles/`: fundamentos y reglas responsivas globales.
+- `shared/workspace/styles/`: shell, navegación y layout general.
+- `shared/ui/styles/`: controles, tablas, estados, formularios y paneles compartidos.
+- `modulos/pedidos/styles/OrderListPanel.module.css`: presentación exclusiva de líneas de pedidos.
+- `modulos/traspasos/styles/TransferDetail.module.css`: interfaz operativa del detalle de traspaso.
+- `modulos/supervision/styles/`: reportes y reglas propias de administración.
+
+Se conservaron las reglas reutilizables en shared y el orden global de imports para minimizar diferencias visuales. La existencia de estilos compartidos no implica mezclar las reglas de cada módulo.
+
+### Hooks y utilidades de dominio
+
+- `pedidos/hooks/useOrderHistory.js`: consulta de historial con cancelación al desmontar.
+- `inventario/hooks/useMovements.js` y `utils/movementEvents.js`: filtro y proyección de eventos logísticos.
+- `inventario/hooks/useReservations.js` y `utils/reservationSummary.js`: filtros, relaciones y agregados de reservas.
+- `incidencias/hooks/useAlerts.js`: selección local y derivación de alertas usando `utils/alerts.js`.
+- `supervision/hooks/useGlobalSearch.js` y `utils/searchEntries.js`: estado del buscador y transformación pura de registros.
+- `supervision/hooks/useReportMetrics.js`, `utils/reportMetrics.js`, `data/reportStatuses.js` y `componentes/ReportBar.jsx`: cálculo, configuración y representación de reportes desacoplados.
+
+### Providers: decisión explícita
+
+`shared/workspace/providers/WorkspaceProvider.jsx` administra los datos de cada vista. No se crearon providers artificiales por módulo: un Context de módulo solo será apropiado si existe estado mutable que requiera persistir entre varias rutas o componentes y no sea estado de servidor. Añadir carpetas vacías o duplicar el contexto global no mejora la arquitectura. Se estabilizó la referencia de los datos del workspace con `useMemo` para evitar recalcular proyecciones de manera innecesaria ante renders sin cambios en los recursos.
+
+### Validación
+
+La confirmación del build y las pruebas depende de la ejecución de CI y de las verificaciones posteriores a estos commits. Esta nota describe cambios implementados, no sustituye pruebas funcionales ni visuales.
+
+
+## Organización de estilos por componente — 13 de noviembre de 2026
+
+### Convención definitiva
+
+- Un componente con reglas propias importa `NombreDelComponente.module.css` desde `styles/` del **mismo módulo**. Las importaciones se escriben en el JSX dueño del estilo, nunca en `app/globals.css`.
+- Los componentes reutilizables de `shared/ui/componentes/` tienen CSS Modules homónimos en `shared/ui/styles/`, sin duplicar los estilos en cada consumidor.
+- Los componentes estructurales de Workspace utilizan `shared/workspace/styles/Workspace.module.css`, `WorkspaceNavigation.module.css` y `CreateRecordAction.module.css`.
+- `shared/componentes/styles/DetailLayout.module.css` es compartido deliberadamente entre detalles de Pedidos y Traspasos. `DetailHeader.module.css` y `modulos/traspasos/styles/TransferTracePage.module.css` cubren sus estilos específicos.
+- Los estilos de formulario genéricos, botones, disposición de métricas, responsive y accesibilidad que **usan varias funcionalidades** permanecen en las hojas globales acotadas de `shared/ui/styles/` y `shared/styles/`. No se copian por módulo.
+- No se crean archivos de estilos vacíos o con reglas decorativas artificiales para componentes que solo componen otros componentes estilizados.
+
+### Mapa de estilos implementados
+
+| Módulo | Componentes y sus estilos |
+| --- | --- |
+| `pedidos` | `OrderListPanel → styles/OrderListPanel.module.css` |
+| `traspasos` | `TransferDetail → styles/TransferDetail.module.css`; `TransferTracePage → styles/TransferTracePage.module.css` |
+| `supervision` | `OverviewPage`, `AuditoriaPage`, `AdministrationPage`, `ReportsPage` y `ReportBar` → archivos CSS Module homónimos en `styles/` |
+| `shared/ui` | `Panel`, `Metric`, `Status`, `Table`, `Progress`, `Empty`, `Hint`, `SearchField`, `Unavailable` → archivos CSS Module homónimos |
+| `shared/workspace` | `Workspace`, `WorkspaceNavigation`, `CreateRecordAction` → CSS Module propio |
+
+`ModuleKit.jsx` mantiene las exportaciones públicas y delega el código a `shared/ui/componentes/`. Esta fachada evita reescribir los consumidores de todos los módulos.
+
+### Protección contra regresiones de estilo
+
+La prueba `apps/web/tests/component-styles.test.mjs` comprueba que los estilos específicos son importados por sus componentes, que los archivos existen, que `globals.css` importa solo estilos compartidos y que no quedan referencias a los archivos CSS globales sustituidos.
+
+Los resultados de CI se deben consultar en el Pull Request; no sustituye la comprobación visual de cada módulo en diferentes resoluciones de pantalla.
+
+
+## Cobertura completa de CSS Modules por módulo — 13-nov-2026
+
+**Criterio solicitado:** cada JSX situado dentro de `modulos/<dominio>/componentes/` o `modulos/<dominio>/paginas/` tiene un CSS Module homónimo dentro de `modulos/<dominio>/styles/` e importa dicho módulo explícitamente. Esto se implementa en los cinco dominios: incidencias (6 JSX / 6 CSS Modules), inventario (3/3), pedidos (9/9), supervisión (6/6) y traspasos (11/11). Total: **35 JSX / 35 CSS Modules**.
+
+La vista de Preparación tenía `PickForm` definido dentro de `PreparationPage.jsx`; ahora es un componente independiente en `traspasos/componentes/PickForm.jsx` con `traspasos/styles/PickForm.module.css`. De esta manera, estilos y componentes son rastreables por nombre. Los componentes continúan consumiendo las clases genéricas compartidas para controles, botones, tablas y layout sin duplicar implementaciones.
+
+Se añade `apps/web/tests/module-styles-coverage.test.mjs` para detectar nuevas páginas o componentes sin estilos de módulo propios, y módulos CSS que no se correspondan con un componente del módulo. Esta convención se aplica solo a `componentes/` y `paginas/`; hooks, datos, providers y utilidades no requieren estilos.

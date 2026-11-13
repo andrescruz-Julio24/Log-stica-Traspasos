@@ -1,0 +1,4 @@
+.plan { min-width: 0; }
+.plan > summary { cursor: pointer; }
+.plan form { display: grid; gap: 8px; padding-top: 12px; }
+.plan input, .plan select { max-width: 100%; }

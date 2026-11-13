@@ -3,6 +3,7 @@ import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { OrderPlan } from '../componentes/OrderPlan';
 import { lineHolds } from '../utils/impact';
 import Link from 'next/link';
+import styles from '../styles/OrderListPanel.module.css';
 import { CreateRecordAction } from '../../../shared/workspace/componentes/CreateRecordAction';
 import { CreateOrder } from '../componentes/CreateOrder';
 import {
@@ -30,7 +31,7 @@ export function OrderListPanel() {
       order.destination.name,
       <div key="lineas">
         {order.lines.map((line) => (
-          <div key={line.id} className="subline">
+          <div key={line.id} className={styles.subline}>
             {line.product.sku}: {line.required} u.{' '}
             {lineHolds(line).map((h) => (
               <small key={h.id}>

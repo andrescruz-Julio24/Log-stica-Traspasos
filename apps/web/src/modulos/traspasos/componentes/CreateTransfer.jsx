@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/CreateTransfer.module.css';
 import { submit } from '../../../shared/services/apiClient';
 import {
   ProductLines,
@@ -17,7 +18,7 @@ export function CreateTransfer({ data, busy, act }) {
     );
   }
   return (
-    <form className="form-grid" onSubmit={save}>
+    <form className={`form-grid ${styles.form}`} onSubmit={save}>
       {[
         ['Origen', 'originId'],
         ['Destino', 'destinationId'],

@@ -1,0 +1,32 @@
+.bar > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 9px;
+  font-size: 12px;
+}
+.bar strong {
+  font-weight: 600;
+}
+.bar span {
+  font-variant-numeric: tabular-nums;
+}
+.bar .track {
+  width: 100%;
+  height: 12px;
+}
+
+.track {
+  height: 9px;
+  background: #e8eef2;
+  border-radius: 99px;
+  flex: 1;
+  min-width: 65px;
+  overflow: hidden;
+}
+.track > div {
+  height: 100%;
+  background: #0d7479;
+  border-radius: 99px;
+  min-width: 0;
+}

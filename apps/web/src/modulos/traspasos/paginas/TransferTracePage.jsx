@@ -1,4 +1,6 @@
 'use client';
+import detailStyles from '../../../shared/componentes/styles/DetailLayout.module.css';
+import styles from '../styles/TransferTracePage.module.css';
 import {
   Empty,
   Hint,
@@ -20,7 +22,7 @@ export default function TransferTracePage({ id }) {
   const t = data.transfers.find((t) => t.id === id);
   if (!t)
     return (
-      <div className="standalone-loading">
+      <div className={detailStyles.loading}>
         <Empty message="Traspaso no encontrado." />
         {<BackLink href="/traspasos" label="traspasos" />}
       </div>
@@ -33,7 +35,7 @@ export default function TransferTracePage({ id }) {
     (e) => e.entityId === t.id || e.data?.transferId === t.id,
   );
   return (
-    <main className="detail-page">
+    <main className={detailStyles.page}>
       <DetailHeader
         title={t.code}
         subtitle={
@@ -73,7 +75,7 @@ export default function TransferTracePage({ id }) {
       </Hint>
       <div className="two-cols">
         <Panel title="Información general" description="Resumen del traspaso.">
-          <div className="detail-fields">
+          <div className={styles.fields}>
             <div>
               <span>Estado</span>
               <Status
@@ -100,7 +102,7 @@ export default function TransferTracePage({ id }) {
           title="Progreso del movimiento"
           description="Solicitado → enviado → aceptado."
         >
-          <div className="detail-progress">
+          <div className={styles.progress}>
             <div>
               <span>Despachado</span>
               <Progress actual={dispatched} total={req} />

@@ -1,0 +1,18 @@
+.sidebar { background:#10283b; color:#fff; width:255px; min-width:255px; padding:26px 14px; display:flex; flex-direction:column; min-height:100vh; position:sticky; top:0; height:100vh; overflow-y:auto; }
+.brand { display:flex; align-items:center; gap:12px; margin:0 10px 38px; }
+.brandIcon { height:42px; width:42px; display:grid; place-items:center; background:#0d7479; border-radius:11px; }
+.brand strong { font-size:20px; display:block; }
+.brand small { display:block; font-size:11px; color:#b0c4d3; }
+.sidebar nav { display:flex; flex-direction:column; min-height:0; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#355369 transparent; }
+.navButton { border:0; background:none; color:#bfced8; width:100%; display:flex; align-items:center; gap:12px; padding:13px 15px; text-align:left; border-radius:9px; font-size:13px; margin-bottom:4px; text-decoration:none; flex-shrink:0; outline-offset:2px; }
+.navButton:hover { background:#1f3d50; color:white; }
+.navButton.active { background:#0e5665; color:#fff; font-weight:700; }
+.navButton:focus-visible { outline:2px solid #61d3c5; color:#fff; }
+.sidebarBottom { margin-top:auto; font-size:12px; padding:18px 10px; color:#ccdae4; border-top:1px solid #345065; }
+.sidebarBottom small { display:block; color:#96acbd; margin-top:6px; }
+.sectionNav { display:flex; flex-wrap:wrap; gap:0.4rem; margin:0 0 1.25rem; }
+.sectionNav a { padding:0.45rem 0.75rem; border-radius:0.45rem; color:#355365; text-decoration:none; }
+.sectionNav a:hover, .sectionNav a:focus-visible { background:#e0edee; }
+.sectionNav a[aria-current='page'] { background:#d6eae9; color:#095b60; font-weight:700; }
+@media(max-width:1120px) { .sidebar { width:220px; min-width:220px; } .navButton { font-size:12px; padding:12px; } }
+@media(max-width:760px) { .sidebar { position:relative; min-height:0; height:auto; width:100%; padding:14px; overflow:visible; } .brand { margin:0 0 14px; } .sidebar nav { display:flex; flex-direction:row; overflow-x:auto; overflow-y:hidden; gap:5px; scrollbar-width:thin; } .navButton { width:auto; padding:11px; white-space:nowrap; } .sidebarBottom { display:none; } }

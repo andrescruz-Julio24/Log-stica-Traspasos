@@ -1,0 +1,6 @@
+.panel { background:#fff; border:1px solid #e2ebf0; box-shadow:0 3px 16px #173f5710; border-radius:12px; overflow:hidden; margin-bottom:17px; }
+.head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:19px 21px; border-bottom:1px solid #edf2f5; }
+.head p { font-size:12px; color:#7b91a0; margin-bottom:0; }
+.actions { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.actions :global(.secondary) { text-decoration:none; }
+.panel :global(td) { max-width:350px; line-height:1.45; }

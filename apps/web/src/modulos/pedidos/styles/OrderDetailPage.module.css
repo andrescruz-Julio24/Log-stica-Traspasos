@@ -1,0 +1,2 @@
+.page { min-width: 0; }
+.page :global(.stats) { min-width: 0; }

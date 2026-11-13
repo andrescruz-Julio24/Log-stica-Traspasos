@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import styles from '../styles/TransferDetail.module.css';
 import { ReceiptControls } from './ReceiptControls';
 import { priorities } from '../../pedidos/data/priorities';
 import { activeReserved } from '../../../shared/utils/quantities';
@@ -39,7 +40,7 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
   const qty = Number(quantity);
   return (
     <>
-      <div className="detail">
+      <div className={styles.detail}>
         <h3>Operar {transfer.code}</h3>
         <p className="muted">
           Origen: {transfer.origin.name} · Destino: {transfer.destination.name}
@@ -82,7 +83,7 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
               onChange={(e) => setCustodian(e.target.value)}
             />
           </label>
-          <div className="actions full">
+          <div className={`${styles.actions} full`}>
             <button
               disabled={busy || !line || !Number.isSafeInteger(qty) || qty < 1}
               className="primary"
@@ -138,7 +139,7 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
           />
         </div>
       </div>
-      <div className="line-summary">
+      <div className={styles.lineSummary}>
         {transfer.lines.map((l) => (
           <div key={l.id}>
             <strong>{l.product.sku}</strong> · Solicitado {l.requested} ·

@@ -1,0 +1,4 @@
+.dialog { width:min(570px, calc(100% - 2rem)); max-height:90vh; padding:0; border:0; border-radius:13px; color:inherit; }
+.dialog::backdrop { background:#0d2736a8; }
+.head { padding:19px 24px; border-bottom:1px solid #e7edf1; display:flex; justify-content:space-between; align-items:center; }
+.head h2 { margin:0; }

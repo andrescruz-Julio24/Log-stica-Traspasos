@@ -1,0 +1,2 @@
+.request { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.request input { max-width: 100%; }

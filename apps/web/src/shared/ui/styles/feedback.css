@@ -1,0 +1,25 @@
+.message {
+  padding:14px 16px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:18px;
+  font-size:13px
+}
+.message button {
+  margin-left:auto
+}
+.message.error {
+  background:#fff0ee;
+  color:#a33f3e
+}
+.message.success {
+  background:#e3f7eb;
+  color:#167454
+}
+.loading {
+  color:#7891a0;
+  margin:90px auto;
+  text-align:center
+}

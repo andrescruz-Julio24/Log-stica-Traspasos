@@ -1,0 +1,36 @@
+.timeline {
+  padding:19px 24px
+}
+.event {
+  display:flex;
+  gap:16px;
+  padding:0 0 22px;
+  position:relative;
+  font-size:12px
+}
+.dot {
+  width:10px;
+  height:10px;
+  flex:none;
+  background:#0d7479;
+  border-radius:50%;
+  margin-top:4px
+}
+.event p {
+  margin:4px 0;
+  color:#647e8e
+}
+.event small {
+  color:#8498a3
+}
+.event summary {
+  cursor:pointer;
+  color:#0d7479
+}
+.event pre {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  background:#f2f6f8;
+  padding:10px;
+  font-size:11px
+}

@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/InventarioPage.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { Panel, Table, stockAvailable } from '../../../shared/ui/ModuleKit';
 
@@ -29,7 +30,7 @@ export default function InventarioPage() {
             stock.physical,
             stock.reserved,
             stock.blocked,
-            <strong key="disponible" className="positive">
+            <strong key="disponible" className={styles.positive}>
               {stockAvailable(stock)}
             </strong>,
             stock.stale

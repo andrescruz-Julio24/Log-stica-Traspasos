@@ -1,8 +1,8 @@
 'use client';
-import { deriveAlerts } from '../utils/alerts';
+import styles from '../styles/AlertsPage.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
-import { useState } from 'react';
 import Link from 'next/link';
+import { useAlerts } from '../hooks/useAlerts';
 import {
   Hint,
   Metric,
@@ -14,8 +14,7 @@ import {
 
 export function AlertsPage() {
   const { data, resources, complete } = useWorkspace();
-  const [q, setQ] = useState('');
-  const alerts = deriveAlerts(data, q);
+  const { q, setQ, alerts } = useAlerts(data);
   return (
     <>
       <Hint title="Alertas derivadas, no notificaciones persistidas">
@@ -24,7 +23,7 @@ export function AlertsPage() {
         confirmación de lectura ni acciones de resolución independientes de los
         registros originales.
       </Hint>
-      <div className="stats">
+      <div className={`stats ${styles.metrics}`}>
         <Metric
           label={
             complete ? 'Alertas calculadas' : 'Alertas de fuentes disponibles'

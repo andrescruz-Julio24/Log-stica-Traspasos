@@ -1,0 +1,2 @@
+@media(max-width:1120px) { .stats { grid-template-columns:repeat(2,1fr); } .two-cols { grid-template-columns:1fr; } }
+@media(max-width:760px) { .form-grid { grid-template-columns:1fr; } .full { grid-column:auto; } }

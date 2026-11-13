@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start --port 3000",
     "lint": "eslint src",
-    "test": "node --test tests/derived-data.test.mjs",
+    "test": "node --test",
     "test:e2e": "node tests/workspace.e2e.mjs"
   },
   "dependencies": {

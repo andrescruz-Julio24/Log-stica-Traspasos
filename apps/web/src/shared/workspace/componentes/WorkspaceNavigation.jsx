@@ -8,6 +8,7 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { areas } from '../data/navigation';
+import styles from '../styles/WorkspaceNavigation.module.css';
 const icons = {
   dashboard: LayoutDashboard,
   orders: ClipboardList,
@@ -17,9 +18,9 @@ const icons = {
 };
 export function Sidebar({ area, section }) {
   return (
-    <aside className="sidebar">
-      <div className="brand">
-        <div className="brand-icon">
+    <aside className={styles.sidebar}>
+      <div className={styles.brand}>
+        <div className={styles.brandIcon}>
           <Package size={22} />
         </div>
         <div>
@@ -35,9 +36,7 @@ export function Sidebar({ area, section }) {
               key={entry.key}
               href={entry.href}
               aria-current={entry.key === section ? 'page' : undefined}
-              className={
-                'nav-btn ' + (entry.key === area[0].key ? 'active' : '')
-              }
+              className={[styles.navButton, entry.key === area[0].key && styles.active].filter(Boolean).join(' ')}
             >
               <Icon size={18} />
               {entry.label}
@@ -45,7 +44,7 @@ export function Sidebar({ area, section }) {
           );
         })}
       </nav>
-      <div className="sidebar-bottom">
+      <div className={styles.sidebarBottom}>
         Entorno de demostración <small>Sin autenticación empresarial</small>
       </div>
     </aside>
@@ -53,7 +52,7 @@ export function Sidebar({ area, section }) {
 }
 export function SectionNavigation({ area, section }) {
   return (
-    <nav className="section-nav" aria-label={'Secciones de ' + area[0].label}>
+    <nav className={styles.sectionNav} aria-label={'Secciones de ' + area[0].label}>
       {area.map((item) => (
         <Link
           key={item.key}

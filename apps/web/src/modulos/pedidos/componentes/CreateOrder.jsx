@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/CreateOrder.module.css';
 import { submitOnce } from '../../../shared/services/apiClient';
 import {
   ProductLines,
@@ -22,7 +23,7 @@ export function CreateOrder({ data, busy, act }) {
     );
   }
   return (
-    <form className="form-grid" onSubmit={save}>
+    <form className={`form-grid ${styles.form}`} onSubmit={save}>
       <label className="field">
         Cliente
         <input required name="customer" placeholder="Nombre del cliente" />

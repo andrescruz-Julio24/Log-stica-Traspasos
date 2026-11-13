@@ -1,57 +1,19 @@
 'use client';
+import styles from '../styles/SearchPage.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
-import { useState } from 'react';
 import Link from 'next/link';
+import { useGlobalSearch } from '../hooks/useGlobalSearch';
 import { Empty, Panel, SearchField, Table } from '../../../shared/ui/ModuleKit';
 
 export function SearchPage() {
   const { data, complete } = useWorkspace();
-  const [q, setQ] = useState('');
-  const normalized = q.toLocaleLowerCase('es-MX').trim();
-  const entries = [
-    ...data.orders.map((x) => ({
-      key: 'order:' + x.id,
-      type: 'Pedido',
-      title: x.code,
-      detail: x.customer + ' · ' + x.destination.name,
-      href: '/pedidos',
-    })),
-    ...data.transfers.map((x) => ({
-      key: 'transfer:' + x.id,
-      type: 'Traspaso',
-      title: x.code,
-      detail: x.origin.name + ' → ' + x.destination.name,
-      href: '/traspasos',
-    })),
-    ...data.products.map((x) => ({
-      key: 'product:' + x.id,
-      type: 'Producto',
-      title: x.sku,
-      detail: x.name,
-      href: '/inventario',
-    })),
-    ...data.incidents.map((x) => ({
-      key: 'incident:' + x.id,
-      type: 'Incidencia',
-      title: x.type,
-      detail: x.notes,
-      href: '/incidencias',
-    })),
-  ]
-    .filter(
-      (x) =>
-        normalized &&
-        (x.title + ' ' + x.detail + ' ' + x.type)
-          .toLocaleLowerCase('es-MX')
-          .includes(normalized),
-    )
-    .slice(0, 100);
+  const { q, setQ, normalized, entries } = useGlobalSearch(data);
   return (
     <Panel
       title="Búsqueda global"
       description="Busca por SKU, folio, cliente o descripción. Los resultados se limitan a los registros disponibles en la API."
     >
-      <div className="module-toolbar">
+      <div className={`module-toolbar ${styles.toolbar}`}>
         <SearchField
           value={q}
           onChange={setQ}

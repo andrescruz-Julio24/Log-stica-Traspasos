@@ -1,0 +1,27 @@
+.stack {
+  max-height:420px;
+  overflow:auto
+}
+.row {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:transparent;
+  border:0;
+  border-bottom:1px solid #f0f4f6;
+  width:100%;
+  text-align:left;
+  padding:17px 20px;
+  gap:12px
+}
+.row strong,.row small {
+  display:block
+}
+.row strong {
+  font-size:12px
+}
+.row small {
+  font-size:11px;
+  color:#7791a0;
+  margin-top:5px
+}

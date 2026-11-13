@@ -1,0 +1,2 @@
+.decisionForm { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.decisionForm input { min-width: 120px; max-width: 100%; }

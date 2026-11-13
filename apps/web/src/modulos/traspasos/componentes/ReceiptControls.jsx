@@ -1,4 +1,5 @@
 'use client';
+import styles from '../styles/ReceiptControls.module.css';
 import { useState } from 'react';
 import { submit } from '../../../shared/services/apiClient';
 import { Quantity } from '../../../shared/componentes/FormFields';
@@ -26,7 +27,7 @@ export function ReceiptControls({
       ?.lines.find((l) => l.productId === productId)?.allocations || [];
   return (
     <>
-      <label className="field full">
+      <label className={`field full ${styles.dispatchPicker}`}>
         Despacho a inspeccionar
         <select
           value={dispatchId}

@@ -1,11 +1,13 @@
 'use client';
+import styles from '../styles/ReplenishmentPanel.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { Panel, Table } from '../../../shared/ui/ModuleKit';
 import { replenishmentImpact } from '../utils/impact';
 export function ReplenishmentPanel() {
   const { data } = useWorkspace();
   return (
-    <Panel
+    <div className={styles.replenishment}>
+      <Panel
       title="Impacto del reabastecimiento"
       description="Pedidos que podrían completarse si se aceptan y asignan todas las unidades faltantes de ese SKU en su destino."
     >
@@ -31,6 +33,7 @@ export function ReplenishmentPanel() {
         }))}
         empty="Ningún pedido activo depende de un único SKU."
       />
-    </Panel>
+      </Panel>
+    </div>
   );
 }
