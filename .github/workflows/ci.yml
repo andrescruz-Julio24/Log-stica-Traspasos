@@ -1,0 +1,50 @@
+name: SGTL CI
+on:
+  pull_request:
+  push:
+    branches: [feat/sgtl-mvp-next-nest]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://sgtl:sgtl_local@localhost:5432/sgtl?schema=public
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sgtl
+          POSTGRES_PASSWORD: sgtl_local
+          POSTGRES_DB: sgtl
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sgtl"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: npm install
+      - name: Generate Prisma client
+        run: npm run db:generate
+        env:
+          DATABASE_URL: postgresql://sgtl:sgtl_local@localhost:5432/sgtl?schema=public
+      - name: Create isolated database schema
+        run: npx prisma migrate deploy --schema apps/api/prisma/schema.prisma
+      - name: Unit tests
+        run: npm test
+      - name: PostgreSQL integration tests
+        run: npm run test:integration -w @sgtl/api
+        env:
+          SGTL_INTEGRATION_TEST_DB: '1'
+      - name: ESLint frontend
+        run: npm run lint -w @sgtl/web
+      - name: Build API and web
+        run: npm run build
+        env:
+          DATABASE_URL: postgresql://sgtl:sgtl_local@localhost:5432/sgtl?schema=public
+          API_INTERNAL_URL: http://localhost:5200

@@ -1,0 +1,23 @@
+{
+  "name": "sgtl",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n API,WEB -c blue,green \"npm run dev -w @sgtl/api\" \"npm run dev -w @sgtl/web\"",
+    "build": "npm run build -w @sgtl/api && npm run build -w @sgtl/web",
+    "test": "npm run test -w @sgtl/api",
+    "db:generate": "npm run prisma:generate -w @sgtl/api",
+    "db:migrate": "npm run prisma:migrate -w @sgtl/api",
+    "db:seed": "npm run seed -w @sgtl/api",
+    "predev": "npm run db:generate",
+    "prebuild": "npm run db:generate"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

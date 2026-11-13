@@ -1,0 +1,4 @@
+@import '../shared/styles/base.css';
+@import '../shared/styles/modules.css';
+@import '../shared/styles/details.css';
+@import '../features/workspace/styles/workspace.css';
