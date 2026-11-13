@@ -13,7 +13,7 @@ export function TransitPage({data}){
   return <>
     <Hint title="Seguimiento físico aún incompleto" warning>El MVP no registra vehículo, custodio, ubicación GPS ni vincula cada recepción a un despacho específico. La cantidad sin presentar es un saldo agregado por producto y traspaso; no prueba por sí sola dónde se encuentra físicamente la mercancía.</Hint>
     <Panel title="Traspasos con mercancía en movimiento" description="Conciliación agregada entre lo despachado y lo presentado en recepción." actions={<NextStep label="Ver movimientos"/>}>
-      <Table headers={['Folio','Origen → Destino','SKU','Despachado','Presentado','Sin presentar','Estado']} rows={rows.map(r=>({key:r.key,cells:[<TransferLink t={r.t}/>,r.t.origin.name+' → '+r.t.destination.name,r.l.product.sku,r.l.dispatched,r.presented,<strong>{r.unpresented}</strong>,<Status value={r.t.status}/>]}))} empty="No hay traspasos con tránsito pendiente según el estado registrado."/>
+      <Table headers={['Folio','Origen → Destino','SKU','Despachado','Presentado','Sin presentar','Estado']} rows={rows.map(r=>({key:r.key,cells:[<TransferLink key="column-1" t={r.t}/>,r.t.origin.name+' → '+r.t.destination.name,r.l.product.sku,r.l.dispatched,r.presented,<strong key="column-2">{r.unpresented}</strong>,<Status key="column-3" value={r.t.status}/>]}))} empty="No hay traspasos con tránsito pendiente según el estado registrado."/>
     </Panel>
   </>;
 }

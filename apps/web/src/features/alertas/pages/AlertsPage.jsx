@@ -16,7 +16,7 @@ export function AlertsPage({data}){
     <div className="stats"><Metric label="Alertas calculadas" value={alerts.length} detail="Incidencias, recepciones y pedidos parciales"/><Metric label="Incidencias abiertas" value={data.incidents.filter(i=>i.status==='OPEN').length} detail="Requieren investigación"/><Metric label="Recepciones pendientes" value={data.transfers.filter(t=>t.status==='RECEIVING').length} detail="Con diferencia o verificación incompleta"/><Metric label="Pedidos parcialmente surtidos" value={data.orders.filter(o=>o.status==='PARTIAL').length} detail="No aptos para envío"/></div>
     <Panel title="Atención operativa" description="Selecciona un registro para consultar el módulo que debe resolverlo.">
       <div className="module-toolbar"><SearchField value={q} onChange={setQ} placeholder="Filtrar alertas"/></div>
-      <Table headers={['Importancia','Tipo','Registro','Descripción','Detectado','Consultar']} rows={alerts.map(a=>({key:a.key,cells:[a.level,a.kind,<strong>{a.title}</strong>,a.detail,formatDate(a.when),<Link href={a.href} className="text-link">Abrir módulo</Link>]}))} empty="No existen alertas derivadas que coincidan con el filtro."/>
+      <Table headers={['Importancia','Tipo','Registro','Descripción','Detectado','Consultar']} rows={alerts.map(a=>({key:a.key,cells:[a.level,a.kind,<strong key="column-1">{a.title}</strong>,a.detail,formatDate(a.when),<Link key="column-2" href={a.href} className="text-link">Abrir módulo</Link>]}))} empty="No existen alertas derivadas que coincidan con el filtro."/>
     </Panel>
   </>;
 }

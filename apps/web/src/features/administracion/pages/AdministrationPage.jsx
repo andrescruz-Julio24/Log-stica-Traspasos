@@ -16,13 +16,13 @@ export function AdministrationPage({data}){
       <div className="module-toolbar"><SearchField value={q} onChange={setQ} placeholder="Buscar SKU o nombre"/></div>
       <Table headers={['SKU','Producto','Ubicaciones con stock','Existencia física total','Disponible calculado']} rows={active.map(p=>{
         const stocks=data.stocks.filter(s=>s.productId===p.id);
-        return {key:p.id,cells:[<strong>{p.sku}</strong>,p.name,stocks.length,sumField(stocks,'physical'),stocks.reduce((n,s)=>n+stockAvailable(s),0)]};
+        return {key:p.id,cells:[<strong key="column-1">{p.sku}</strong>,p.name,stocks.length,sumField(stocks,'physical'),stocks.reduce((n,s)=>n+stockAvailable(s),0)]};
       })} empty="No hay productos con ese filtro."/>
     </Panel>}
     {tab==='locations'&&<Panel title="Ubicaciones logísticas" description="Almacenes, bodegas, distribuidoras y puntos de venta.">
       <Table headers={['Nombre de ubicación','Productos con existencias','Unidades físicas','Unidades disponibles']} rows={data.locations.map(l=>{
         const stocks=data.stocks.filter(s=>s.locationId===l.id);
-        return {key:l.id,cells:[<strong>{l.name}</strong>,stocks.length,sumField(stocks,'physical'),stocks.reduce((n,s)=>n+stockAvailable(s),0)]};
+        return {key:l.id,cells:[<strong key="column-1">{l.name}</strong>,stocks.length,sumField(stocks,'physical'),stocks.reduce((n,s)=>n+stockAvailable(s),0)]};
       })} empty="Sin ubicaciones."/>
     </Panel>}
     {tab==='roles'&&<Panel title="Usuarios y permisos" description="Módulo restringido hasta contar con autenticación real y autorización en NestJS.">

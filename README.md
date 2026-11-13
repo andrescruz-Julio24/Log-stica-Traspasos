@@ -35,3 +35,7 @@ Ver docs/MVP_SCOPE.md para pendientes y criterios de validación.
 - `apps/web/src/shared/api/client.js`: utilidades JavaScript sin JSX (se conserva `.js`).
 - `apps/api/src/**/*.ts`: backend NestJS con TypeScript.
 - Se preservan imports sin extensión para permitir resolución automática de `.jsx` por Next.js.
+
+## Arquitectura modular (frontend JSX / backend TypeScript)
+
+El código se organiza por dominio y responsabilidad. Lee `docs/ARQUITECTURA_REFACTORIZADA.md` para el árbol real, archivos migrados y validaciones. No se han creado providers ni contextos globales porque las pantallas actuales sólo necesitan estado de consulta local. Se conservó Prisma `schema.prisma` sin migraciones nuevas.

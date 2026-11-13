@@ -26,7 +26,7 @@ export function MovementsPage({data}){
     <Panel title="Movimientos registrados" description="Eventos consultables por traspaso y SKU." actions={<NextStep label="Abrir operación de traspasos"/>}>
       <div className="module-toolbar"><SearchField value={q} onChange={setQ} placeholder="Folio, SKU o tipo de movimiento"/></div>
       <Table headers={['Tipo','Traspaso','SKU','Unidades','Origen','Destino o condición','Fecha']} rows={events.map(e=>({
-        key:e.key,cells:[e.type,<Link className="text-link" href={'/traspasos/'+e.t.id}>{e.t.code}</Link>,
+        key:e.key,cells:[e.type,<Link key="column-1" className="text-link" href={'/traspasos/'+e.t.id}>{e.t.code}</Link>,
           e.sku,e.quantity,e.from,e.to,formatDate(e.createdAt)]
       }))} empty="No hay movimientos registrados con ese filtro."/>
     </Panel>

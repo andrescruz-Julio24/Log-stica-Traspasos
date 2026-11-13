@@ -17,7 +17,7 @@ export function ReservationsPage({data}){
     <Hint title="Reserva confirmada ≠ asignación prevista">La reserva física descuenta disponibilidad en el origen. La relación con un pedido de cliente no significa que su mercancía ya haya sido recibida en el destino.</Hint>
     <Panel title="Reservas por traspaso" description="Consulta de unidades comprometidas y cantidad liberada." actions={<NextStep label="Registrar una reserva"/>}>
       <div className="module-toolbar"><SearchField value={q} onChange={setQ}/></div>
-      <Table headers={['Folio','Producto','Origen','Reservado','Activo','Pedido cliente','Fecha']} rows={rows.map(r=>({key:r.key,cells:[<TransferLink t={r.transfer}/>,r.product.sku,r.transfer.origin.name,r.quantity,r.active,r.orderLineId?'Vinculado':'Sin vincular',formatDate(r.createdAt)]}))} empty="No se encontraron reservas."/>
+      <Table headers={['Folio','Producto','Origen','Reservado','Activo','Pedido cliente','Fecha']} rows={rows.map(r=>({key:r.key,cells:[<TransferLink key="column-1" t={r.transfer}/>,r.product.sku,r.transfer.origin.name,r.quantity,r.active,r.orderLineId?'Vinculado':'Sin vincular',formatDate(r.createdAt)]}))} empty="No se encontraron reservas."/>
     </Panel>
   </>;
 }

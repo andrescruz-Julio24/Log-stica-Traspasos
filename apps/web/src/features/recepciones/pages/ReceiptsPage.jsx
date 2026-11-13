@@ -10,7 +10,7 @@ export function ReceiptsPage({data}){
     <div className="stats"><Metric label="Líneas recibidas" value={rows.length} detail="Registros de recepción verificable"/><Metric label="Presentadas" value={rows.reduce((n,x)=>n+x.l.presented,0)} detail="Cantidad física reportada"/><Metric label="Aceptadas" value={rows.reduce((n,x)=>n+x.l.accepted,0)} detail="Se incorpora al destino"/><Metric label="Rechazadas" value={rows.reduce((n,x)=>n+x.l.rejected,0)} detail="No aumenta inventario disponible"/></div>
     <Hint title="Regla de recepción">Para cada línea, presentado = aceptado + rechazado. Una aceptación no borra faltantes, excedentes o incidencias previas.</Hint>
     <Panel title="Recepciones verificadas" description="Diferencia explícita entre presentado, aceptado y rechazado." actions={<NextStep label="Registrar recepción"/>}>
-      <Table headers={['Traspaso','SKU','Presentado','Aceptado','Rechazado','Destino','Fecha']} rows={rows.map(x=>({key:x.key,cells:[<TransferLink t={x.t}/>,x.product?.sku||x.l.productId,x.l.presented,<span className="positive">{x.l.accepted}</span>,x.l.rejected,x.t.destination.name,formatDate(x.r.createdAt)]}))} empty="Aún no se han registrado recepciones."/>
+      <Table headers={['Traspaso','SKU','Presentado','Aceptado','Rechazado','Destino','Fecha']} rows={rows.map(x=>({key:x.key,cells:[<TransferLink key="column-1" t={x.t}/>,x.product?.sku||x.l.productId,x.l.presented,<span key="column-2" className="positive">{x.l.accepted}</span>,x.l.rejected,x.t.destination.name,formatDate(x.r.createdAt)]}))} empty="Aún no se han registrado recepciones."/>
     </Panel>
   </>;
 }

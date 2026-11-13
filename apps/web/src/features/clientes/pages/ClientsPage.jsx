@@ -16,7 +16,7 @@ export function ClientsPage({data}){
     <Hint title="Clientes derivados de pedidos">Esta lista agrupa por nombre escrito en los pedidos; aún no existe catálogo de clientes con identificador empresarial. Dos nombres distintos pueden referirse a la misma persona o empresa.</Hint>
     <Panel title="Clientes con pedidos registrados" description="Vista de abastecimiento comercial por cliente." actions={<Link href="/pedidos" className="secondary">Ir a pedidos</Link>}>
       <div className="module-toolbar"><SearchField value={q} onChange={setQ} placeholder="Buscar cliente"/></div>
-      <Table headers={['Cliente','Pedidos','Pedidos listos','Abastecimiento','Unidades faltantes']} rows={grouped.map(c=>({key:c.name,cells:[<strong>{c.name}</strong>,c.orders.length,c.orders.filter(o=>o.status==='READY').length,<Progress actual={c.accepted} total={c.required}/>,Math.max(0,c.required-c.accepted)]}))} empty="No hay clientes que coincidan."/>
+      <Table headers={['Cliente','Pedidos','Pedidos listos','Abastecimiento','Unidades faltantes']} rows={grouped.map(c=>({key:c.name,cells:[<strong key="column-1">{c.name}</strong>,c.orders.length,c.orders.filter(o=>o.status==='READY').length,<Progress key="column-2" actual={c.accepted} total={c.required}/>,Math.max(0,c.required-c.accepted)]}))} empty="No hay clientes que coincidan."/>
     </Panel>
   </>;
 }

@@ -17,12 +17,12 @@ Versión: ampliación MVP 2026-11-12. Base: árbol de conocimiento SGTL v6.0. La
 
 ## Organización aplicada
 
-- Dashboard.jsx: navegación, carga y pantalla operativa existente.
-- WorkflowForms.jsx: formularios de creación y operaciones, extraídos sin duplicación.
-- OperationsViews.jsx: recepción, reservas, despacho, preparación, tránsito, movimientos y cancelaciones.
-- GovernanceViews.jsx: alertas, autorizaciones y administración.
-- InsightViews.jsx: reportes, clientes y búsqueda.
-- EntityDetail.jsx: trazabilidad individual de pedido y traspaso.
+- Workspace.jsx: shell, navegación y mensajes; OverviewPage.jsx: resumen; useWorkspaceData.js: estado remoto por sección.
+- CreateOrder.jsx, CreateTransfer.jsx, CreateIncident.jsx y TransferDetail.jsx: formularios por dominio; FormFields.jsx: controles comunes.
+- Páginas individuales bajo features/reservas, preparacion, despachos, transito, recepciones, cancelaciones y movimientos.
+- Páginas individuales bajo features/alertas, autorizaciones y administracion.
+- Páginas individuales bajo features/reportes, clientes y buscar.
+- features/trazabilidad/pages/EntityDetail.jsx: trazabilidad individual compartida entre pedidos y traspasos.
 - ModuleKit.jsx: tablas, estados, indicadores, progreso, vacíos, avisos y búsqueda reutilizables.
 - Rutas Next.js dedicadas con parámetros para detalle.
 
@@ -31,3 +31,5 @@ Versión: ampliación MVP 2026-11-12. Base: árbol de conocimiento SGTL v6.0. La
 Los módulos sin endpoint de escritura no presentan acciones ficticias. El MVP no está listo para producción por falta de autenticación real, control por sucursal, evidencias, cancelaciones compensatorias, aprobaciones y pruebas transaccionales E2E. Los datos de tránsito son agregados, no ubicación verificada. Los valores de reportes son conteos actuales, no SLA confirmados.
 
 La referencia original del árbol es SGTL v6.0: preservar las decisiones D-01 y las políticas aún pendientes.
+
+Backend: `modules/pedidos`, `modules/traspasos`, `modules/incidencias`, `modules/catalogos`, `modules/auditoria`, y `shared/database` para Prisma y transacciones. Los endpoints originales se mantienen.

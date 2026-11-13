@@ -13,7 +13,7 @@ export function CancellationsPage({data}){
       <div className="module-toolbar"><SearchField value={q} onChange={setQ} placeholder="Buscar pedido o cliente"/></div>
       <Table headers={['Pedido','Cliente','Destino','Abastecimiento','Reservas relacionadas','Evaluación']} rows={candidates.map(o=>{
         const reservations=data.transfers.flatMap(t=>t.lines.flatMap(l=>l.reservations)).filter(r=>o.lines.some(l=>l.id===r.orderLineId));
-        return {key:o.id,cells:[o.code,o.customer,o.destination.name,<Progress actual={sumField(o.lines,'accepted')} total={sumField(o.lines,'required')}/>,reservations.length,<span className="muted">Requiere evaluación y autorización</span>]};})} empty="Sin pedidos para evaluar."/>
+        return {key:o.id,cells:[o.code,o.customer,o.destination.name,<Progress key="column-1" actual={sumField(o.lines,'accepted')} total={sumField(o.lines,'required')}/>,reservations.length,<span key="column-2" className="muted">Requiere evaluación y autorización</span>]};})} empty="Sin pedidos para evaluar."/>
     </Panel>
     <Panel title="Flujo de cancelación controlada" description="Diseño de proceso no habilitado en el MVP.">
       <div className="workflow-steps"><span>Solicitud</span><span>Impacto en inventario</span><span>Aprobación</span><span>Compensación</span><span>Auditoría</span></div>

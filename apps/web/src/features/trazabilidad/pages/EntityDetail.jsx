@@ -30,10 +30,10 @@ export default function EntityDetail({kind,id}){
       <div className="stats"><Metric label="Unidades requeridas" value={req} detail="Pedido comercial"/><Metric label="Aceptadas y asignadas" value={accepted} detail="Recepción validada"/><Metric label="Pendientes" value={Math.max(0,req-accepted)} detail="Aún no cubiertas"/><Metric label="Estado" value={<Status value={order.status}/>} detail="Calculado desde el registro"/></div>
       <Hint title="Disponibilidad comercial">Este pedido solamente figura listo cuando todas sus líneas alcanzan la cantidad aceptada; la entrega final al cliente y los permisos de liberación no forman parte del MVP.</Hint>
       <Panel title="Productos solicitados" description="Consulta detallada de abastecimiento por SKU.">
-        <Table headers={['SKU','Producto','Requerido','Aceptado','Faltante','Progreso']} rows={order.lines.map(l=>({key:l.id,cells:[<strong>{l.product.sku}</strong>,l.product.name,l.required,l.accepted,Math.max(0,l.required-l.accepted),<Progress actual={l.accepted} total={l.required}/>]}))}/>
+        <Table headers={['SKU','Producto','Requerido','Aceptado','Faltante','Progreso']} rows={order.lines.map(l=>({key:l.id,cells:[<strong key="column-1">{l.product.sku}</strong>,l.product.name,l.required,l.accepted,Math.max(0,l.required-l.accepted),<Progress key="column-2" actual={l.accepted} total={l.required}/>]}))}/>
       </Panel>
       <Panel title="Reservas y traspasos relacionados" description="Una reserva en origen no equivale a recepción en destino.">
-        <Table headers={['Traspaso','SKU','Cantidad prevista','Reserva activa','Estado']} rows={reservations.map(({t,l,r})=>({key:r.id,cells:[<Link href={'/traspasos/'+t.id} className="text-link">{t.code}</Link>,l.product.sku,r.quantity,r.quantity-r.released,<Status value={t.status}/>]}))} empty="No hay reservas asociadas a este pedido."/>
+        <Table headers={['Traspaso','SKU','Cantidad prevista','Reserva activa','Estado']} rows={reservations.map(({t,l,r})=>({key:r.id,cells:[<Link key="column-1" href={'/traspasos/'+t.id} className="text-link">{t.code}</Link>,l.product.sku,r.quantity,r.quantity-r.released,<Status key="column-2" value={t.status}/>]}))} empty="No hay reservas asociadas a este pedido."/>
       </Panel>
     </main>;
   }
@@ -66,7 +66,7 @@ export default function EntityDetail({kind,id}){
       </Panel>
     </div>
     <Panel title="Incidencias" description="Problemas asociados al traspaso.">
-      <Table headers={['Tipo','Observación','Estado','Creada']} rows={relatedIncidents.map(i=>({key:i.id,cells:[i.type,i.notes,<Status value={i.status}/>,formatDate(i.createdAt)]}))} empty="No hay incidencias relacionadas."/>
+      <Table headers={['Tipo','Observación','Estado','Creada']} rows={relatedIncidents.map(i=>({key:i.id,cells:[i.type,i.notes,<Status key="column-1" value={i.status}/>,formatDate(i.createdAt)]}))} empty="No hay incidencias relacionadas."/>
     </Panel>
     <Panel title="Historial disponible" description="Eventos almacenados en la ventana de auditoría consultada (últimos 200).">
       <Table headers={['Evento','Actor demo','Fecha','Entidad']} rows={history.map(e=>({key:e.id,cells:[e.type,e.actor,formatDate(e.createdAt),e.entity+' / '+e.entityId.slice(0,10)]}))} empty="No hay eventos relacionados dentro de los registros consultados."/>
