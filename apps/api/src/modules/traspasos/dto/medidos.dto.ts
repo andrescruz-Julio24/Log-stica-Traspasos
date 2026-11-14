@@ -1,6 +1,6 @@
 import { Type } from 'class-transformer';
 import { ArrayMinSize, IsArray, IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, Min, ValidateNested } from 'class-validator';
-import { decimalPattern } from '../proveedores/dto/proveedores.dto';
+import { decimalPattern } from '../../proveedores/dto/proveedores.dto';
 
 export class MeasuredTransferItemDto {
   @IsString() @IsNotEmpty() productId!: string;

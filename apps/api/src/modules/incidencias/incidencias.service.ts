@@ -45,7 +45,9 @@ export class IncidenciasService {
         const t = await tx.transfer.findUniqueOrThrow({
           where: { id: i.transferId },
         });
-        if (t.status === 'RECEIVING') await reconcileTransfer(tx, t.id);
+        if (t.status === 'RECEIVING' &&
+          !(await tx.measuredTransferLine.count({ where: { transferId: t.id } })))
+          await reconcileTransfer(tx, t.id);
       }
       await this.tx.auditTx(tx, 'INCIDENT_RESOLVED', 'Incident', id, actor, {
         transferId: i.transferId,
