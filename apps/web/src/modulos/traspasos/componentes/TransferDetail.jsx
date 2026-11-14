@@ -5,10 +5,14 @@ import { ReceiptControls } from './ReceiptControls';
 import { priorities } from '../../pedidos/data/priorities';
 import { activeReserved } from '../../../shared/utils/quantities';
 import { useState } from 'react';
+import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { useTransferMovements } from '../hooks/useTransferMovements';
 import { Quantity, Select } from '../../../shared/componentes/FormFields';
 
 export function TransferDetail({ transfer, orders, busy, onAction }) {
+  const { data } = useWorkspace();
+  const trips = data.trips.filter(t => t.transferId === transfer.id && t.status === 'ACTIVE');
+  const [tripId, setTripId] = useState('');
   const [productId, setProduct] = useState(transfer.lines[0]?.productId || ''),
     [quantity, setQuantity] = useState('1'),
     [orderLineId, setOrderLine] = useState('');
@@ -83,6 +87,12 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
               onChange={(e) => setCustodian(e.target.value)}
             />
           </label>
+          <label className="field full">Viaje asignado (opcional; registrar primero en Choferes y viajes)
+            <select value={tripId} onChange={(e)=>setTripId(e.target.value)}>
+              <option value="">Sin viaje vinculado</option>
+              {trips.map(t=><option key={t.id} value={t.id}>Viaje {t.id.slice(0,8)} · activo</option>)}
+            </select>
+          </label>
           <div className={`${styles.actions} full`}>
             <button
               disabled={busy || !line || !Number.isSafeInteger(qty) || qty < 1}
@@ -113,7 +123,7 @@ export function TransferDetail({ transfer, orders, busy, onAction }) {
                   submitMovement(
                     'dispatches',
                     { productId, quantity: qty },
-                    custodian ? { custodian } : {},
+                    { ...(custodian ? { custodian } : {}), ...(tripId ? { tripId } : {}) },
                   ),
                 )
               }

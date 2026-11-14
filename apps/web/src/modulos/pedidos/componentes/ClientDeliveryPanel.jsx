@@ -60,6 +60,7 @@ function ClientReceptionForm({ shipment }) {
 
 export function ClientDeliveryPanel({ order }) {
   const { data, act, busy } = useWorkspace();
+  const trips = data.trips.filter(t => t.orderId === order.id && t.status === 'ACTIVE');
   const shipments = data.clientDeliveries.filter((shipment) => shipment.orderId === order.id);
   const shipped = new Map();
   const received = new Map();
@@ -93,6 +94,7 @@ export function ClientDeliveryPanel({ order }) {
     act(() => submitOnce('/client-deliveries/dispatch', {
       orderId: order.id, custodian: String(f.get('custodian') || '').trim(),
       reference: String(f.get('reference') || '').trim() || undefined,
+      ...(f.get('tripId') ? { tripId: f.get('tripId') } : {}),
       items,
     }));
   }
@@ -112,6 +114,11 @@ export function ClientDeliveryPanel({ order }) {
           <label className="field">Chofer o custodio <input required name="custodian" maxLength={120}/></label>
           <label className="field">Referencia de bitácora o remisión
             <input name="reference" maxLength={200}/>
+          </label>
+          <label className="field">Viaje y chofer registrado (opcional)
+            <select name="tripId" defaultValue=""><option value="">Sin viaje asociado</option>
+              {trips.map(t=><option key={t.id} value={t.id}>Viaje {t.id.slice(0,8)} · activo</option>)}
+            </select>
           </label>
           {eligible.map(({ line, available }) => (
             <label className="field" key={line.id}>
