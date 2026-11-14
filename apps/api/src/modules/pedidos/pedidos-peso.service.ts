@@ -135,7 +135,7 @@ export class PedidosPesoService {
         include: { order: true, shipments: true } });
       ensure(line.order.status !== 'CANCELLED' && !line.shipments.length &&
         line.dispatchedKg.isZero(), 'Este peso comercial ya fue despachado');
-      await validTripForDispatch(tx, body.tripId, { orderId: line.orderId });
+      const activeTrip = await validTripForDispatch(tx, body.tripId, { orderId: line.orderId });
       ensure(line.reservedKg.equals(line.plannedKg), 'Falta reservar el peso teórico completo');
       const actual = measuredAmount(body.actualKg, 'KG');
       ensure(actual.lte(line.reservedKg), 'El peso real supera lo reservado; requiere nueva autorización');
@@ -160,7 +160,7 @@ export class PedidosPesoService {
         weightLineId: line.id, nominalKg: line.plannedKg, actualKg: actual,
         differenceKg: diff, documentRef: body.documentRef?.trim() || null,
         accountingRef: 'REV-PESO-' + randomUUID().slice(0, 12).toUpperCase(),
-        custodian: body.custodian.trim(), dispatchedBy: actor,
+        custodian: activeTrip?.assignments[0]?.driver.fullName || body.custodian.trim(), dispatchedBy: actor,
         tripId: body.tripId || null,
       } });
       await this.transactions.auditTx(tx, 'COMMERCIAL_WEIGHT_DISPATCHED', 'WeightShipment',
@@ -171,6 +171,8 @@ export class PedidosPesoService {
           averageBoxKg: line.averageBoxKg?.toString() ?? null,
           accountingRef: shipment.accountingRef, documentRef: shipment.documentRef,
           noPriceCalculated: true, requiresCustomerReception: true,
+          tripId: body.tripId || null,
+          effectiveDriverId: activeTrip?.assignments[0]?.driverId || null,
         });
       return shipment;
     });

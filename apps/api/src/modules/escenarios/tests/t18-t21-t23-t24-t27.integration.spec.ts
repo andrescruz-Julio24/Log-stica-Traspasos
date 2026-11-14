@@ -148,6 +148,7 @@ describe('T-23: registro y sustitución de chofer por falta del habitual',()=>{
     const loadKey=randomUUID();
     const shipment=await transfers.dispatch(transfer.id,loaded,loadKey,'preparador');
     expect(shipment.tripId).toBe(trip.id);
+    expect(shipment.custodian).toBe(support.fullName);
     expect((await transfers.dispatch(transfer.id,loaded,loadKey,'preparador')).id).toBe(shipment.id);
     expect(await db.dispatch.count({where:{transferId:transfer.id}})).toBe(1);
     const t2=await drivers.createTrip({...tripBody,plannedDepartureAt:new Date(Date.now()+2*3600000).toISOString()},

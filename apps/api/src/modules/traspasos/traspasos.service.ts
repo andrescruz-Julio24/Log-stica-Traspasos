@@ -248,7 +248,7 @@ export class TraspasosService {
           },
         });
         if (!transfer) throw new NotFoundException('Traspaso no encontrado');
-        await validTripForDispatch(tx, body.tripId, { transferId });
+        const activeTrip = await validTripForDispatch(tx, body.tripId, { transferId });
         ensure(
           ['PREPARING', 'DISPATCHED', 'IN_TRANSIT', 'RECEIVING'].includes(
             transfer.status,
@@ -338,7 +338,7 @@ export class TraspasosService {
           data: {
             transferId,
             tripId: body.tripId ?? null,
-            custodian: body.custodian || actor || 'operador-demo',
+            custodian: activeTrip?.assignments[0]?.driver.fullName || body.custodian || actor || 'operador-demo',
             lines: {
               create: body.items.map((i) => ({
                 productId: i.productId,
@@ -363,7 +363,9 @@ export class TraspasosService {
           'Dispatch',
           dispatch.id,
           actor,
-          { transferId, items: body.items },
+          { transferId, items: body.items,
+            tripId: body.tripId || null,
+            effectiveDriverId: activeTrip?.assignments[0]?.driverId || null },
         );
         return dispatch;
       },

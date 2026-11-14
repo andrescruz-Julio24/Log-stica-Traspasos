@@ -99,7 +99,7 @@ export class MedidosService {
       });
       ensure(line.transferId === transferId && ['PREPARING','IN_TRANSIT','RECEIVING'].includes(line.transfer.status),
         'Traspaso no disponible para despacho');
-      await validTripForDispatch(tx, body.tripId, { transferId });
+      const activeTrip = await validTripForDispatch(tx, body.tripId, { transferId });
       const qty = measuredAmount(body.quantity, line.unit);
       ensure(line.dispatched.plus(qty).lte(line.reserved),
         'Se requiere reserva suficiente antes de cargar la mercancía');
@@ -118,12 +118,13 @@ export class MedidosService {
       ensure(updatedLine.count === 1, 'El despacho ya fue modificado');
       const dispatch = await tx.measuredDispatch.create({ data: {
         transferId, lineId: line.id, quantity: qty, tripId: body.tripId ?? null,
-        custodian: body.custodian.trim(), dispatchedBy: actor,
+        custodian: activeTrip?.assignments[0]?.driver.fullName || body.custodian.trim(), dispatchedBy: actor,
       } });
       await tx.transfer.update({ where: { id: transferId }, data: { status: 'IN_TRANSIT' } });
       await this.tx.auditTx(tx, 'MEASURED_TRANSFER_DISPATCHED', 'MeasuredDispatch', dispatch.id, actor, {
         transferId, productId: line.productId, unit: line.unit,
-        quantity: qty.toString(), custodian: body.custodian, inTransit: true,
+        quantity: qty.toString(), custodian: dispatch.custodian, inTransit: true,
+        tripId: body.tripId || null, effectiveDriverId: activeTrip?.assignments[0]?.driverId || null,
       });
       return dispatch;
     });

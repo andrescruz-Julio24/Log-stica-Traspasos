@@ -131,7 +131,7 @@ export class EntregasService {
         where: { id: body.orderId }, include: { lines: true },
       });
       ensure(order.status !== 'CANCELLED', 'Pedido comercial cancelado');
-      await validTripForDispatch(tx, body.tripId, { orderId: order.id });
+      const activeTrip = await validTripForDispatch(tx, body.tripId, { orderId: order.id });
       const blocking = await tx.incident.count({
         where: { status: 'OPEN', blocking: true, allocation: { reservation: { orderLine: { orderId: order.id } } } },
       });
@@ -157,14 +157,17 @@ export class EntregasService {
       }
       const shipment = await tx.clientShipment.create({
         data: {
-          orderId: order.id, originId: order.destinationId, tripId: body.tripId ?? null, custodian: body.custodian.trim(),
+          orderId: order.id, originId: order.destinationId, tripId: body.tripId ?? null,
+          custodian: activeTrip?.assignments[0]?.driver.fullName || body.custodian.trim(),
           reference: body.reference || null, dispatchedBy: actor,
+          
           lines: { create: body.items.map((i) => ({ orderLineId: i.orderLineId, quantity: i.quantity })) },
         },
         include: { lines: true },
       });
       await this.transactions.auditTx(tx, 'CLIENT_SHIPMENT_DISPATCHED', 'ClientShipment', shipment.id, actor, {
-        orderId: order.id, originId: order.destinationId, custodian: body.custodian,
+        orderId: order.id, originId: order.destinationId, custodian: shipment.custodian, tripId: body.tripId || null,
+        effectiveDriverId: activeTrip?.assignments[0]?.driverId || null,
         items: body.items, inTransit: true,
       });
       return shipment;
