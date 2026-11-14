@@ -79,7 +79,7 @@ export function ClientDeliveryPanel({ order }) {
   })).filter((x) => x.available > 0);
   const allDelivered = order.lines.length > 0 && order.lines.every((line) => (received.get(line.id) || 0) >= line.required);
   const anyDelivered = [...received.values()].some((n) => n > 0);
-  const commercialStatus = allDelivered && rejected === 0 && order.status !== 'BLOCKED'
+  const computedStatus = allDelivered && rejected === 0 && order.status !== 'BLOCKED'
     ? 'ENTREGADO CONFORME'
     : rejected > 0 ? 'CON INCIDENCIAS'
     : anyDelivered ? 'ENTREGA PARCIAL'
@@ -100,7 +100,7 @@ export function ClientDeliveryPanel({ order }) {
   }
   return (
     <Panel title="Entrega efectiva al cliente" description="El abastecimiento interno y la entrega final son eventos distintos.">
-      <p className={styles.status}>Estado comercial de entrega: <strong>{commercialStatus}</strong></p>
+      <p className={styles.status}>Estado comercial de entrega: <strong>{(data.clientDeliveryStatus?.commercialStatus || computedStatus).replaceAll('_',' ')}</strong></p>
       <Table headers={['Producto','Requerido','Abastecido','Salido al cliente','Recibido por cliente']}
         rows={order.lines.map((line) => ({
           key: line.id,

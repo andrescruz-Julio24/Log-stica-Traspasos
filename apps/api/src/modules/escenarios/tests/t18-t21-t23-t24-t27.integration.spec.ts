@@ -185,6 +185,7 @@ describe('T-27: rechazo parcial del cliente y retorno protegido',()=>{
     expect([caseFile.expected.toString(),caseFile.status]).toEqual(['2','AWAITING_RETURN']);
     expect(caseFile.incidents.some(i=>i.status==='OPEN')).toBe(true);
     expect((await db.stock.findUniqueOrThrow({where:{id:stock.id}})).physical).toBe(0);
+    expect((await deliveries.deliveryStatus(order.id)).commercialStatus).toBe('CON_INCIDENCIAS');
     await returns.intake(caseFile.id,{observed:'2',observedAt:new Date().toISOString(),
       conditionNote:'Dos piezas en cuarentena'},randomUUID(),'almacenista');
     expect((await db.stock.findUniqueOrThrow({where:{id:stock.id}})).physical).toBe(0);
@@ -195,5 +196,8 @@ describe('T-27: rechazo parcial del cliente y retorno protegido',()=>{
     const receiving=await db.clientReceptionLine.findMany({where:{receptionId:confirmed.id}});
     expect(receiving.map(x=>[x.accepted,x.rejected])).toEqual([[4,2]]);
     expect(await db.commercialReturn.count({where:{orderId:order.id}})).toBe(1);
+    const state = await deliveries.deliveryStatus(order.id);
+    expect(state.commercialStatus).toBe('CON_INCIDENCIAS');
+    expect([state.accepted,state.rejected,state.openReturns]).toEqual([4,2,0]);
   });
 });
