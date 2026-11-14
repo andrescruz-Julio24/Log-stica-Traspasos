@@ -7,6 +7,7 @@ import { operator, OperatorRequest } from '../gobierno/identity';
 export class EntregasController {
   constructor(private readonly service: EntregasService) {}
   @Get() list(@Query('orderId') orderId?: string) { return this.service.list(orderId); }
+  @Get('order/:id/status') status(@Param('id') id: string) { return this.service.deliveryStatus(id); }
   @Post('allocate-local') allocateLocal(
     @Body() body: LocalStockCommitmentDto,
     @Headers('idempotency-key') key: string | undefined,

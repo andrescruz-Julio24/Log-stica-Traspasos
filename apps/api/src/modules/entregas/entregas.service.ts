@@ -10,6 +10,50 @@ import { CreateClientReceptionDto, CreateClientShipmentDto } from './dto/entrega
 export class EntregasService {
   constructor(private readonly db: PrismaService, private readonly transactions: TransactionService) {}
 
+  // Resultado comercial calculado en servidor; 'READY' únicamente significa abastecimiento.
+  async deliveryStatus(orderId: string) {
+    const order = await this.db.customerOrder.findUniqueOrThrow({
+      where: { id: orderId },
+      include: {
+        lines: true, returns: true,
+        weightLines: { include: { shipments: true } },
+        clientShipments: { include: { lines: true, receptions: { include: { lines: true } } } },
+      },
+    });
+    const delivered = new Map(order.lines.map(l => [l.id, 0]));
+    let rejected = 0;
+    let shipped = 0;
+    let accepted = 0;
+    for (const shipment of order.clientShipments) {
+      const byId = new Map(shipment.lines.map(l => [l.id, l.orderLineId]));
+      for (const line of shipment.lines) shipped += line.quantity;
+      for (const receipt of shipment.receptions) {
+        for (const line of receipt.lines) {
+          const orderLineId = byId.get(line.shipmentLineId);
+          if (orderLineId) delivered.set(orderLineId, (delivered.get(orderLineId) || 0) + line.accepted);
+          accepted += line.accepted;
+          rejected += line.rejected;
+        }
+      }
+    }
+    const openReturns = order.returns.filter(r => r.status !== 'RESOLVED').length;
+    const complete = order.lines.length > 0 && order.lines.every(l =>
+      (delivered.get(l.id) || 0) >= l.required);
+    const weightSent = order.weightLines.some(l => l.shipments.length > 0);
+    const state = order.status === 'CANCELLED' ? 'CANCELADO'
+      : (openReturns || rejected || order.status === 'BLOCKED') ? 'CON_INCIDENCIAS'
+      : complete ? 'ENTREGADO_CONFORME'
+      : accepted > 0 ? 'ENTREGA_PARCIAL'
+      : shipped > 0 || weightSent ? 'EN_REPARTO' : 'PENDIENTE_DE_REPARTO';
+    return {
+      orderId: order.id, supplyStatus: order.status, commercialStatus: state,
+      shipped, accepted, rejected, openReturns,
+      kilogramsSent: order.weightLines.reduce((n,l)=>n+l.shipments.reduce(
+        (sum,sh)=>sum+sh.actualKg.toNumber(),0),0),
+      customerReceptionRequired: true,
+    };
+  }
+
   // Reserva directa: una existencia validada en destino no necesita traspaso ficticio.
   allocateLocal(body: { orderLineId: string; quantity: number }, key: string | undefined, actor: string) {
     return this.transactions.idempotent('local-commitment:' + actor, key, body, async (tx) => {
