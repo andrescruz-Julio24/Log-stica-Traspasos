@@ -38,8 +38,6 @@ export class EntregasService {
     }
     const openReturns = order.returns.filter(r => r.status !== 'RESOLVED').length;
     const pieceComplete = order.lines.every(l => (delivered.get(l.id) || 0) >= l.required);
-    const hasLines = order.lines.length > 0 || order.weightLines.length > 0;
-    const complete = hasLines && pieceComplete && weightComplete;
     const weightSent = order.weightLines.some(l => l.shipments.length > 0);
     const weightAccepted = order.weightLines.reduce((total, l) =>
       total + l.shipments.reduce((sum, sh) =>
@@ -50,6 +48,8 @@ export class EntregasService {
     const weightComplete = order.weightLines.every(l =>
       l.shipments.reduce((sum, sh) => sum +
         (sh.clientReception?.acceptedKg.toNumber() || 0), 0) >= l.plannedKg.toNumber());
+    const hasLines = order.lines.length > 0 || order.weightLines.length > 0;
+    const complete = hasLines && pieceComplete && weightComplete;
     const state = order.status === 'CANCELLED' ? 'CANCELADO'
       : (openReturns || rejected || weightRejected || order.status === 'BLOCKED') ? 'CON_INCIDENCIAS'
       : complete ? 'ENTREGADO_CONFORME'
