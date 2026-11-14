@@ -148,6 +148,34 @@ export class EntregasService {
           })) },
         }, include: { lines: true },
       });
+      // T-27: lo rechazado sigue en custodia, sin crear stock en el destino.
+      for (const line of result.lines.filter(x => x.rejected > 0)) {
+        const original = shipment.lines.find(x => x.id === line.shipmentLineId);
+        ensure(original, 'La recepción no corresponde a esta salida');
+        const orderLine = await tx.orderLine.findUniqueOrThrow({
+          where: { id: original.orderLineId }, include: { product: true },
+        });
+        const returned = await tx.commercialReturn.create({ data: {
+          orderId: shipment.orderId, productId: orderLine.productId,
+          returnLocationId: shipment.originId, clientReceptionLineId: line.id,
+          expected: line.rejected, unit: 'PIEZA',
+          reason: body.notes?.trim() || 'Rechazo parcial del cliente',
+          registeredBy: actor,
+        } });
+        const incident = await tx.incident.create({ data: {
+          commercialReturnId: returned.id, type: 'CLIENTE_RECHAZO_PARCIAL',
+          blocking: true, sku: orderLine.product.sku,
+          quantity: line.rejected, location: shipment.originId,
+          notes: 'Cliente rechazó ' + line.rejected + ' PIEZA. ' + (body.notes || ''),
+        } });
+        await this.transactions.auditTx(tx, 'CLIENT_RETURN_OPENED',
+          'CommercialReturn', returned.id, actor, {
+            shipmentId: shipment.id, receptionId: result.id,
+            clientReceptionLineId: line.id, quantity: line.rejected,
+            incidentId: incident.id, awaitingPhysicalReturn: true,
+            stockNotRestored: true,
+          });
+      }
       await this.transactions.auditTx(tx, 'CLIENT_RECEIPT_CONFIRMED', 'ClientReception', result.id, actor, {
         shipmentId, orderId: shipment.orderId, receiverName: body.receiverName, observedAt: body.observedAt,
         items: body.items, rejected: body.items.some((i) => i.rejected > 0),
