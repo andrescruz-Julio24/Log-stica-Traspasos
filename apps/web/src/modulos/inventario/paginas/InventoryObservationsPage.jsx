@@ -4,6 +4,7 @@ import { CaptureInventoryObservation } from '../componentes/CaptureInventoryObse
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { Panel, Table, formatDate } from '../../../shared/ui/ModuleKit';
 import { submitOnce } from '../../../shared/services/apiClient';
+import { observationDifference } from '../utils/countDifference';
 
 const source = { PAPER: 'Papel', EXCEL: 'Excel estimado', DIGITAL: 'Digital' };
 const method = { COUNT: 'Conteo', WEIGHT: 'Pesaje', ESTIMATE: 'Estimación' };
@@ -15,7 +16,7 @@ export function InventoryObservationsPage() {
       <CaptureInventoryObservation />
       <Panel title="Observaciones y validaciones" description="Distingue observaciones estimadas de mediciones físicas confirmadas. Las diferencias requieren un ajuste autorizado independiente.">
         <Table
-          headers={['Producto', 'Ubicación', 'Medición', 'Fuente / método', 'Observado', 'Registró', 'Verificación']}
+          headers={['Producto', 'Ubicación', 'Medición', 'Fuente / método', 'Diferencia orientativa', 'Observado', 'Registró', 'Verificación']}
           rows={data.inventoryObservations.map((o) => ({
             key: o.id,
             cells: [
@@ -23,6 +24,12 @@ export function InventoryObservationsPage() {
               o.location.name,
               o.quantity + ' ' + o.unit,
               source[o.source] + ' · ' + method[o.method],
+              (() => {
+                const delta = observationDifference(o);
+                if (delta === null) return 'Sin unidad comparable';
+                if (delta === 0) return 'Coincide con captura digital';
+                return <span key="difference" className={styles.difference}>{o.source === 'EXCEL' ? 'Referencia: ' : 'Revisar: '}{delta > 0 ? '+' : ''}{delta} piezas</span>;
+              })(),
               formatDate(o.observedAt),
               o.recordedBy,
               o.status === 'VERIFIED'
