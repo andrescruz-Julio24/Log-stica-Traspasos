@@ -96,6 +96,14 @@ describe('T-21: reserva de hoy vinculada al compromiso de mañana',()=>{
       .rejects.toThrow('después del compromiso');
     expect((await db.stock.findFirstOrThrow({where:{productId:product.id,locationId:a.id}})).reserved).toBe(3);
     expect(await db.dispatch.count({where:{transferId:transfer.id}})).toBe(0);
+    await transfers.pick(transfer.id, {
+      transferLineId: transfer.lines[0].id, quantity: 3, version: 0, location: 'RACK QA',
+    }, 'preparador');
+    const payload={items:[{productId:product.id,quantity:3}],custodian:'Chofer programado'};
+    const shippingKey=randomUUID();
+    const sent=await transfers.dispatch(transfer.id,payload,shippingKey,'preparador');
+    expect((await transfers.dispatch(transfer.id,payload,shippingKey,'preparador')).id).toBe(sent.id);
+    expect(await db.dispatch.count({where:{transferId:transfer.id}})).toBe(1);
   });
 });
 describe('T-23: registro y sustitución de chofer por falta del habitual',()=>{
@@ -103,7 +111,15 @@ describe('T-23: registro y sustitución de chofer por falta del habitual',()=>{
     const tag=randomUUID();
     const a=await db.location.create({data:{name:'PVT viaje '+tag}});
     const b=await db.location.create({data:{name:'Distri viaje '+tag}});
-    const transfer=await db.transfer.create({data:{code:'TR-DR-'+tag,originId:a.id,destinationId:b.id}});
+    const product=await db.product.create({data:{sku:'TRIP-'+tag,name:'Producto en ruta'}});
+    await db.stock.create({data:{productId:product.id,locationId:a.id,physical:10}});
+    const transfer=await transfers.createTransfer({
+      originId:a.id,destinationId:b.id,items:[{productId:product.id,requested:2}],
+    },'responsable');
+    await transfers.reserve(transfer.id,{transferLineId:transfer.lines[0].id,quantity:2},
+      'responsable',randomUUID());
+    await transfers.pick(transfer.id,{transferLineId:transfer.lines[0].id,
+      quantity:2,version:0,location:'RACK QA'},'preparador');
     const regular=await drivers.register({fullName:'Chofer habitual QA',category:'REGULAR'},
       randomUUID(),'supervisor');
     const support=await drivers.register({fullName:'Operario de apoyo QA',category:'SUPPORT'},
@@ -128,6 +144,12 @@ describe('T-23: registro y sustitución de chofer por falta del habitual',()=>{
     await drivers.start(trip.id,randomUUID(),'logística');
     const valid=await db.$transaction(tx=>validTripForDispatch(tx,trip.id,{transferId:transfer.id}));
     expect(valid?.id).toBe(trip.id);
+    const loaded={items:[{productId:product.id,quantity:2}],custodian:'Relevo provisional QA',tripId:trip.id};
+    const loadKey=randomUUID();
+    const shipment=await transfers.dispatch(transfer.id,loaded,loadKey,'preparador');
+    expect(shipment.tripId).toBe(trip.id);
+    expect((await transfers.dispatch(transfer.id,loaded,loadKey,'preparador')).id).toBe(shipment.id);
+    expect(await db.dispatch.count({where:{transferId:transfer.id}})).toBe(1);
     const t2=await drivers.createTrip({...tripBody,plannedDepartureAt:new Date(Date.now()+2*3600000).toISOString()},
       randomUUID(),'logística');
     await expect(drivers.assign(t2.id,alternate,randomUUID(),'supervisor')).rejects.toThrow('otro viaje');
