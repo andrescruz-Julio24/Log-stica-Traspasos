@@ -45,6 +45,7 @@ model Location {
 
 model Product {
   baseUnit InventoryBaseUnit @default(PIEZA)
+  externalLabel String?
   supplierLines SupplierReceiptLine[]
   unitStocks UnitStock[]
   variant      String?

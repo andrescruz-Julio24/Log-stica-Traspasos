@@ -54,6 +54,9 @@ export class TraspasosService {
       'Origen y destino deben ser distintos',
     );
     return this.tx.transaction(async (tx) => {
+      const products = await tx.product.findMany({ where: { id: { in: body.items.map(i => i.productId) } } });
+      ensure(products.length === body.items.length && products.every(p => p.baseUnit === 'PIEZA'),
+        'Este traspaso opera en piezas; KG/CAJA requieren movimiento por unidad');
       const transfer = await tx.transfer.create({
         data: {
           code: 'TR-' + randomUUID().slice(0, 8).toUpperCase(),

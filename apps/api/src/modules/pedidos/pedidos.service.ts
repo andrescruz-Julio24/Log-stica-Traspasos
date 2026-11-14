@@ -84,6 +84,9 @@ export class PedidosService {
         where: { id: body.destinationId },
       });
       if (!place) throw new NotFoundException('Destino no encontrado');
+      const products = await tx.product.findMany({ where: { id: { in: body.items.map(i => i.productId) } } });
+      ensure(products.length === body.items.length && products.every(p => p.baseUnit === 'PIEZA'),
+        'Los pedidos tradicionales operan en piezas; KG/CAJA requieren el flujo comercial multunidad');
       const order = await tx.customerOrder.create({
         data: {
           code: 'CL-' + randomUUID().slice(0, 8).toUpperCase(),
