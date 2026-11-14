@@ -223,3 +223,45 @@ describe('T-27: rechazo parcial del cliente y retorno protegido',()=>{
     expect([state.accepted,state.rejected,state.openReturns]).toEqual([4,2,0]);
   });
 });
+
+describe('T-27 + T-18: conformidad comercial por kg y rechazo parcial pesado',()=>{
+  it('conserva recepción del cliente, impide doble confirmación y abre devolución de kg sin reponer stock',async()=>{
+    const s=await plannedKgShipment();
+    expect((await deliveries.deliveryStatus(s.order.id)).commercialStatus).toBe('EN_REPARTO');
+    const body={receiverName:'Cliente de báscula',
+      acceptedKg:'24.000',rejectedKg:'5.400',
+      observedAt:new Date().toISOString(),notes:'Mercancía dañada al recibir',
+      evidenceRef:'ACUSE-KG-49'};
+    const k=randomUUID();
+    const receipt=await weight.confirmCustomer(s.shipment.id,body,k,'repartidor');
+    expect((await weight.confirmCustomer(s.shipment.id,body,k,'repartidor')).id).toBe(receipt.id);
+    await expect(weight.confirmCustomer(s.shipment.id,body,randomUUID(),'repartidor')).rejects.toThrow('conformidad');
+    const state=await deliveries.deliveryStatus(s.order.id);
+    expect(state.commercialStatus).toBe('CON_INCIDENCIAS');
+    expect([state.weightAcceptedKg,state.weightRejectedKg,state.openReturns]).toEqual([24,5.4,1]);
+    const returnCase=await db.commercialReturn.findFirstOrThrow({where:{
+      orderId:s.order.id,weightShipmentId:s.shipment.id,
+    }});
+    expect([returnCase.expected.toString(),returnCase.unit,returnCase.status])
+      .toEqual(['5.4','KG','AWAITING_RETURN']);
+    expect(await db.incident.count({where:{commercialReturnId:returnCase.id,status:'OPEN'}})).toBe(1);
+    const physical=await db.unitStock.findUniqueOrThrow({where:{id:s.stock.id}});
+    expect([physical.physical.toString(),physical.reserved.toString()]).toEqual(['20.6','0']);
+    await returns.intake(returnCase.id,{observed:'5.400',observedAt:new Date().toISOString(),
+      conditionNote:'Rechazo pesado: cinco kilos y cuatrocientos gramos'},randomUUID(),'almacenista');
+    await returns.resolve(returnCase.id,{usable:'0',blocked:'5.400',
+      reason:'Rechazo en revisión; no permitir venta'},randomUUID(),'supervisor');
+    const final=await db.unitStock.findUniqueOrThrow({where:{id:s.stock.id}});
+    expect([final.physical.toString(),final.blocked.toString()]).toEqual(['26','5.4']);
+    expect((await deliveries.deliveryStatus(s.order.id)).commercialStatus).toBe('CON_INCIDENCIAS');
+    expect(await db.weightClientReception.count({where:{shipmentId:s.shipment.id}})).toBe(1);
+  });
+  it('no permite que un peso por debajo del despacho desaparezca sin explicar su custodia',async()=>{
+    const s=await plannedKgShipment();
+    await expect(weight.confirmCustomer(s.shipment.id,{
+      receiverName:'Cliente',acceptedKg:'20.000',rejectedKg:'3.000',
+      observedAt:new Date().toISOString(),notes:'Sin explicación de restantes',
+    },randomUUID(),'repartidor')).rejects.toThrow('totalidad');
+    expect(await db.weightClientReception.count({where:{shipmentId:s.shipment.id}})).toBe(0);
+  });
+});
