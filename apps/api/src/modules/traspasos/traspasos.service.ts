@@ -25,6 +25,7 @@ export class TraspasosService {
 
   transfers() {
     return this.db.transfer.findMany({
+      where: { measuredLines: { none: {} } },
       include: {
         origin: true,
         destination: true,
