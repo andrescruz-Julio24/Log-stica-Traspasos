@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../shared/database/prisma.service';
 import {
   TransactionService,
@@ -89,6 +90,19 @@ export class GobiernoService {
             })),
             'Hay incidencias bloqueantes',
           );
+          const measuredLines = await tx.measuredTransferLine.findMany({
+            where: { transferId: t.id },
+          });
+          if (measuredLines.length) {
+            ensure(measuredLines.every(l => l.reserved.equals(l.dispatched)),
+              'Libera o despacha las reservas de peso antes del cierre');
+            const measuredDispatches = await tx.measuredDispatch.findMany({
+              where: { transferId: t.id }, include: { receipts: true },
+            });
+            ensure(measuredDispatches.every(d =>
+              d.receipts.reduce((total, r) => total.plus(r.presented), new Prisma.Decimal(0)).gte(d.quantity)),
+              'Inspecciona todos los despachos de peso antes del cierre con diferencias');
+          }
           await tx.transfer.update({
             where: { id: t.id },
             data: { status: 'CLOSED', closedWithDifferences: true },

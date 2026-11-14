@@ -5,7 +5,8 @@ import { submitOnce } from '../../../shared/services/apiClient';
 
 export function ApplyInventoryCount({ observation }) {
   const { act, busy } = useWorkspace();
-  const old = observation.stockPhysicalSnapshot;
+  const old = observation.unit === 'PIEZA'
+    ? observation.stockPhysicalSnapshot : observation.stockMeasuredSnapshot;
   const desired = Number(observation.quantity);
   const delta = old === null ? null : desired - old;
   function apply(event) {
@@ -22,7 +23,7 @@ export function ApplyInventoryCount({ observation }) {
       <summary>Aplicar al inventario oficial</summary>
       <form onSubmit={apply} className={styles.form}>
         <p>Saldo al contar: <strong>{old === null ? 'sin registro' : old}</strong>
-          {' · '}Conteo validado: <strong>{desired} piezas</strong>
+          {' · '}Conteo validado: <strong>{desired} {observation.unit}</strong>
           {' · '}Diferencia: <strong>{delta === null ? 'alta inicial' : (delta > 0 ? '+' : '') + delta}</strong>
         </p>
         <label className="field">Motivo documentado del ajuste

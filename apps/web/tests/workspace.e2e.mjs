@@ -145,6 +145,21 @@ try {
   await page.getByRole('heading', { name: 'Observaciones y validaciones' }).waitFor();
   await button('Registrar observación').click();
   assert.ok((await page.locator('form :invalid').count()) > 0);
+  // Cobertura de nuevas interfaces v2.1 sin suplantar permisos de escritura.
+  await go('/proveedores');
+  await page.getByRole('heading', { name: 'Registrar llegada prevista del proveedor' }).waitFor();
+  await page.getByRole('heading', { name: 'Ingresos e inspecciones de proveedores' }).waitFor();
+  await button('Registrar ingreso previsto').click();
+  assert.ok((await page.locator('form :invalid').count()) > 0);
+  await go('/traspasos-peso');
+  await page.getByRole('heading', { name: 'Traspasos por peso y unidad' }).waitFor();
+  await page.getByText('Crear solicitud de traspaso por KG o caja').click();
+  await page.locator('select[name=originId]').waitFor();
+  await go('/inventario');
+  await page.getByRole('heading', { name: 'Inventario por kilogramo y caja' }).waitFor();
+  await go('/administracion');
+  await page.getByText('Registrar producto en el catálogo').click();
+  await page.locator('input[name=externalLabel]').waitFor();
   console.log(
     'E2E operativo, resultados parciales, bloqueo, reintentos, excepción de panel, timeout y navegación OK',
   );

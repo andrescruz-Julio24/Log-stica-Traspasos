@@ -1,0 +1,6 @@
+.container { border: 1px solid #d9e4e9; border-radius: 9px; padding: 12px; margin-bottom: 16px; }
+.container summary { font-weight: 600; cursor: pointer; }
+.form { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 215px), 1fr)); margin-top: 12px; }
+.form input, .form select { width: 100%; max-width: 100%; }
+.form button, .note { grid-column: 1 / -1; }
+.note { font-size: .875rem; color: var(--muted, #657889); }

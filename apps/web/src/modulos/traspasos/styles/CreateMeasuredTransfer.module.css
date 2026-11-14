@@ -1,0 +1,7 @@
+.container { border: 1px solid #d9e4e9; padding: 12px; border-radius: 10px; margin: 10px 0 16px; }
+.container summary { font-weight: 600; cursor: pointer; }
+.form { display: grid; gap: 12px; padding: 14px 0; }
+.form input, .form select { width: 100%; max-width: 100%; }
+.line { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%,210px),1fr)); border: 1px solid #d9e4e9; padding: 12px; border-radius: 8px; }
+.line legend { font-weight: 600; }
+.note { color: var(--muted, #657889); font-size: .875rem; }

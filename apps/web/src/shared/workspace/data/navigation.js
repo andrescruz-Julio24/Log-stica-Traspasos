@@ -14,6 +14,7 @@ export const areas = [
   ],
   [
     { key: 'transfers', label: 'Traspasos', href: '/traspasos' },
+    { key: 'measuredTransfers', label: 'Traspasos por KG y caja', href: '/traspasos-peso' },
     { key: 'preparation', label: 'Preparación', href: '/preparacion' },
     { key: 'dispatches', label: 'Despachos', href: '/despachos' },
     { key: 'transit', label: 'En tránsito', href: '/transito' },
@@ -22,6 +23,7 @@ export const areas = [
   [
     { key: 'stock', label: 'Inventario', href: '/inventario' },
     { key: 'counts', label: 'Conteos y referencias', href: '/conteos' },
+    { key: 'suppliers', label: 'Ingresos de proveedores', href: '/proveedores' },
     { key: 'reservations', label: 'Reservas', href: '/reservas' },
     { key: 'movements', label: 'Movimientos', href: '/movimientos' },
   ],

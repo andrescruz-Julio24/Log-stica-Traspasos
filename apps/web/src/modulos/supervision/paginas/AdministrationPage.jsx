@@ -9,6 +9,7 @@ import {
   Unavailable,
   stockAvailable,
 } from '../../../shared/ui/ModuleKit';
+import { ProductCatalogForm } from '../componentes/ProductCatalogForm';
 import { sumField } from '../../../shared/utils/quantities';
 import styles from '../styles/AdministrationPage.module.css';
 
@@ -21,10 +22,10 @@ export function AdministrationPage() {
   );
   return (
     <>
-      <Hint title="Catálogos de sólo lectura">
-        Los catálogos mostrados provienen de PostgreSQL. Este MVP no incorpora
-        edición de usuarios, sucursales, productos, roles ni permisos. Ningún
-        control visual suplanta la autorización del backend.
+      <Hint title="Catálogo con códigos internos controlados">
+        Los productos se registran en SGTL con código interno asignado por el servidor,
+        presentación, unidad base y etiqueta externa. Crear productos requiere supervisor;
+        la administración de cuentas y las sucursales aún son limitadas.
       </Hint>
       <div
         className={styles.tabs}
@@ -61,10 +62,13 @@ export function AdministrationPage() {
               placeholder="Buscar SKU o nombre"
             />
           </div>
+          <ProductCatalogForm />
           <Table
             headers={[
-              'SKU',
+              'Código interno',
               'Producto',
+              'Unidad',
+              'Presentación / etiqueta',
               'Ubicaciones con stock',
               'Existencia física total',
               'Disponible calculado',
@@ -76,6 +80,8 @@ export function AdministrationPage() {
                 cells: [
                   <strong key="column-1">{p.sku}</strong>,
                   p.name,
+                  p.baseUnit || 'PIEZA',
+                  [p.presentation, p.externalLabel].filter(Boolean).join(' · ') || '—',
                   stocks.length,
                   sumField(stocks, 'physical'),
                   stocks.reduce((n, s) => n + stockAvailable(s), 0),

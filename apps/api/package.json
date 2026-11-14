@@ -10,7 +10,7 @@
     "prisma:migrate": "prisma migrate dev",
     "seed": "node --env-file=.env --import tsx prisma/seed.ts",
     "test": "vitest run --exclude '**/*.integration.spec.ts'",
-    "test:integration": "vitest run src/modules/traspasos/tests/traspasos.integration.spec.ts src/modules/inventario/tests/conteos.integration.spec.ts src/modules/entregas/tests/entregas.integration.spec.ts"
+    "test:integration": "vitest run src/modules/traspasos/tests/traspasos.integration.spec.ts src/modules/inventario/tests/conteos.integration.spec.ts src/modules/entregas/tests/entregas.integration.spec.ts src/modules/proveedores/tests/proveedores.integration.spec.ts src/modules/traspasos/tests/medidos.integration.spec.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.0",

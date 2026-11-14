@@ -1,0 +1,5 @@
+.form { display: grid; gap: 14px; min-width: 0; }
+.form input, .form select { width: 100%; max-width: 100%; }
+.lines { display: grid; gap: 8px; }
+.line { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; border: 1px solid #d9e4e9; border-radius: 9px; padding: 12px; }
+.line > label { flex: 1 1 210px; }
