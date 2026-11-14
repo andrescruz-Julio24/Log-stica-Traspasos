@@ -88,8 +88,8 @@ describe('D-01 — SGTL sustituye el registro en papel', () => {
   });
   it('Excel y papel dejan de ser medios de captura oficial; kg no se convierte silenciosamente en piezas', async () => {
     const s = await fixture();
-    await expect(svc.create({ ...s.common, quantity: '10', unit: 'PIEZA',
-      source: 'PAPER', method: 'COUNT' }, 'capturista', randomUUID())).rejects.toThrow('papel');
+    expect(() => svc.create({ ...s.common, quantity: '10', unit: 'PIEZA',
+      source: 'PAPER', method: 'COUNT' }, 'capturista', randomUUID())).toThrow('papel');
     const excel = await svc.create({ ...s.common, quantity: '10', unit: 'PIEZA',
       source: 'EXCEL', method: 'ESTIMATE' }, 'capturista', randomUUID());
     await expect(svc.verify(excel.id, 'supervisor', randomUUID())).rejects.toThrow();
