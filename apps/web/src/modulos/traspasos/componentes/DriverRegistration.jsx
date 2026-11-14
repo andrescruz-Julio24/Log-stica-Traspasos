@@ -20,14 +20,20 @@ export function DriverRegistration() {
       <button className="primary" disabled={busy}>Registrar chofer</button>
     </form>
     <div className={styles.drivers}>
-      {data.drivers.map(driver=><div key={driver.id} className={styles.driver}>
+      {data.drivers.map(driver=><form key={driver.id} className={styles.driver}
+        onSubmit={(e)=>{e.preventDefault();const form=e.currentTarget;const f=new FormData(form);
+          act(()=>submitOnce('/drivers/'+driver.id+'/availability',{
+            available:!driver.available,reason:String(f.get('reason')).trim(),
+          }),()=>form.reset());}}>
         <strong>{driver.fullName}</strong>
         <span>{driver.category==='SUPPORT'?'Personal de apoyo':'Chofer habitual'} · {driver.available?'Disponible':'No disponible'}</span>
-        <button type="button" className="secondary" disabled={busy}
-          onClick={()=>act(()=>submitOnce('/drivers/'+driver.id+'/availability',{
-            available:!driver.available,reason:'Actualización de disponibilidad operativa',
-          }))}>{driver.available?'Marcar no disponible':'Marcar disponible'}</button>
-      </div>)}
+        <label className="field">Motivo del cambio de disponibilidad
+          <input name="reason" required maxLength={500} placeholder="Ej. ausencia, permiso, reingreso"/>
+        </label>
+        <button type="submit" className="secondary" disabled={busy}>
+          {driver.available?'Marcar no disponible':'Marcar disponible'}
+        </button>
+      </form>)}
     </div>
   </div>;
 }
