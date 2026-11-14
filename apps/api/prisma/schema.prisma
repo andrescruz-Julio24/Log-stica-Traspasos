@@ -34,6 +34,7 @@ model Location {
   id      String          @id @default(cuid())
   name    String          @unique
   stocks  Stock[]
+  observations InventoryObservation[]
   orders  CustomerOrder[]
   origins Transfer[]      @relation("Origin")
   targets Transfer[]      @relation("Destination")
@@ -253,4 +254,44 @@ model ExceptionRequest {
   decision  String?
   createdAt DateTime  @default(now())
   decidedAt DateTime?
+}
+
+enum InventoryObservationSource {
+  PAPER
+  EXCEL
+  DIGITAL
+}
+
+enum InventoryObservationMethod {
+  COUNT
+  WEIGHT
+  ESTIMATE
+}
+
+enum InventoryObservationStatus {
+  REFERENCE
+  VERIFIED
+}
+
+model InventoryObservation {
+  id                    String                     @id @default(cuid())
+  productId             String
+  locationId            String
+  quantity              Decimal                    @db.Decimal(18, 3)
+  unit                  String
+  source                InventoryObservationSource
+  method                InventoryObservationMethod
+  status                InventoryObservationStatus @default(REFERENCE)
+  reference             String?
+  observedAt            DateTime
+  recordedAt            DateTime                   @default(now())
+  recordedBy            String
+  verifiedAt            DateTime?
+  verifiedBy            String?
+  stockPhysicalSnapshot Int?
+  product               Product                    @relation(fields: [productId], references: [id])
+  location              Location                   @relation(fields: [locationId], references: [id])
+
+  @@index([locationId, recordedAt])
+  @@index([productId, recordedAt])
 }
