@@ -45,6 +45,7 @@ try {
     .getByRole('link')
     .click();
   await page.getByText('Productos solicitados', { exact: true }).waitFor();
+  await page.getByRole('heading', { name: 'Entrega efectiva al cliente' }).waitFor();
 
   await go('/traspasos');
   await button('Nuevo traspaso').click();
@@ -139,6 +140,11 @@ try {
     .first()
     .click();
   await page.getByText('Inventario por ubicación', { exact: true }).waitFor();
+  await go('/conteos');
+  await page.getByRole('heading', { name: 'Registrar conteo o referencia' }).waitFor();
+  await page.getByRole('heading', { name: 'Observaciones y validaciones' }).waitFor();
+  await button('Registrar observación').click();
+  assert.ok((await page.locator('form :invalid').count()) > 0);
   console.log(
     'E2E operativo, resultados parciales, bloqueo, reintentos, excepción de panel, timeout y navegación OK',
   );

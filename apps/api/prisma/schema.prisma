@@ -34,6 +34,8 @@ model Location {
   id      String          @id @default(cuid())
   name    String          @unique
   stocks  Stock[]
+  observations InventoryObservation[]
+  clientShipmentOrigins ClientShipment[]
   orders  CustomerOrder[]
   origins Transfer[]      @relation("Origin")
   targets Transfer[]      @relation("Destination")
@@ -48,6 +50,7 @@ model Product {
   stocks       Stock[]
   lines        OrderLine[]
   transfers    TransferLine[]
+  observations InventoryObservation[]
 }
 
 model Stock {
@@ -61,6 +64,7 @@ model Stock {
   version         Int       @default(0)
   product         Product   @relation(fields: [productId], references: [id])
   location        Location  @relation(fields: [locationId], references: [id])
+  localCommitments LocalStockCommitment[]
 
   @@unique([productId, locationId])
 }
@@ -83,6 +87,7 @@ model CustomerOrder {
   createdAt     DateTime    @default(now())
   destination   Location    @relation(fields: [destinationId], references: [id])
   lines         OrderLine[]
+  clientShipments ClientShipment[]
 }
 
 model OrderLine {
@@ -94,6 +99,8 @@ model OrderLine {
   order        CustomerOrder @relation(fields: [orderId], references: [id])
   product      Product       @relation(fields: [productId], references: [id])
   reservations Reservation[]
+  clientShipmentLines ClientShipmentLine[]
+  localCommitments LocalStockCommitment[]
 
   @@unique([orderId, productId])
 }
@@ -253,4 +260,117 @@ model ExceptionRequest {
   decision  String?
   createdAt DateTime  @default(now())
   decidedAt DateTime?
+}
+
+enum InventoryObservationSource {
+  PAPER
+  EXCEL
+  DIGITAL
+}
+
+enum InventoryObservationMethod {
+  COUNT
+  WEIGHT
+  ESTIMATE
+}
+
+enum InventoryObservationStatus {
+  REFERENCE
+  VERIFIED
+}
+
+model InventoryObservation {
+  id                    String                     @id @default(cuid())
+  productId             String
+  locationId            String
+  quantity              Decimal                    @db.Decimal(18, 3)
+  unit                  String
+  source                InventoryObservationSource
+  method                InventoryObservationMethod
+  status                InventoryObservationStatus @default(REFERENCE)
+  reference             String?
+  observedAt            DateTime
+  recordedAt            DateTime                   @default(now())
+  recordedBy            String
+  verifiedAt            DateTime?
+  verifiedBy            String?
+  stockPhysicalSnapshot Int?
+  stockVersionSnapshot  Int?
+  appliedAt             DateTime?
+  appliedBy             String?
+  appliedReason         String?
+  appliedPhysical       Int?
+  product               Product                    @relation(fields: [productId], references: [id])
+  location              Location                   @relation(fields: [locationId], references: [id])
+
+  @@index([locationId, recordedAt])
+  @@index([productId, recordedAt])
+}
+
+model ClientShipment {
+  id           String               @id @default(cuid())
+  orderId      String
+  originId     String
+  custodian    String
+  reference    String?
+  dispatchedAt DateTime             @default(now())
+  dispatchedBy String
+  order        CustomerOrder        @relation(fields: [orderId], references: [id])
+  origin       Location             @relation(fields: [originId], references: [id])
+  lines        ClientShipmentLine[]
+  receptions   ClientReception[]
+
+  @@index([orderId, dispatchedAt])
+}
+
+model ClientShipmentLine {
+  id         String                @id @default(cuid())
+  shipmentId String
+  orderLineId String
+  quantity   Int
+  shipment   ClientShipment        @relation(fields: [shipmentId], references: [id])
+  orderLine  OrderLine             @relation(fields: [orderLineId], references: [id])
+  received   ClientReceptionLine[]
+
+  @@unique([shipmentId, orderLineId])
+}
+
+model ClientReception {
+  id           String                @id @default(cuid())
+  shipmentId   String
+  receiverName String
+  observedAt   DateTime
+  recordedAt   DateTime              @default(now())
+  recordedBy   String
+  notes        String?
+  evidenceRef  String?
+  shipment     ClientShipment        @relation(fields: [shipmentId], references: [id])
+  lines        ClientReceptionLine[]
+
+  @@index([shipmentId, recordedAt])
+}
+
+model ClientReceptionLine {
+  id             String              @id @default(cuid())
+  receptionId    String
+  shipmentLineId String
+  accepted       Int
+  rejected       Int
+  reception      ClientReception     @relation(fields: [receptionId], references: [id])
+  shipmentLine   ClientShipmentLine  @relation(fields: [shipmentLineId], references: [id])
+
+  @@unique([receptionId, shipmentLineId])
+}
+
+model LocalStockCommitment {
+  id          String    @id @default(cuid())
+  orderLineId String
+  stockId     String
+  quantity    Int
+  actor       String
+  createdAt   DateTime  @default(now())
+  orderLine   OrderLine @relation(fields: [orderLineId], references: [id])
+  stock       Stock     @relation(fields: [stockId], references: [id])
+
+  @@index([orderLineId, createdAt])
 }

@@ -1,0 +1,10 @@
+.status { margin: 0 0 12px; }
+.form { display: grid; gap: 12px; min-width: 0; margin-top: 14px; }
+.form input { max-width: 100%; }
+.form h3 { margin-bottom: 0; font-size: 1rem; }
+.line { display: flex; flex-wrap: wrap; gap: 12px; border: 1px solid #d3e0e4; border-radius: 9px; padding: 10px; }
+.line legend { font-weight: 600; }
+.shipments { display: grid; gap: 10px; margin-top: 18px; }
+.shipment { border: 1px solid #d3e0e4; border-radius: 9px; padding: 12px; }
+.shipment summary { cursor: pointer; }
+.notice { color: var(--muted, #64748b); font-size: .85rem; }

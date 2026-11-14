@@ -1,0 +1,5 @@
+.form { display: grid; gap: 12px; padding: 14px 0; border-top: 1px solid #d3e0e4; min-width: 0; }
+.form h3 { margin: 0; font-size: 1rem; }
+.form input, .form select { width: 100%; max-width: 100%; }
+.note { color: var(--muted, #64748b); font-size: .85rem; }
+.note a { text-decoration: underline; }

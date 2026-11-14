@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { deriveAlerts } from '../src/modulos/incidencias/utils/alerts.js';
 import { replenishmentImpact } from '../src/modulos/pedidos/utils/impact.js';
 import { formatDate } from '../src/shared/utils/formatDate.js';
+import { observationDifference } from '../src/modulos/inventario/utils/countDifference.js';
 const order = {
   id: '1',
   code: 'CL1',
@@ -37,4 +38,12 @@ test('impacto comercial excluye pedidos retenidos y agrupa faltantes por destino
 test('fechas ausentes e inválidas', () => {
   assert.equal(formatDate(null), '—');
   assert.equal(formatDate('x'), '—');
+});
+
+test('solo compara piezas contra el saldo congelado; Excel permanece orientativo', () => {
+  assert.equal(observationDifference({ unit: 'PIEZA', quantity: '12.000', stockPhysicalSnapshot: 10 }), 2);
+  assert.equal(observationDifference({ unit: 'PIEZA', quantity: '8', stockPhysicalSnapshot: 10 }), -2);
+  assert.equal(observationDifference({ unit: 'KG', quantity: '29.400', stockPhysicalSnapshot: 30 }), null);
+  assert.equal(observationDifference({ unit: 'PIEZA', quantity: '3.5', stockPhysicalSnapshot: 3 }), null);
+  assert.equal(observationDifference({ unit: 'PIEZA', quantity: '10', stockPhysicalSnapshot: null }), null);
 });

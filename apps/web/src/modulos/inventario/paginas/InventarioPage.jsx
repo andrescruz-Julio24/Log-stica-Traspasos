@@ -2,14 +2,16 @@
 import styles from '../styles/InventarioPage.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { Panel, Table, stockAvailable } from '../../../shared/ui/ModuleKit';
+import Link from 'next/link';
 
 export default function InventarioPage() {
   const { data } = useWorkspace();
   return (
     <Panel
       title="Inventario por ubicación"
-      description="Existencia física ≠ existencia disponible para nuevas reservas"
+      description="SGTL es el registro oficial: existencias físicas, reservas, bloqueos y movimientos por ubicación."
     >
+      <p><Link className="text-link" href="/conteos">Registrar conteo digital o corrección autorizada</Link></p>
       <Table
         headers={[
           'SKU',
@@ -34,7 +36,7 @@ export default function InventarioPage() {
               {stockAvailable(stock)}
             </strong>,
             stock.stale
-              ? 'ERP desactualizado · reserva bloqueada'
+              ? 'Referencia externa pendiente · reserva bloqueada'
               : data.inventorySource,
           ],
         }))}

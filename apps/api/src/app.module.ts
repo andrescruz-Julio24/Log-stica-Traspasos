@@ -1,3 +1,5 @@
+import { EntregasModule } from './modules/entregas/entregas.module';
+import { InventarioModule } from './modules/inventario/inventario.module';
 import { GobiernoService } from './modules/gobierno/gobierno.service';
 import { GobiernoController } from './modules/gobierno/gobierno.controller';
 import { Module } from '@nestjs/common';
@@ -21,6 +23,8 @@ import { AuditoriaModule } from './modules/auditoria/auditoria.module';
     TraspasosModule,
     IncidenciasModule,
     CatalogosModule,
+    InventarioModule,
+    EntregasModule,
     AuditoriaModule,
   ],
   providers: [GobiernoService],
