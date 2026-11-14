@@ -6,7 +6,7 @@ import { BackLink } from '@/shared/componentes/DetailHeader';
 export default async function Page({ params }) {
   const { id } = await params;
   return (
-    <WorkspaceProvider query={queries.transferDetail}>
+    <WorkspaceProvider query={{...queries.transferDetail, resources: [...queries.transferDetail.resources, 'orders', 'transfer-schedules:' + id]}}>
       <WorkspaceContent
         fallback={<BackLink href="/traspasos" label="traspasos" />}
       >
