@@ -746,3 +746,48 @@ it('deduplica altas y reservas concurrentes y permite otra intención independie
   expect((await db.stock.findUniqueOrThrow({where:{id:s.stock.id}})).reserved).toBe(2);
   expect((await create(randomUUID())).id).not.toBe(a.id);
 });
+
+describe('T-16 / INV-19: rutas bidireccionales entre tres inventarios', () => {
+  it('autoriza y concilia los seis sentidos sin duplicar ni crear stock', async () => {
+    const tag = randomUUID();
+    const product = await db.product.create({ data: { sku: 'ROUTE-' + tag, name: 'Rutas QA' } });
+    const locations = [];
+    for (const name of ['Distribuidora', 'PVT', 'Almacen']) {
+      const location = await db.location.create({ data: { name: name + ' QA ' + tag } });
+      locations.push(location);
+      await db.stock.create({ data: { productId: product.id, locationId: location.id, physical: 100 } });
+    }
+    let movements = 0;
+    for (const origin of locations) for (const destination of locations) {
+      if (origin.id === destination.id) continue;
+      const transfer = await service.createTransfer({
+        originId: origin.id, destinationId: destination.id,
+        items: [{ productId: product.id, requested: 1 }],
+      }, 'qa-operador');
+      expect(transfer.originId).toBe(origin.id);
+      expect(transfer.destinationId).toBe(destination.id);
+      await service.reserve(transfer.id, {
+        transferLineId: transfer.lines[0].id, quantity: 1,
+      }, 'qa-operador', randomUUID());
+      await countPicked(transfer.id, 1);
+      const shipment = await service.dispatch(transfer.id, {
+        custodian: 'Chofer QA', items: [{ productId: product.id, quantity: 1 }],
+      }, randomUUID(), 'qa-operador');
+      const beforeAcceptance = await db.stock.findUniqueOrThrow({
+        where: { productId_locationId: { productId: product.id, locationId: destination.id } },
+      });
+      expect(beforeAcceptance.physical).toBeGreaterThanOrEqual(98);
+      await service.receive(transfer.id, {
+        dispatchId: shipment.id,
+        items: [{ productId: product.id, presented: 1, accepted: 1, rejected: 0 }],
+      }, randomUUID(), 'qa-receptor');
+      const closed = await db.transfer.findUniqueOrThrow({ where: { id: transfer.id } });
+      expect(closed.status).toBe('CLOSED');
+      movements++;
+    }
+    expect(movements).toBe(6);
+    const stock = await db.stock.findMany({ where: { productId: product.id } });
+    expect(stock).toHaveLength(3);
+    expect(stock.map(s => [s.physical, s.reserved]).sort()).toEqual([[100,0],[100,0],[100,0]]);
+  });
+});
