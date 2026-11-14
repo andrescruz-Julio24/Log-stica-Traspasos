@@ -36,7 +36,7 @@ export function InventoryObservationsPage() {
               o.appliedAt
                 ? <span key="applied" className={styles.verified}>Aplicado por {o.appliedBy} · {formatDate(o.appliedAt)}</span>
                 : o.status === 'VERIFIED'
-                  ? o.source === 'DIGITAL' && o.unit === 'PIEZA' && o.method === 'COUNT' && Number.isSafeInteger(Number(o.quantity))
+                  ? o.source === 'DIGITAL' && (o.method === 'COUNT' || (o.unit === 'KG' && o.method === 'WEIGHT')) && (o.unit === 'KG' || Number.isSafeInteger(Number(o.quantity)))
                     ? <ApplyInventoryCount key="apply" observation={o} />
                     : <span key="verified" className={styles.verified}>Medición validada; ajuste no disponible para esta unidad</span>
                   : o.source === 'DIGITAL' && o.method !== 'ESTIMATE'
