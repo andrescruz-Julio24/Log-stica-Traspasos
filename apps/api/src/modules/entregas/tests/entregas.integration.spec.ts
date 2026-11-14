@@ -51,8 +51,8 @@ describe('T-26 y T-27: entrega real al cliente', () => {
     const {order,line}=await fixture();
     const shipment=await svc.dispatch({orderId:order.id,custodian:'Chofer QA',
       items:[{orderLineId:line.id,quantity:3}]},randomUUID(),'operador');
-    await expect(svc.confirm(shipment.id,{receiverName:'Cliente',observedAt:new Date().toISOString(),
-      items:[{shipmentLineId:shipment.lines[0].id,accepted:2,rejected:1}]},randomUUID(),'repartidor')).rejects.toThrow();
+    expect(() => svc.confirm(shipment.id,{receiverName:'Cliente',observedAt:new Date().toISOString(),
+      items:[{shipmentLineId:shipment.lines[0].id,accepted:2,rejected:1}]},randomUUID(),'repartidor')).toThrow();
     expect(await db.clientReception.count({where:{shipmentId:shipment.id}})).toBe(0);
   });
 });
