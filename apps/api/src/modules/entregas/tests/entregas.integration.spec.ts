@@ -4,6 +4,7 @@ import { beforeAll, afterAll, describe, it, expect } from 'vitest';
 import { PrismaService } from '../../../shared/database/prisma.service';
 import { TransactionService } from '../../../shared/database/transaction.service';
 import { EntregasService } from '../entregas.service';
+import { ConteosService } from '../../inventario/conteos.service';
 
 if (process.env.SGTL_INTEGRATION_TEST_DB !== '1') throw Error('Se requiere PostgreSQL de pruebas');
 const db = new PrismaService();
@@ -53,5 +54,38 @@ describe('T-26 y T-27: entrega real al cliente', () => {
     await expect(svc.confirm(shipment.id,{receiverName:'Cliente',observedAt:new Date().toISOString(),
       items:[{shipmentLineId:shipment.lines[0].id,accepted:2,rejected:1}]},randomUUID(),'repartidor')).rejects.toThrow();
     expect(await db.clientReception.count({where:{shipmentId:shipment.id}})).toBe(0);
+  });
+});
+
+describe('T-30: entrega desde stock local, sin inventar traspaso',()=>{
+  it('requiere conteo físico y reserva directa antes de salida comercial',async()=>{
+    const tag=randomUUID();
+    const product=await db.product.create({data:{sku:'DIRECT-'+tag,name:'Stock local'}});
+    const location=await db.location.create({data:{name:'Almacen directo '+tag}});
+    const stock=await db.stock.create({data:{productId:product.id,locationId:location.id,physical:5}});
+    const order=await db.customerOrder.create({data:{
+      code:'DIRECT-ORD-'+tag,customer:'Cliente directo',destinationId:location.id,
+      lines:{create:{productId:product.id,required:3}},
+    },include:{lines:true}});
+    const payload={orderLineId:order.lines[0].id,quantity:3};
+    await expect(svc.allocateLocal(payload,randomUUID(),'operador')).rejects.toThrow();
+    const countService=new ConteosService(db,new TransactionService(db));
+    const record=await countService.create({productId:product.id,locationId:location.id,
+      quantity:'5',unit:'PIEZA',source:'PAPER',method:'COUNT',
+      observedAt:new Date().toISOString()},'almacenista');
+    await countService.verify(record.id,'supervisor');
+    const key=randomUUID();
+    const commitment=await svc.allocateLocal(payload,key,'operador');
+    expect((await svc.allocateLocal(payload,key,'operador')).id).toBe(commitment.id);
+    const prepared=await db.customerOrder.findUniqueOrThrow({where:{id:order.id},include:{lines:true}});
+    expect(prepared.status).toBe('READY');
+    expect(prepared.lines[0].accepted).toBe(3);
+    expect((await db.stock.findUniqueOrThrow({where:{id:stock.id}})).reserved).toBe(3);
+    expect(await db.transfer.count({where:{destinationId:location.id}})).toBe(0);
+    const sent=await svc.dispatch({orderId:order.id,custodian:'Chofer directo',
+      items:[{orderLineId:order.lines[0].id,quantity:3}]},randomUUID(),'operador');
+    expect(sent.originId).toBe(location.id);
+    const after=await db.stock.findUniqueOrThrow({where:{id:stock.id}});
+    expect([after.physical,after.reserved]).toEqual([2,0]);
   });
 });
