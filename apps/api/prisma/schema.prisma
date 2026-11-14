@@ -31,6 +31,8 @@ enum IncidentStatus {
 }
 
 model Location {
+  supplierReceipts SupplierReceipt[]
+  unitStocks UnitStock[]
   id      String          @id @default(cuid())
   name    String          @unique
   stocks  Stock[]
@@ -42,6 +44,9 @@ model Location {
 }
 
 model Product {
+  baseUnit InventoryBaseUnit @default(PIEZA)
+  supplierLines SupplierReceiptLine[]
+  unitStocks UnitStock[]
   variant      String?
   presentation String?
   id           String         @id @default(cuid())
@@ -373,4 +378,105 @@ model LocalStockCommitment {
   stock       Stock     @relation(fields: [stockId], references: [id])
 
   @@index([orderLineId, createdAt])
+}
+
+enum InventoryBaseUnit {
+  PIEZA
+  KG
+  CAJA
+}
+
+enum SupplierReceiptStatus {
+  OPEN
+  PARTIAL
+  INSPECTED
+}
+
+// El inventario de PIEZA existente permanece en Stock (valores enteros).
+// Esta tabla cubre unidades sin conversión aprobada (KG o CAJA).
+model UnitStock {
+  id String @id @default(cuid())
+  productId String
+  locationId String
+  unit InventoryBaseUnit
+  physical Decimal @default(0) @db.Decimal(18, 3)
+  reserved Decimal @default(0) @db.Decimal(18, 3)
+  blocked Decimal @default(0) @db.Decimal(18, 3)
+  version Int @default(0)
+  product Product @relation(fields: [productId], references: [id])
+  location Location @relation(fields: [locationId], references: [id])
+
+  @@unique([productId, locationId])
+  @@index([locationId, unit])
+}
+
+model SupplierReceipt {
+  id String @id @default(cuid())
+  supplier String
+  reference String?
+  destinationId String
+  status SupplierReceiptStatus @default(OPEN)
+  createdAt DateTime @default(now())
+  createdBy String
+  destination Location @relation(fields: [destinationId], references: [id])
+  lines SupplierReceiptLine[]
+  inspections SupplierInspection[]
+
+  @@index([destinationId, createdAt])
+}
+
+model SupplierReceiptLine {
+  id String @id @default(cuid())
+  receiptId String
+  productId String
+  unit InventoryBaseUnit
+  expected Decimal @db.Decimal(18, 3)
+  presented Decimal @default(0) @db.Decimal(18, 3)
+  accepted Decimal @default(0) @db.Decimal(18, 3)
+  blocked Decimal @default(0) @db.Decimal(18, 3)
+  receipt SupplierReceipt @relation(fields: [receiptId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  inspectionLines SupplierInspectionLine[]
+  returns SupplierBlockedReturn[]
+
+  @@unique([receiptId, productId])
+}
+
+model SupplierInspection {
+  id String @id @default(cuid())
+  receiptId String
+  observedAt DateTime
+  recordedAt DateTime @default(now())
+  inspectedBy String
+  notes String?
+  evidenceRef String?
+  receipt SupplierReceipt @relation(fields: [receiptId], references: [id])
+  lines SupplierInspectionLine[]
+
+  @@index([receiptId, recordedAt])
+}
+
+model SupplierInspectionLine {
+  id String @id @default(cuid())
+  inspectionId String
+  receiptLineId String
+  presented Decimal @db.Decimal(18, 3)
+  accepted Decimal @db.Decimal(18, 3)
+  blocked Decimal @db.Decimal(18, 3)
+  inspection SupplierInspection @relation(fields: [inspectionId], references: [id])
+  receiptLine SupplierReceiptLine @relation(fields: [receiptLineId], references: [id])
+
+  @@unique([inspectionId, receiptLineId])
+}
+
+model SupplierBlockedReturn {
+  id String @id @default(cuid())
+  receiptLineId String
+  quantity Decimal @db.Decimal(18, 3)
+  reason String
+  returnedBy String
+  returnedAt DateTime @default(now())
+  receiptLine SupplierReceiptLine @relation(fields: [receiptLineId], references: [id])
+
+  @@index([receiptLineId, returnedAt])
 }
