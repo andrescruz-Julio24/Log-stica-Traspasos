@@ -134,6 +134,8 @@ try {
   await page.route('**/api/orders', () => {});
   await go('/pedidos');
   await page.getByText(/tardó demasiado/).waitFor({ timeout: 22000 });
+  // Aislar la simulación de timeout: no bloquear GET /orders en las pantallas siguientes.
+  await page.unroute('**/api/orders');
   await go('/pedidos');
   await page
     .getByRole('link', { name: 'Inventario', exact: true })
