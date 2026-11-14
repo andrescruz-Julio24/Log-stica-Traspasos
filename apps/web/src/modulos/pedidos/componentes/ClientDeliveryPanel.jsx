@@ -1,6 +1,7 @@
 'use client';
 import styles from '../styles/ClientDeliveryPanel.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
+import { LocalStockForm } from './LocalStockForm';
 import { submitOnce } from '../../../shared/services/apiClient';
 import { Panel, Table, formatDate } from '../../../shared/ui/ModuleKit';
 
@@ -102,6 +103,7 @@ export function ClientDeliveryPanel({ order }) {
           cells: [line.product.sku, line.required, line.accepted,
             shipped.get(line.id) || 0, received.get(line.id) || 0],
         }))}/>
+      <LocalStockForm order={order} />
       {eligible.length > 0 && order.status !== 'BLOCKED' && order.status !== 'CANCELLED' && (
         <form onSubmit={send} className={styles.form}>
           <h3>Registrar salida comercial</h3>
