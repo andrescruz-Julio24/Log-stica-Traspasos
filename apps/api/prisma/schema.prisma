@@ -50,6 +50,7 @@ model Product {
   stocks       Stock[]
   lines        OrderLine[]
   transfers    TransferLine[]
+  observations InventoryObservation[]
 }
 
 model Stock {
