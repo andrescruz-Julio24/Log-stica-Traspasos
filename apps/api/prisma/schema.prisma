@@ -35,6 +35,7 @@ model Location {
   name    String          @unique
   stocks  Stock[]
   observations InventoryObservation[]
+  clientShipmentOrigins ClientShipment[]
   orders  CustomerOrder[]
   origins Transfer[]      @relation("Origin")
   targets Transfer[]      @relation("Destination")
@@ -84,6 +85,7 @@ model CustomerOrder {
   createdAt     DateTime    @default(now())
   destination   Location    @relation(fields: [destinationId], references: [id])
   lines         OrderLine[]
+  clientShipments ClientShipment[]
 }
 
 model OrderLine {
@@ -95,6 +97,7 @@ model OrderLine {
   order        CustomerOrder @relation(fields: [orderId], references: [id])
   product      Product       @relation(fields: [productId], references: [id])
   reservations Reservation[]
+  clientShipmentLines ClientShipmentLine[]
 
   @@unique([orderId, productId])
 }
@@ -294,4 +297,59 @@ model InventoryObservation {
 
   @@index([locationId, recordedAt])
   @@index([productId, recordedAt])
+}
+
+model ClientShipment {
+  id           String               @id @default(cuid())
+  orderId      String
+  originId     String
+  custodian    String
+  reference    String?
+  dispatchedAt DateTime             @default(now())
+  dispatchedBy String
+  order        CustomerOrder        @relation(fields: [orderId], references: [id])
+  origin       Location             @relation(fields: [originId], references: [id])
+  lines        ClientShipmentLine[]
+  receptions   ClientReception[]
+
+  @@index([orderId, dispatchedAt])
+}
+
+model ClientShipmentLine {
+  id         String                @id @default(cuid())
+  shipmentId String
+  orderLineId String
+  quantity   Int
+  shipment   ClientShipment        @relation(fields: [shipmentId], references: [id])
+  orderLine  OrderLine             @relation(fields: [orderLineId], references: [id])
+  received   ClientReceptionLine[]
+
+  @@unique([shipmentId, orderLineId])
+}
+
+model ClientReception {
+  id           String                @id @default(cuid())
+  shipmentId   String
+  receiverName String
+  observedAt   DateTime
+  recordedAt   DateTime              @default(now())
+  recordedBy   String
+  notes        String?
+  evidenceRef  String?
+  shipment     ClientShipment        @relation(fields: [shipmentId], references: [id])
+  lines        ClientReceptionLine[]
+
+  @@index([shipmentId, recordedAt])
+}
+
+model ClientReceptionLine {
+  id             String              @id @default(cuid())
+  receptionId    String
+  shipmentLineId String
+  accepted       Int
+  rejected       Int
+  reception      ClientReception     @relation(fields: [receptionId], references: [id])
+  shipmentLine   ClientShipmentLine  @relation(fields: [shipmentLineId], references: [id])
+
+  @@unique([receptionId, shipmentLineId])
 }
