@@ -6,7 +6,7 @@ import { PrismaService } from '../../shared/database/prisma.service';
 import { TransactionService } from '../../shared/database/transaction.service';
 import { ensure } from '../../shared/domain/assertions';
 import { measuredAmount } from '../proveedores/utils/measuredAmount';
-import { CreateWeightOrderDto, ReserveWeightOrderDto, DispatchWeightOrderDto } from './dto/pedidos-peso.dto';
+import { CreateWeightOrderDto, ReserveWeightOrderDto, DispatchWeightOrderDto, ConfirmWeightClientDto } from './dto/pedidos-peso.dto';
 
 @Injectable()
 export class PedidosPesoService {
@@ -74,6 +74,61 @@ export class PedidosPesoService {
       return { lineId, reservedKg: line.reservedKg.plus(qty).toString() };
     });
   }
+  confirmCustomer(shipmentId: string, body: ConfirmWeightClientDto,
+    key: string | undefined, actor: string) {
+    const when = new Date(body.observedAt);
+    ensure(Number.isFinite(when.getTime()) && when.getTime() <= Date.now() + 300000,
+      'Fecha de recepción del cliente inválida');
+    return this.transactions.idempotent('weight-client-confirm:' + shipmentId, key, body, async tx => {
+      const shipment = await tx.weightShipment.findUniqueOrThrow({
+        where: { id: shipmentId },
+        include: { clientReception: true, returnCase: true,
+          weightLine: { include: { order: true, product: true } } },
+      });
+      ensure(!shipment.clientReception, 'La salida de peso ya tiene conformidad del cliente');
+      const accepted = measuredAmount(body.acceptedKg, 'KG', true);
+      const rejected = measuredAmount(body.rejectedKg, 'KG', true);
+      ensure(accepted.plus(rejected).equals(shipment.actualKg),
+        'La conformidad debe conciliar la totalidad del peso presentado al cliente');
+      if (rejected.gt(0)) {
+        ensure(body.notes?.trim(), 'El rechazo de kg requiere motivo');
+        ensure(!shipment.returnCase, 'La salida ya tiene devolución abierta; concilia el expediente existente');
+      }
+      const receipt = await tx.weightClientReception.create({ data: {
+        shipmentId: shipment.id, receiverName: body.receiverName.trim(),
+        acceptedKg: accepted, rejectedKg: rejected, observedAt: when, recordedBy: actor,
+        notes: body.notes?.trim() || null, evidenceRef: body.evidenceRef?.trim() || null,
+      } });
+      if (rejected.gt(0)) {
+        const returned = await tx.commercialReturn.create({ data: {
+          orderId: shipment.weightLine.orderId, productId: shipment.weightLine.productId,
+          weightShipmentId: shipment.id, returnLocationId: shipment.weightLine.order.destinationId,
+          unit: 'KG', expected: rejected, reason: body.notes!.trim(), registeredBy: actor,
+        } });
+        const incident = await tx.incident.create({ data: {
+          commercialReturnId: returned.id, type: 'CLIENTE_RECHAZO_PESO',
+          blocking: true, location: returned.returnLocationId,
+          sku: shipment.weightLine.product.sku,
+          notes: rejected.toString() + ' kg rechazados por el cliente. ' + body.notes!.trim(),
+        } });
+        await this.transactions.auditTx(tx, 'CLIENT_WEIGHT_RETURN_OPENED',
+          'CommercialReturn', returned.id, actor, {
+            weightShipmentId: shipment.id, clientReceiptId: receipt.id,
+            expectedKg: rejected.toString(), incidentId: incident.id,
+            noAutomaticRestock: true,
+          });
+      }
+      await this.transactions.auditTx(tx, 'CLIENT_WEIGHT_RECEIVED',
+        'WeightClientReception', receipt.id, actor, {
+          weightShipmentId: shipment.id, orderId: shipment.weightLine.orderId,
+          acceptedKg: accepted.toString(), rejectedKg: rejected.toString(),
+          receiverName: body.receiverName, observedAt: body.observedAt,
+          evidenceRef: body.evidenceRef || null, isCommercialReceipt: true,
+        });
+      return receipt;
+    });
+  }
+
   dispatch(lineId: string, body: DispatchWeightOrderDto, key: string | undefined, actor: string) {
     return this.transactions.idempotent('weight-order-dispatch:' + lineId, key, body, async tx => {
       const line = await tx.weightOrderLine.findUniqueOrThrow({ where: { id: lineId },

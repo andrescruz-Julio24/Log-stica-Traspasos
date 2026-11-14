@@ -16,7 +16,7 @@ export class EntregasService {
       where: { id: orderId },
       include: {
         lines: true, returns: true,
-        weightLines: { include: { shipments: true } },
+        weightLines: { include: { shipments: { include: { clientReception: true } } } },
         clientShipments: { include: { lines: true, receptions: { include: { lines: true } } } },
       },
     });
@@ -37,17 +37,28 @@ export class EntregasService {
       }
     }
     const openReturns = order.returns.filter(r => r.status !== 'RESOLVED').length;
-    const complete = order.lines.length > 0 && order.lines.every(l =>
-      (delivered.get(l.id) || 0) >= l.required);
+    const pieceComplete = order.lines.every(l => (delivered.get(l.id) || 0) >= l.required);
+    const hasLines = order.lines.length > 0 || order.weightLines.length > 0;
+    const complete = hasLines && pieceComplete && weightComplete;
     const weightSent = order.weightLines.some(l => l.shipments.length > 0);
+    const weightAccepted = order.weightLines.reduce((total, l) =>
+      total + l.shipments.reduce((sum, sh) =>
+        sum + (sh.clientReception?.acceptedKg.toNumber() || 0), 0), 0);
+    const weightRejected = order.weightLines.reduce((total, l) =>
+      total + l.shipments.reduce((sum, sh) =>
+        sum + (sh.clientReception?.rejectedKg.toNumber() || 0), 0), 0);
+    const weightComplete = order.weightLines.every(l =>
+      l.shipments.reduce((sum, sh) => sum +
+        (sh.clientReception?.acceptedKg.toNumber() || 0), 0) >= l.plannedKg.toNumber());
     const state = order.status === 'CANCELLED' ? 'CANCELADO'
-      : (openReturns || rejected || order.status === 'BLOCKED') ? 'CON_INCIDENCIAS'
+      : (openReturns || rejected || weightRejected || order.status === 'BLOCKED') ? 'CON_INCIDENCIAS'
       : complete ? 'ENTREGADO_CONFORME'
-      : accepted > 0 ? 'ENTREGA_PARCIAL'
+      : accepted > 0 || weightAccepted > 0 ? 'ENTREGA_PARCIAL'
       : shipped > 0 || weightSent ? 'EN_REPARTO' : 'PENDIENTE_DE_REPARTO';
     return {
       orderId: order.id, supplyStatus: order.status, commercialStatus: state,
       shipped, accepted, rejected, openReturns,
+      weightAcceptedKg: weightAccepted, weightRejectedKg: weightRejected,
       kilogramsSent: order.weightLines.reduce((n,l)=>n+l.shipments.reduce(
         (sum,sh)=>sum+sh.actualKg.toNumber(),0),0),
       customerReceptionRequired: true,

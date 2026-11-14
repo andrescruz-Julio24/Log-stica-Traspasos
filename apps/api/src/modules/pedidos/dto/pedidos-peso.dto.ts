@@ -18,3 +18,12 @@ export class DispatchWeightOrderDto {
   @IsString() @IsNotEmpty() @MaxLength(150) custodian!: string;
   @IsOptional() @IsString() @MaxLength(200) documentRef?: string;
 }
+
+export class ConfirmWeightClientDto {
+  @IsString() @IsNotEmpty() @MaxLength(120) receiverName!: string;
+  @IsString() @Matches(decimalPattern) acceptedKg!: string;
+  @IsString() @Matches(decimalPattern) rejectedKg!: string;
+  @IsDateString() observedAt!: string;
+  @IsOptional() @IsString() @MaxLength(500) notes?: string;
+  @IsOptional() @IsString() @MaxLength(200) evidenceRef?: string;
+}
