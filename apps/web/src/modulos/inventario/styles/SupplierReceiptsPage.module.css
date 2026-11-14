@@ -1,0 +1,7 @@
+.content { display: grid; gap: 16px; min-width: 0; }
+.receipt { border: 1px solid #d9e4e9; border-radius: 9px; padding: 14px; margin-block: 10px; }
+.receipt > summary { cursor: pointer; line-height: 1.5; }
+.receipt p { overflow-wrap: anywhere; }
+.status { font-weight: 500; }
+.returns { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 12px; padding-top: 14px; }
+.audit { font-size: .875rem; color: var(--muted, #657889); }

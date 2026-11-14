@@ -7,6 +7,7 @@ import Link from 'next/link';
 export default function InventarioPage() {
   const { data } = useWorkspace();
   return (
+    <div className={styles.content}>
     <Panel
       title="Inventario por ubicación"
       description="SGTL es el registro oficial: existencias físicas, reservas, bloqueos y movimientos por ubicación."
@@ -43,5 +44,13 @@ export default function InventarioPage() {
         empty="Sin registros de inventario."
       />
     </Panel>
+    <Panel title="Inventario por kilogramo y caja" description="Registro por producto, unidad y ubicación sin conversiones automáticas entre cajas, piezas y kg.">
+      <Table headers={['Producto', 'Ubicación', 'Unidad', 'Físico', 'Reservado', 'Bloqueado', 'Disponible']}
+        rows={data.unitStocks.map((s) => ({ key: s.id, cells: [s.product.sku + ' · ' + s.product.name,
+          s.location.name, s.unit, String(s.physical), String(s.reserved), String(s.blocked),
+          <strong key="available">{(Number(s.physical) - Number(s.reserved) - Number(s.blocked)).toFixed(3)}</strong> ] }))}
+        empty="Sin existencias por KG o CAJA todavía." />
+    </Panel>
+    </div>
   );
 }

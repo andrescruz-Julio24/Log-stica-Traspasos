@@ -22,6 +22,7 @@ export const areas = [
   [
     { key: 'stock', label: 'Inventario', href: '/inventario' },
     { key: 'counts', label: 'Conteos y referencias', href: '/conteos' },
+    { key: 'suppliers', label: 'Ingresos de proveedores', href: '/proveedores' },
     { key: 'reservations', label: 'Reservas', href: '/reservas' },
     { key: 'movements', label: 'Movimientos', href: '/movimientos' },
   ],
