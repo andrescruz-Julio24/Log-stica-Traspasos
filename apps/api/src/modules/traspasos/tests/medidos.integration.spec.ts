@@ -100,4 +100,21 @@ describe('T-19/T-20: tránsito y recepción de kg reales entre sedes',()=>{
       observedAt:new Date().toISOString()},randomUUID(),'receptor')).rejects.toThrow('excede');
     expect(await db.unitStock.count({where:{productId:s.product.id,locationId:s.destination.id}})).toBe(0);
   });
+  it('T-18: conserva 30 kg teóricos, 29.4 kg pesados y diferencia sin inventar precio',async()=>{
+    const s=await fixture('40.000');
+    const tr=await svc.create({originId:s.origin.id,destinationId:s.destination.id,
+      items:[{productId:s.product.id,requested:'30.000',estimatedPackages:2,
+        averageWeightKg:'15.000'}]},randomUUID(),'operador');
+    const line=tr.measuredLines[0];
+    await svc.reserve(tr.id,{lineId:line.id,quantity:'30.000'},randomUUID(),'operador');
+    const dispatch=await svc.dispatch(tr.id,{lineId:line.id,quantity:'29.400',custodian:'Chofer'},randomUUID(),'operador');
+    await svc.receive(tr.id,{dispatchId:dispatch.id,presented:'29.400',
+      accepted:'29.400',blocked:'0',observedAt:new Date().toISOString()},randomUUID(),'receptor');
+    const result=await db.measuredTransferLine.findUniqueOrThrow({where:{id:line.id}});
+    expect([result.requested.toString(),result.dispatched.toString(),result.accepted.toString(),
+      result.estimatedPackages,result.averageWeightKg?.toString()]).toEqual(['30','29.4','29.4',2,'15']);
+    expect(result.requested.minus(result.accepted).toString()).toBe('0.6');
+    expect((await db.transfer.findUniqueOrThrow({where:{id:tr.id}})).status).toBe('RECEIVING');
+  });
+
 });
