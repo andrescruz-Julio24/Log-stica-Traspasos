@@ -1,0 +1,9 @@
+.content { min-width: 0; }
+.transfer { border: 1px solid #d9e4e9; border-radius: 10px; padding: 14px; margin: 12px 0; }
+.transfer summary, .dispatch summary { cursor: pointer; line-height: 1.6; }
+.line { padding: 12px 0; border-bottom: 1px solid #d9e4e9; }
+.line h3 { font-size: 1rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 14px; }
+.dispatch { padding: 12px; margin-block: 10px; border: 1px solid #d9e4e9; border-radius: 8px; }
+.history { font-size: .875rem; }
+.warning { color: #9a6700; font-weight: 500; }
