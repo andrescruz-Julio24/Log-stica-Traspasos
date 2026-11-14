@@ -1,3 +1,4 @@
+import { validTripForDispatch } from '../transporte/trip-validation';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
@@ -98,6 +99,7 @@ export class MedidosService {
       });
       ensure(line.transferId === transferId && ['PREPARING','IN_TRANSIT','RECEIVING'].includes(line.transfer.status),
         'Traspaso no disponible para despacho');
+      await validTripForDispatch(tx, body.tripId, { transferId });
       const qty = measuredAmount(body.quantity, line.unit);
       ensure(line.dispatched.plus(qty).lte(line.reserved),
         'Se requiere reserva suficiente antes de cargar la mercancía');
@@ -115,7 +117,7 @@ export class MedidosService {
       });
       ensure(updatedLine.count === 1, 'El despacho ya fue modificado');
       const dispatch = await tx.measuredDispatch.create({ data: {
-        transferId, lineId: line.id, quantity: qty,
+        transferId, lineId: line.id, quantity: qty, tripId: body.tripId ?? null,
         custodian: body.custodian.trim(), dispatchedBy: actor,
       } });
       await tx.transfer.update({ where: { id: transferId }, data: { status: 'IN_TRANSIT' } });

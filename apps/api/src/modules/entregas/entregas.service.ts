@@ -1,3 +1,4 @@
+import { validTripForDispatch } from '../transporte/trip-validation';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../shared/database/prisma.service';
 import { TransactionService } from '../../shared/database/transaction.service';
@@ -75,6 +76,7 @@ export class EntregasService {
         where: { id: body.orderId }, include: { lines: true },
       });
       ensure(order.status !== 'CANCELLED', 'Pedido comercial cancelado');
+      await validTripForDispatch(tx, body.tripId, { orderId: order.id });
       const blocking = await tx.incident.count({
         where: { status: 'OPEN', blocking: true, allocation: { reservation: { orderLine: { orderId: order.id } } } },
       });
@@ -100,7 +102,7 @@ export class EntregasService {
       }
       const shipment = await tx.clientShipment.create({
         data: {
-          orderId: order.id, originId: order.destinationId, custodian: body.custodian.trim(),
+          orderId: order.id, originId: order.destinationId, tripId: body.tripId ?? null, custodian: body.custodian.trim(),
           reference: body.reference || null, dispatchedBy: actor,
           lines: { create: body.items.map((i) => ({ orderLineId: i.orderLineId, quantity: i.quantity })) },
         },
