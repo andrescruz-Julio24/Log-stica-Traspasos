@@ -2,6 +2,7 @@
 import styles from '../styles/OrderDetailPage.module.css';
 import detailStyles from '../../../shared/componentes/styles/DetailLayout.module.css';
 import { OrderHistory } from '../componentes/OrderHistory';
+import { ClientDeliveryPanel } from '../componentes/ClientDeliveryPanel';
 import { lineHolds } from '../utils/impact';
 import {orderTrace} from '../utils/orderTrace';
 import Link from 'next/link';
@@ -72,6 +73,7 @@ export default function OrderDetailPage({ id }) {
       </div>
       {shortages.length>0&&<Panel title="Seguimiento de faltantes del despacho"><Table headers={['Traspaso','SKU','Faltante total del despacho','Responsable','Observación']} rows={shortages}/></Panel>}
       <OrderHistory id={id} />
+      <ClientDeliveryPanel order={order} />
       <Hint title="Disponibilidad comercial">
         Un pedido está listo cuando todas sus líneas tienen unidades utilizables
         asignadas y se han liberado las retenciones. Consulta abajo el motivo y

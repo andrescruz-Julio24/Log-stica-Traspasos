@@ -13,7 +13,7 @@ export async function loadResource(key, signal) {
           )
         : Array.isArray(value);
     if (!valid) throw new Error('La respuesta de ' + key + ' está incompleta.');
-    return key === 'bootstrap' ? value : key === 'inventory-observations' ? { inventoryObservations: value } : { [key]: value };
+    return key === 'bootstrap' ? value : key === 'inventory-observations' ? { inventoryObservations: value } : key === 'client-deliveries' ? { clientDeliveries: value } : { [key]: value };
   } catch (error) {
     if (deadline.aborted && !signal.aborted)
       throw new Error('La consulta tardó demasiado.');
