@@ -663,6 +663,7 @@ model WeightOrderLine {
 }
 
 model WeightShipment {
+  clientReception WeightClientReception?
   tripId String?
   trip Trip? @relation(fields: [tripId], references: [id])
   id String @id @default(cuid())
@@ -727,4 +728,18 @@ model AccountingNotice {
   createdAt DateTime @default(now())
   createdBy String
   returnCase CommercialReturn @relation(fields: [returnId], references: [id])
+}
+
+model WeightClientReception {
+  id String @id @default(cuid())
+  shipmentId String @unique
+  receiverName String
+  acceptedKg Decimal @db.Decimal(18,3)
+  rejectedKg Decimal @db.Decimal(18,3)
+  observedAt DateTime
+  recordedAt DateTime @default(now())
+  recordedBy String
+  notes String?
+  evidenceRef String?
+  shipment WeightShipment @relation(fields: [shipmentId], references: [id])
 }
