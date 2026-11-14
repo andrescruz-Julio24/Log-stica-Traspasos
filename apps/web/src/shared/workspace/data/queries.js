@@ -2,6 +2,7 @@ export const emptyWorkspaceData = {
   products: [],
   locations: [],
   stocks: [],
+  inventoryObservations: [],
   orders: [],
   transfers: [],
   incidents: [],
@@ -15,6 +16,7 @@ export const resourceNames = {
   transfers: 'Traspasos',
   incidents: 'Incidencias',
   bootstrap: 'Catálogo e inventario',
+  'inventory-observations': 'Conteos físicos y referencias',
   audit: 'Auditoría',
   authorizations: 'Autorizaciones',
 };
