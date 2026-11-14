@@ -71,6 +71,9 @@ describe('LOG-04 / LOG-06: recepción de proveedores y stock multunidad', () => 
       randomUUID(), 'supervisor')).rejects.toThrow();
     stockKg = await db.unitStock.findUniqueOrThrow({ where: { id: stockKg.id } });
     expect([stockKg.physical.toString(),stockKg.blocked.toString()]).toEqual(['29.4','0.5']);
+    const supplierIncidents = await db.incident.findMany({ where: { supplierReceiptId: receipt.id } });
+    expect(supplierIncidents).toHaveLength(2);
+    expect(supplierIncidents.every(i => i.status === 'OPEN')).toBe(true);
     const audit = await db.auditEvent.findMany({ where: { entityId: receipt.id } });
     expect(audit.map(a=>a.type)).toContain('SUPPLIER_RECEIPT_OPENED');
     const retEvents = await db.auditEvent.findMany({ where: { entityId: returned.id } });

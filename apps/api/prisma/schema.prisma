@@ -213,6 +213,10 @@ model DispatchAllocation {
 }
 
 model Incident {
+  supplierReceiptId String?
+  supplierReceipt SupplierReceipt? @relation(fields: [supplierReceiptId], references: [id])
+  supplierInspectionLineId String?
+  supplierInspectionLine SupplierInspectionLine? @relation(fields: [supplierInspectionLineId], references: [id])
   allocationId String?
   allocation   DispatchAllocation? @relation(fields: [allocationId], references: [id])
   assignedTo   String?
@@ -234,6 +238,7 @@ model Incident {
   createdAt    DateTime            @default(now())
 
   @@index([allocationId, status])
+  @@index([supplierReceiptId, status])
 }
 
 model AuditEvent {
@@ -414,6 +419,7 @@ model UnitStock {
 }
 
 model SupplierReceipt {
+  incidents Incident[]
   id String @id @default(cuid())
   supplier String
   reference String?
@@ -460,6 +466,7 @@ model SupplierInspection {
 }
 
 model SupplierInspectionLine {
+  incidents Incident[]
   id String @id @default(cuid())
   inspectionId String
   receiptLineId String

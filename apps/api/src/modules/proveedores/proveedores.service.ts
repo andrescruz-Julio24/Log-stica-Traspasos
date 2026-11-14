@@ -114,6 +114,23 @@ export class ProveedoresService {
         });
         ensure(changed.count === 1, 'La línea cambió durante la recepción');
         await this.addPhysical(tx, line.productId, receipt.destinationId, line.unit, accepted, blocked);
+        if (blocked.gt(0)) {
+          const inspectionLine = inspection.lines.find(l => l.receiptLineId === line.id);
+          ensure(inspectionLine, 'Inspección vinculada no encontrada');
+          const product = await tx.product.findUniqueOrThrow({ where: { id: line.productId } });
+          const incident = await tx.incident.create({ data: {
+            supplierReceiptId: id, supplierInspectionLineId: inspectionLine.id,
+            type: 'RECEPCION_PROVEEDOR_BLOQUEADA',
+            notes: 'Material en revisión: ' + blocked.toString() + ' ' + line.unit +
+              '. ' + (body.notes || ''),
+            sku: product.sku, custodian: actor, location: receipt.destinationId,
+            evidence: body.evidenceRef || null, blocking: true,
+          } });
+          await this.transactions.auditTx(tx, 'SUPPLIER_INCIDENT_OPENED', 'Incident', incident.id, actor, {
+            receiptId: id, inspectionId: inspection.id, productId: line.productId,
+            blocked: blocked.toString(), unit: line.unit,
+          });
+        }
       }
       const allLines = await tx.supplierReceiptLine.findMany({ where: { receiptId: id } });
       const state = allLines.every(l => l.presented.gte(l.expected))
