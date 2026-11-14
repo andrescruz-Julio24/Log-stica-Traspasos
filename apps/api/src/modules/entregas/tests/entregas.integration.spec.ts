@@ -72,8 +72,8 @@ describe('T-30: entrega desde stock local, sin inventar traspaso',()=>{
     const countService=new ConteosService(db,new TransactionService(db));
     const record=await countService.create({productId:product.id,locationId:location.id,
       quantity:'5',unit:'PIEZA',source:'PAPER',method:'COUNT',
-      observedAt:new Date().toISOString()},'almacenista');
-    await countService.verify(record.id,'supervisor');
+      observedAt:new Date().toISOString()},'almacenista',randomUUID());
+    await countService.verify(record.id,'supervisor',randomUUID());
     const key=randomUUID();
     const commitment=await svc.allocateLocal(payload,key,'operador');
     expect((await svc.allocateLocal(payload,key,'operador')).id).toBe(commitment.id);

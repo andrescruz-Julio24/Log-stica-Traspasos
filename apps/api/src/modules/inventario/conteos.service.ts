@@ -17,10 +17,10 @@ export class ConteosService {
     });
   }
 
-  create(body: CreateInventoryObservationDto, actor: string) {
+  create(body: CreateInventoryObservationDto, actor: string, key?: string) {
     const observedAt = new Date(body.observedAt);
     ensure(observedAt.getTime() <= Date.now() + 5 * 60_000, 'No se admiten conteos fechados en el futuro');
-    return this.transactions.transaction(async (tx) => {
+    return this.transactions.idempotent('inventory-observation:' + actor, key, body, async (tx) => {
       await tx.product.findUniqueOrThrow({ where: { id: body.productId } });
       await tx.location.findUniqueOrThrow({ where: { id: body.locationId } });
       const snapshot = body.unit === 'PIEZA'
@@ -49,8 +49,8 @@ export class ConteosService {
     });
   }
 
-  verify(id: string, actor: string) {
-    return this.transactions.transaction(async (tx) => {
+  verify(id: string, actor: string, key?: string) {
+    return this.transactions.idempotent('inventory-verify:' + id + ':' + actor, key, { id }, async (tx) => {
       const observation = await tx.inventoryObservation.findUniqueOrThrow({ where: { id } });
       ensure(observation.status === InventoryObservationStatus.REFERENCE, 'Observación ya validada');
       if (observation.source === 'EXCEL' || observation.method === 'ESTIMATE')

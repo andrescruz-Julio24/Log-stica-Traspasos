@@ -1,12 +1,14 @@
 'use client';
 import styles from '../styles/ClientDeliveryPanel.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
+import { useRef } from 'react';
 import { LocalStockForm } from './LocalStockForm';
 import { submitOnce } from '../../../shared/services/apiClient';
 import { Panel, Table, formatDate } from '../../../shared/ui/ModuleKit';
 
 function ClientReceptionForm({ shipment }) {
   const { busy, act } = useWorkspace();
+  const receptionTime = useRef(null);
   const pending = shipment.lines.map((line) => {
     const registered = shipment.receptions.flatMap((r) => r.lines)
       .filter((r) => r.shipmentLineId === line.id)
@@ -25,12 +27,12 @@ function ClientReceptionForm({ shipment }) {
     })).filter((l) => l.accepted + l.rejected > 0);
     const payload = {
       receiverName: String(f.get('receiverName') || '').trim(),
-      observedAt: new Date().toISOString(),
+      observedAt: receptionTime.current || (receptionTime.current = new Date().toISOString()),
       notes: String(f.get('notes') || '').trim() || undefined,
       evidenceRef: String(f.get('evidenceRef') || '').trim() || undefined,
       items,
     };
-    act(() => submitOnce('/client-deliveries/' + shipment.id + '/confirm', payload), () => form.reset());
+    act(() => submitOnce('/client-deliveries/' + shipment.id + '/confirm', payload), () => { form.reset(); receptionTime.current = null; });
   }
   return (
     <form onSubmit={save} className={styles.form}>

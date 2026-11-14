@@ -1,18 +1,20 @@
 'use client';
 import styles from '../styles/CaptureInventoryObservation.module.css';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
-import { submit } from '../../../shared/services/apiClient';
+import { submitOnce } from '../../../shared/services/apiClient';
+import { useRef } from 'react';
 import { Panel } from '../../../shared/ui/ModuleKit';
 
 export function CaptureInventoryObservation() {
   const { data, act, busy } = useWorkspace();
+  const captureTime = useRef(null);
   function save(event) {
     event.preventDefault();
     const form = event.currentTarget;
     const f = new FormData(form);
     const moment = f.get('observedAt');
-    const observedAt = moment ? new Date(moment).toISOString() : new Date().toISOString();
-    act(() => submit('/inventory-observations', {
+    const observedAt = captureTime.current || (captureTime.current = moment ? new Date(moment).toISOString() : new Date().toISOString());
+    act(() => submitOnce('/inventory-observations', {
       productId: f.get('productId'),
       locationId: f.get('locationId'),
       quantity: String(f.get('quantity')).replace(',', '.'),
@@ -21,7 +23,7 @@ export function CaptureInventoryObservation() {
       method: f.get('method'),
       observedAt,
       reference: String(f.get('reference') || '').trim() || undefined,
-    }), () => form.reset());
+    }), () => { form.reset(); captureTime.current = null; });
   }
   return (
     <Panel title="Registrar conteo o referencia" description="La captura no modifica existencias: primero debe validarse y conciliarse cualquier discrepancia.">

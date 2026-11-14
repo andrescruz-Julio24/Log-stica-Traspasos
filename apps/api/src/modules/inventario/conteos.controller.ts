@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Post, Req } from '@nestjs/common';
 import { ConteosService } from './conteos.service';
 import { CreateInventoryObservationDto } from './dto/conteos.dto';
 import { operator, OperatorRequest } from '../gobierno/identity';
@@ -7,10 +7,10 @@ import { operator, OperatorRequest } from '../gobierno/identity';
 export class ConteosController {
   constructor(private readonly service: ConteosService) {}
   @Get() list() { return this.service.list(); }
-  @Post() create(@Body() body: CreateInventoryObservationDto, @Req() req: OperatorRequest) {
-    return this.service.create(body, operator(req));
+  @Post() create(@Body() body: CreateInventoryObservationDto, @Req() req: OperatorRequest, @Headers('idempotency-key') key?: string) {
+    return this.service.create(body, operator(req), key);
   }
-  @Post(':id/verify') verify(@Param('id') id: string, @Req() req: OperatorRequest) {
-    return this.service.verify(id, operator(req, true));
+  @Post(':id/verify') verify(@Param('id') id: string, @Req() req: OperatorRequest, @Headers('idempotency-key') key?: string) {
+    return this.service.verify(id, operator(req, true), key);
   }
 }
