@@ -1,6 +1,7 @@
 'use client';
 import styles from '../styles/InventoryObservationsPage.module.css';
 import { CaptureInventoryObservation } from '../componentes/CaptureInventoryObservation';
+import { ApplyInventoryCount } from '../componentes/ApplyInventoryCount';
 import { useWorkspace } from '../../../shared/workspace/hooks/useWorkspace';
 import { Panel, Table, formatDate } from '../../../shared/ui/ModuleKit';
 import { submitOnce } from '../../../shared/services/apiClient';
@@ -14,9 +15,9 @@ export function InventoryObservationsPage() {
   return (
     <div className={styles.content}>
       <CaptureInventoryObservation />
-      <Panel title="Observaciones y validaciones" description="Distingue observaciones estimadas de mediciones físicas confirmadas. Las diferencias requieren un ajuste autorizado independiente.">
+      <Panel title="Observaciones y validaciones" description="Historial digital de conteos. La validación comprueba la medición; aplicar un ajuste actualiza el saldo oficial con causa y auditoría.">
         <Table
-          headers={['Producto', 'Ubicación', 'Medición', 'Fuente / método', 'Diferencia orientativa', 'Observado', 'Registró', 'Verificación']}
+          headers={['Producto', 'Ubicación', 'Medición', 'Fuente / método', 'Diferencia orientativa', 'Observado', 'Registró', 'Estado del inventario']}
           rows={data.inventoryObservations.map((o) => ({
             key: o.id,
             cells: [
@@ -32,11 +33,15 @@ export function InventoryObservationsPage() {
               })(),
               formatDate(o.observedAt),
               o.recordedBy,
-              o.status === 'VERIFIED'
-                ? <span key="verified" className={styles.verified}>Verificado por {o.verifiedBy}</span>
-                : o.source !== 'EXCEL' && o.method !== 'ESTIMATE'
-                  ? <button key="verify" disabled={busy} onClick={() => act(() => submitOnce('/inventory-observations/' + o.id + '/verify', {}))}>Validar medición</button>
-                  : <span key="estimated" className={styles.estimated}>Referencia no verificada</span>,
+              o.appliedAt
+                ? <span key="applied" className={styles.verified}>Aplicado por {o.appliedBy} · {formatDate(o.appliedAt)}</span>
+                : o.status === 'VERIFIED'
+                  ? o.source === 'DIGITAL' && o.unit === 'PIEZA' && o.method === 'COUNT' && Number.isSafeInteger(Number(o.quantity))
+                    ? <ApplyInventoryCount key="apply" observation={o} />
+                    : <span key="verified" className={styles.verified}>Medición validada; ajuste no disponible para esta unidad</span>
+                  : o.source === 'DIGITAL' && o.method !== 'ESTIMATE'
+                    ? <button key="verify" disabled={busy} onClick={() => act(() => submitOnce('/inventory-observations/' + o.id + '/verify', {}))}>Validar medición</button>
+                    : <span key="estimated" className={styles.estimated}>Referencia no verificable</span>,
             ],
           }))}
           empty="No hay observaciones registradas."

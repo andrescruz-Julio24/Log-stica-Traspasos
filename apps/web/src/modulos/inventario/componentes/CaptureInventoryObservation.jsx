@@ -26,7 +26,7 @@ export function CaptureInventoryObservation() {
     }), () => { form.reset(); captureTime.current = null; });
   }
   return (
-    <Panel title="Registrar conteo o referencia" description="La captura no modifica existencias: primero debe validarse y conciliarse cualquier discrepancia.">
+    <Panel title="Registrar conteo o referencia" description="El registro digital reemplaza la libreta de papel. Después de verificar la medición, un supervisor puede aplicar un ajuste al saldo oficial.">
       <form className={styles.form} onSubmit={save}>
         <label className="field">Producto
           <select name="productId" required defaultValue=""><option value="">Seleccionar</option>
@@ -45,7 +45,7 @@ export function CaptureInventoryObservation() {
           <select name="unit" defaultValue="PIEZA"><option value="PIEZA">Pieza</option><option value="CAJA">Caja</option><option value="KG">Kilogramo</option></select>
         </label>
         <label className="field">Procedencia
-          <select name="source" defaultValue="PAPER"><option value="PAPER">Papel físico</option><option value="EXCEL">Excel / Drive (estimación)</option><option value="DIGITAL">Conteo directo en SGTL</option></select>
+          <select name="source" defaultValue="DIGITAL"><option value="EXCEL">Excel histórico (solo referencia)</option><option value="DIGITAL">Conteo en SGTL (registro oficial)</option></select>
         </label>
         <label className="field">Método
           <select name="method" defaultValue="COUNT"><option value="COUNT">Conteo</option><option value="WEIGHT">Pesaje</option><option value="ESTIMATE">Estimación</option></select>
@@ -58,7 +58,7 @@ export function CaptureInventoryObservation() {
         </label>
         <button type="submit" className="primary" disabled={busy}>Registrar observación</button>
       </form>
-      <p className={styles.warning}>Excel y estimaciones nunca se convierten en stock verificado automáticamente. Validar una medición tampoco ajusta el inventario oficial.</p>
+      <p className={styles.warning}>Los registros de Excel son referencias, no existencias disponibles. Solo un conteo digital verificado y una autorización posterior pueden corregir el stock oficial.</p>
     </Panel>
   );
 }
