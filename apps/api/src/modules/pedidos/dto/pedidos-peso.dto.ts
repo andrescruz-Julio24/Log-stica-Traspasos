@@ -1,5 +1,5 @@
 import { IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, Matches, MaxLength, Min } from 'class-validator';
-import { decimalPattern } from '../proveedores/dto/proveedores.dto';
+import { decimalPattern } from '../../proveedores/dto/proveedores.dto';
 export class CreateWeightOrderDto {
   @IsString() @IsNotEmpty() @MaxLength(150) customer!: string;
   @IsString() @IsNotEmpty() destinationId!: string;

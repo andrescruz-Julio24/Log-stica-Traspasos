@@ -1,5 +1,5 @@
 import { IsDateString, IsNotEmpty, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
-import { decimalPattern } from '../proveedores/dto/proveedores.dto';
+import { decimalPattern } from '../../proveedores/dto/proveedores.dto';
 export class WeightReturnDto {
   @IsString() @IsNotEmpty() weightShipmentId!: string;
   @IsString() @IsNotEmpty() @MaxLength(500) reason!: string;
