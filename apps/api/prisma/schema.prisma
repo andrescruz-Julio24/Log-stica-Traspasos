@@ -31,6 +31,7 @@ enum IncidentStatus {
 }
 
 model Location {
+  returnsToLocation CommercialReturn[]
   supplierReceipts SupplierReceipt[]
   unitStocks UnitStock[]
   id      String          @id @default(cuid())
@@ -44,6 +45,8 @@ model Location {
 }
 
 model Product {
+  weightOrderLines WeightOrderLine[]
+  commercialReturns CommercialReturn[]
   measuredTransferLines MeasuredTransferLine[]
   baseUnit InventoryBaseUnit @default(PIEZA)
   externalLabel String?
@@ -84,6 +87,10 @@ enum Priority {
 }
 
 model CustomerOrder {
+  scheduleEvents TransferSchedule[]
+  weightLines WeightOrderLine[]
+  trips Trip[]
+  returns CommercialReturn[]
   priority      Priority    @default(NORMAL)
   dueAt         DateTime?
   id            String      @id @default(cuid())
@@ -113,6 +120,8 @@ model OrderLine {
 }
 
 model Transfer {
+  scheduleEvents TransferSchedule[]
+  trips Trip[]
   measuredLines MeasuredTransferLine[]
   measuredDispatches MeasuredDispatch[]
   closedWithDifferences Boolean        @default(false)
@@ -160,6 +169,8 @@ model Reservation {
 }
 
 model Dispatch {
+  tripId String?
+  trip Trip? @relation(fields: [tripId], references: [id])
   inspectedAt DateTime?
   custodian   String?
   receipts    Receipt[]
@@ -216,6 +227,8 @@ model DispatchAllocation {
 }
 
 model Incident {
+  commercialReturnId String?
+  commercialReturn CommercialReturn? @relation(fields: [commercialReturnId], references: [id])
   supplierReceiptId String?
   supplierReceipt SupplierReceipt? @relation(fields: [supplierReceiptId], references: [id])
   supplierInspectionLineId String?
@@ -324,6 +337,8 @@ model InventoryObservation {
 }
 
 model ClientShipment {
+  tripId String?
+  trip Trip? @relation(fields: [tripId], references: [id])
   id           String               @id @default(cuid())
   orderId      String
   originId     String
@@ -367,6 +382,7 @@ model ClientReception {
 }
 
 model ClientReceptionLine {
+  returnCase CommercialReturn?
   id             String              @id @default(cuid())
   receptionId    String
   shipmentLineId String
@@ -514,6 +530,8 @@ model MeasuredTransferLine {
 }
 
 model MeasuredDispatch {
+  tripId String?
+  trip Trip? @relation(fields: [tripId], references: [id])
   id String @id @default(cuid())
   transferId String
   lineId String
@@ -542,4 +560,168 @@ model MeasuredReceipt {
   dispatch MeasuredDispatch @relation(fields: [dispatchId], references: [id])
 
   @@index([dispatchId, receivedAt])
+}
+
+enum DriverCategory {
+  REGULAR
+  SUPPORT
+}
+
+enum TripStatus {
+  PLANNED
+  ACTIVE
+  FINISHED
+}
+
+enum CommercialReturnStatus {
+  AWAITING_RETURN
+  INSPECTION_REQUIRED
+  RESOLVED
+}
+
+model TransferSchedule {
+  id String @id @default(cuid())
+  transferId String
+  orderId String
+  departureAt DateTime
+  expectedArrivalAt DateTime
+  reason String
+  recordedBy String
+  recordedAt DateTime @default(now())
+  transfer Transfer @relation(fields: [transferId], references: [id])
+  order CustomerOrder @relation(fields: [orderId], references: [id])
+
+  @@index([transferId, recordedAt])
+}
+
+model DriverProfile {
+  id String @id @default(cuid())
+  fullName String
+  category DriverCategory
+  enabled Boolean @default(true)
+  available Boolean @default(true)
+  authorizedBy String
+  createdAt DateTime @default(now())
+  assignments DriverAssignment[]
+
+  @@index([enabled, available])
+}
+
+model Trip {
+  id String @id @default(cuid())
+  transferId String?
+  orderId String?
+  plannedDepartureAt DateTime
+  plannedArrivalAt DateTime?
+  status TripStatus @default(PLANNED)
+  startedAt DateTime?
+  finishedAt DateTime?
+  createdBy String
+  createdAt DateTime @default(now())
+  transfer Transfer? @relation(fields: [transferId], references: [id])
+  order CustomerOrder? @relation(fields: [orderId], references: [id])
+  assignments DriverAssignment[]
+  dispatches Dispatch[]
+  measuredDispatches MeasuredDispatch[]
+  clientShipments ClientShipment[]
+
+  @@index([transferId, createdAt])
+  @@index([orderId, createdAt])
+}
+
+model DriverAssignment {
+  id String @id @default(cuid())
+  tripId String
+  driverId String
+  provisional Boolean @default(false)
+  validUntil DateTime?
+  reason String
+  assignedBy String
+  assignedAt DateTime @default(now())
+  trip Trip @relation(fields: [tripId], references: [id])
+  driver DriverProfile @relation(fields: [driverId], references: [id])
+
+  @@index([tripId, assignedAt])
+  @@index([driverId, assignedAt])
+}
+
+model WeightOrderLine {
+  id String @id @default(cuid())
+  orderId String
+  productId String
+  plannedKg Decimal @db.Decimal(18,3)
+  estimatedBoxes Int?
+  averageBoxKg Decimal? @db.Decimal(18,3)
+  reservedKg Decimal @default(0) @db.Decimal(18,3)
+  dispatchedKg Decimal @default(0) @db.Decimal(18,3)
+  order CustomerOrder @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  shipments WeightShipment[]
+
+  @@unique([orderId, productId])
+}
+
+model WeightShipment {
+  id String @id @default(cuid())
+  weightLineId String
+  nominalKg Decimal @db.Decimal(18,3)
+  actualKg Decimal @db.Decimal(18,3)
+  differenceKg Decimal @db.Decimal(18,3)
+  documentRef String?
+  accountingRef String
+  custodian String
+  dispatchedBy String
+  dispatchedAt DateTime @default(now())
+  weightLine WeightOrderLine @relation(fields: [weightLineId], references: [id])
+  returnCase CommercialReturn?
+}
+
+model CommercialReturn {
+  id String @id @default(cuid())
+  orderId String
+  productId String
+  returnLocationId String
+  clientReceptionLineId String? @unique
+  weightShipmentId String? @unique
+  unit InventoryBaseUnit
+  expected Decimal @db.Decimal(18,3)
+  status CommercialReturnStatus @default(AWAITING_RETURN)
+  reason String
+  registeredBy String
+  createdAt DateTime @default(now())
+  resolvedAt DateTime?
+  resolvedBy String?
+  order CustomerOrder @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  returnLocation Location @relation(fields: [returnLocationId], references: [id])
+  clientReceptionLine ClientReceptionLine? @relation(fields: [clientReceptionLineId], references: [id])
+  weightShipment WeightShipment? @relation(fields: [weightShipmentId], references: [id])
+  intake ReturnIntake?
+  accountingNotice AccountingNotice?
+  incidents Incident[]
+
+  @@index([orderId, status])
+}
+
+model ReturnIntake {
+  id String @id @default(cuid())
+  returnId String @unique
+  observed Decimal @db.Decimal(18,3)
+  conditionNote String
+  evidenceRef String?
+  observedAt DateTime
+  recordedAt DateTime @default(now())
+  receivedBy String
+  returnCase CommercialReturn @relation(fields: [returnId], references: [id])
+}
+
+model AccountingNotice {
+  id String @id @default(cuid())
+  returnId String @unique
+  reference String @unique
+  reason String
+  requiresReconciliation Boolean @default(false)
+  createdAt DateTime @default(now())
+  createdBy String
+  returnCase CommercialReturn @relation(fields: [returnId], references: [id])
 }
