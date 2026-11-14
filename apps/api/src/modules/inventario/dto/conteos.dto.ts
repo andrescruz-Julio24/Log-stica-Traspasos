@@ -12,3 +12,7 @@ export class CreateInventoryObservationDto {
   @IsDateString() observedAt!: string;
   @IsOptional() @IsString() @MaxLength(200) reference?: string;
 }
+
+export class ApplyInventoryCountDto {
+  @IsString() @Matches(/\S/) @MaxLength(500) reason!: string;
+}
