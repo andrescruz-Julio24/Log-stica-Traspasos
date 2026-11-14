@@ -608,6 +608,7 @@ model DriverProfile {
 }
 
 model Trip {
+  weightShipments WeightShipment[]
   id String @id @default(cuid())
   transferId String?
   orderId String?
@@ -662,6 +663,8 @@ model WeightOrderLine {
 }
 
 model WeightShipment {
+  tripId String?
+  trip Trip? @relation(fields: [tripId], references: [id])
   id String @id @default(cuid())
   weightLineId String
   nominalKg Decimal @db.Decimal(18,3)

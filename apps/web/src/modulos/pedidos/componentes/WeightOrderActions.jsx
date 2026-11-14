@@ -5,7 +5,8 @@ import { submitOnce } from '../../../shared/services/apiClient';
 import { formatDate } from '../../../shared/ui/ModuleKit';
 import Link from 'next/link';
 export function WeightOrderActions({ order, line }) {
-  const { act, busy } = useWorkspace();
+  const { data, act, busy } = useWorkspace();
+  const trips = data.trips.filter(t => t.orderId === order.id && t.status === 'ACTIVE');
   const remaining = Math.max(0, Number(line.plannedKg) - Number(line.reservedKg) - Number(line.dispatchedKg));
   function reserve(e) {
     e.preventDefault();
@@ -21,6 +22,7 @@ export function WeightOrderActions({ order, line }) {
       actualKg: String(f.get('actualKg')).replace(',', '.'),
       custodian: String(f.get('custodian')).trim(),
       documentRef: String(f.get('documentRef') || '').trim() || undefined,
+      ...(f.get('tripId') ? { tripId: f.get('tripId') } : {}),
     }));
   }
   return <div className={styles.content}>
@@ -42,6 +44,11 @@ export function WeightOrderActions({ order, line }) {
       </label>
       <label className="field">Custodio/chofer de la salida<input required name="custodian" maxLength={150}/></label>
       <label className="field">Remisión o bitácora (opcional)<input name="documentRef" maxLength={200}/></label>
+      <label className="field">Viaje con chofer asignado (opcional)
+        <select name="tripId" defaultValue=""><option value="">Sin viaje registrado</option>
+          {trips.map(t=><option key={t.id} value={t.id}>Viaje {t.id.slice(0,8)} activo</option>)}
+        </select>
+      </label>
       <button className="primary" disabled={busy}>Despachar peso realmente medido</button>
     </form>}
     {line.shipments.map(ship=><div key={ship.id} className={styles.shipment}>

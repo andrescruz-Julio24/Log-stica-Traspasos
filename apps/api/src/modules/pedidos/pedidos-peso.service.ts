@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { validTripForDispatch } from '../transporte/trip-validation';
 import { Prisma } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { PrismaService } from '../../shared/database/prisma.service';
@@ -79,6 +80,7 @@ export class PedidosPesoService {
         include: { order: true, shipments: true } });
       ensure(line.order.status !== 'CANCELLED' && !line.shipments.length &&
         line.dispatchedKg.isZero(), 'Este peso comercial ya fue despachado');
+      await validTripForDispatch(tx, body.tripId, { orderId: line.orderId });
       ensure(line.reservedKg.equals(line.plannedKg), 'Falta reservar el peso teórico completo');
       const actual = measuredAmount(body.actualKg, 'KG');
       ensure(actual.lte(line.reservedKg), 'El peso real supera lo reservado; requiere nueva autorización');
@@ -104,6 +106,7 @@ export class PedidosPesoService {
         differenceKg: diff, documentRef: body.documentRef?.trim() || null,
         accountingRef: 'REV-PESO-' + randomUUID().slice(0, 12).toUpperCase(),
         custodian: body.custodian.trim(), dispatchedBy: actor,
+        tripId: body.tripId || null,
       } });
       await this.transactions.auditTx(tx, 'COMMERCIAL_WEIGHT_DISPATCHED', 'WeightShipment',
         shipment.id, actor, {

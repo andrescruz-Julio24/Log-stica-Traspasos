@@ -13,6 +13,7 @@ export class ReserveWeightOrderDto {
   @IsString() @Matches(decimalPattern) quantityKg!: string;
 }
 export class DispatchWeightOrderDto {
+  @IsOptional() @IsString() tripId?: string;
   @IsString() @Matches(decimalPattern) actualKg!: string;
   @IsString() @IsNotEmpty() @MaxLength(150) custodian!: string;
   @IsOptional() @IsString() @MaxLength(200) documentRef?: string;

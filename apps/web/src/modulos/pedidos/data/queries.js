@@ -5,7 +5,7 @@ export const queries = {
     required: ['orders'],
   },
   orderDetail: { resources: ['orders', 'transfers', 'incidents'] },
-  weightOrders: { resources: ['bootstrap', 'unit-stocks', 'weight-orders'] },
+  weightOrders: { resources: ['bootstrap', 'unit-stocks', 'weight-orders', 'trips'] },
   clients: { resources: ['orders'] },
   cancellations: { resources: ['orders'] },
 };
