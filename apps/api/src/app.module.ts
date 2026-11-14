@@ -1,3 +1,4 @@
+import { ProveedoresModule } from './modules/proveedores/proveedores.module';
 import { EntregasModule } from './modules/entregas/entregas.module';
 import { InventarioModule } from './modules/inventario/inventario.module';
 import { GobiernoService } from './modules/gobierno/gobierno.service';
@@ -25,6 +26,7 @@ import { AuditoriaModule } from './modules/auditoria/auditoria.module';
     CatalogosModule,
     InventarioModule,
     EntregasModule,
+    ProveedoresModule,
     AuditoriaModule,
   ],
   providers: [GobiernoService],
