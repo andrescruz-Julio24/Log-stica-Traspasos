@@ -1,3 +1,5 @@
+import { DevolucionesModule } from './modules/devoluciones/devoluciones.module';
+import { TransporteModule } from './modules/transporte/transporte.module';
 import { ProveedoresModule } from './modules/proveedores/proveedores.module';
 import { EntregasModule } from './modules/entregas/entregas.module';
 import { InventarioModule } from './modules/inventario/inventario.module';
@@ -27,6 +29,8 @@ import { AuditoriaModule } from './modules/auditoria/auditoria.module';
     InventarioModule,
     EntregasModule,
     ProveedoresModule,
+    TransporteModule,
+    DevolucionesModule,
     AuditoriaModule,
   ],
   providers: [GobiernoService],

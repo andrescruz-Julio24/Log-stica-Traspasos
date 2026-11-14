@@ -74,6 +74,13 @@ export default function OrderDetailPage({ id }) {
       {shortages.length>0&&<Panel title="Seguimiento de faltantes del despacho"><Table headers={['Traspaso','SKU','Faltante total del despacho','Responsable','Observación']} rows={shortages}/></Panel>}
       <OrderHistory id={id} />
       <ClientDeliveryPanel order={order} />
+      <Panel title="Devoluciones vinculadas a este pedido">
+        <p>{data.commercialReturns.length} expediente(s) de devolución.
+          {' '}<Link href="/devoluciones" className="text-link">Consultar, recibir e inspeccionar devoluciones</Link></p>
+        {data.commercialReturns.map(r=><p key={r.id}>
+          {String(r.expected)} {r.unit} · {r.reason} · {r.status}
+        </p>)}
+      </Panel>
       <Hint title="Disponibilidad comercial">
         Un pedido está listo cuando todas sus líneas tienen unidades utilizables
         asignadas y se han liberado las retenciones. Consulta abajo el motivo y

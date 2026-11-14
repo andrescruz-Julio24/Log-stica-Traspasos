@@ -19,6 +19,7 @@ export class MeasuredReservationDto {
   @IsString() @Matches(decimalPattern) quantity!: string;
 }
 export class MeasuredDispatchDto {
+  @IsOptional() @IsString() tripId?: string;
   @IsString() @IsNotEmpty() lineId!: string;
   @IsString() @Matches(decimalPattern) quantity!: string;
   @IsString() @IsNotEmpty() @MaxLength(150) custodian!: string;

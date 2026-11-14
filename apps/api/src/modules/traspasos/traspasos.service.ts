@@ -1,3 +1,4 @@
+import { validTripForDispatch } from '../transporte/trip-validation';
 import {hasFreshInventory} from '../../shared/domain/inventory-freshness';
 import { finishInspection, receive } from './recepcion';
 import { Injectable, NotFoundException } from '@nestjs/common';
@@ -247,6 +248,7 @@ export class TraspasosService {
           },
         });
         if (!transfer) throw new NotFoundException('Traspaso no encontrado');
+        const activeTrip = await validTripForDispatch(tx, body.tripId, { transferId });
         ensure(
           ['PREPARING', 'DISPATCHED', 'IN_TRANSIT', 'RECEIVING'].includes(
             transfer.status,
@@ -335,7 +337,8 @@ export class TraspasosService {
         const dispatch = await tx.dispatch.create({
           data: {
             transferId,
-            custodian: body.custodian || actor || 'operador-demo',
+            tripId: body.tripId ?? null,
+            custodian: activeTrip?.assignments[0]?.driver.fullName || body.custodian || actor || 'operador-demo',
             lines: {
               create: body.items.map((i) => ({
                 productId: i.productId,
@@ -360,7 +363,9 @@ export class TraspasosService {
           'Dispatch',
           dispatch.id,
           actor,
-          { transferId, items: body.items },
+          { transferId, items: body.items,
+            tripId: body.tripId || null,
+            effectiveDriverId: activeTrip?.assignments[0]?.driverId || null },
         );
         return dispatch;
       },

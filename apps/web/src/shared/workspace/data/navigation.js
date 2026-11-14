@@ -9,6 +9,7 @@ export const areas = [
   ],
   [
     { key: 'orders', label: 'Pedidos de clientes', href: '/pedidos' },
+    { key: 'weightOrders', label: 'Pedidos por kilogramo', href: '/pedidos-peso' },
     { key: 'clients', label: 'Clientes', href: '/clientes' },
     { key: 'cancellations', label: 'Cancelaciones', href: '/cancelaciones' },
   ],
@@ -17,6 +18,7 @@ export const areas = [
     { key: 'measuredTransfers', label: 'Traspasos por KG y caja', href: '/traspasos-peso' },
     { key: 'preparation', label: 'Preparación', href: '/preparacion' },
     { key: 'dispatches', label: 'Despachos', href: '/despachos' },
+    { key: 'drivers', label: 'Choferes y viajes', href: '/choferes' },
     { key: 'transit', label: 'En tránsito', href: '/transito' },
     { key: 'receipts', label: 'Recepciones', href: '/recepciones' },
   ],
@@ -29,6 +31,7 @@ export const areas = [
   ],
   [
     { key: 'incidents', label: 'Incidencias', href: '/incidencias' },
+    { key: 'returns', label: 'Devoluciones', href: '/devoluciones' },
     { key: 'alerts', label: 'Alertas', href: '/alertas' },
     { key: 'authorizations', label: 'Autorizaciones', href: '/autorizaciones' },
   ],

@@ -60,6 +60,7 @@ function ClientReceptionForm({ shipment }) {
 
 export function ClientDeliveryPanel({ order }) {
   const { data, act, busy } = useWorkspace();
+  const trips = data.trips.filter(t => t.orderId === order.id && t.status === 'ACTIVE');
   const shipments = data.clientDeliveries.filter((shipment) => shipment.orderId === order.id);
   const shipped = new Map();
   const received = new Map();
@@ -78,7 +79,7 @@ export function ClientDeliveryPanel({ order }) {
   })).filter((x) => x.available > 0);
   const allDelivered = order.lines.length > 0 && order.lines.every((line) => (received.get(line.id) || 0) >= line.required);
   const anyDelivered = [...received.values()].some((n) => n > 0);
-  const commercialStatus = allDelivered && rejected === 0 && order.status !== 'BLOCKED'
+  const computedStatus = allDelivered && rejected === 0 && order.status !== 'BLOCKED'
     ? 'ENTREGADO CONFORME'
     : rejected > 0 ? 'CON INCIDENCIAS'
     : anyDelivered ? 'ENTREGA PARCIAL'
@@ -93,12 +94,13 @@ export function ClientDeliveryPanel({ order }) {
     act(() => submitOnce('/client-deliveries/dispatch', {
       orderId: order.id, custodian: String(f.get('custodian') || '').trim(),
       reference: String(f.get('reference') || '').trim() || undefined,
+      ...(f.get('tripId') ? { tripId: f.get('tripId') } : {}),
       items,
     }));
   }
   return (
     <Panel title="Entrega efectiva al cliente" description="El abastecimiento interno y la entrega final son eventos distintos.">
-      <p className={styles.status}>Estado comercial de entrega: <strong>{commercialStatus}</strong></p>
+      <p className={styles.status}>Estado comercial de entrega: <strong>{(data.clientDeliveryStatus?.commercialStatus || computedStatus).replaceAll('_',' ')}</strong></p>
       <Table headers={['Producto','Requerido','Abastecido','Salido al cliente','Recibido por cliente']}
         rows={order.lines.map((line) => ({
           key: line.id,
@@ -112,6 +114,11 @@ export function ClientDeliveryPanel({ order }) {
           <label className="field">Chofer o custodio <input required name="custodian" maxLength={120}/></label>
           <label className="field">Referencia de bitácora o remisión
             <input name="reference" maxLength={200}/>
+          </label>
+          <label className="field">Viaje y chofer registrado (opcional)
+            <select name="tripId" defaultValue=""><option value="">Sin viaje asociado</option>
+              {trips.map(t=><option key={t.id} value={t.id}>Viaje {t.id.slice(0,8)} · activo</option>)}
+            </select>
           </label>
           {eligible.map(({ line, available }) => (
             <label className="field" key={line.id}>

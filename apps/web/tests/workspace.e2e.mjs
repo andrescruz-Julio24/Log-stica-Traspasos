@@ -134,6 +134,8 @@ try {
   await page.route('**/api/orders', () => {});
   await go('/pedidos');
   await page.getByText(/tardó demasiado/).waitFor({ timeout: 22000 });
+  // Aislar la simulación de timeout: no bloquear GET /orders en las pantallas siguientes.
+  await page.unroute('**/api/orders');
   await go('/pedidos');
   await page
     .getByRole('link', { name: 'Inventario', exact: true })
@@ -160,6 +162,21 @@ try {
   await go('/administracion');
   await page.getByText('Registrar producto en el catálogo').click();
   await page.locator('input[name=externalLabel]').waitFor();
+  // T-18, T-21, T-23, T-24, T-27: cobertura mínima en navegador.
+  await go('/pedidos-peso');
+  await page.getByRole('heading', { name: 'Pedidos comerciales por peso' }).waitFor();
+  await button('Registrar pedido por peso').click();
+  assert.ok((await page.locator('form :invalid').count()) > 0);
+  await go('/choferes');
+  await page.getByRole('heading', { name: 'Choferes autorizados y disponibilidad' }).waitFor();
+  await page.getByRole('heading', { name: 'Viajes y cambios de chofer' }).waitFor();
+  await button('Registrar chofer').click();
+  assert.ok((await page.locator('form :invalid').count()) > 0);
+  await go('/devoluciones');
+  await page.getByRole('heading', { name: 'Regreso de pedido cargado por peso' }).waitFor();
+  await page.getByRole('heading', { name: 'Devoluciones por rechazo del cliente y retorno de mercancía' }).waitFor();
+  await go('/traspasos/' + transfer.id);
+  await page.getByRole('heading', { name: 'Programación anticipada vinculada a cliente' }).waitFor();
   console.log(
     'E2E operativo, resultados parciales, bloqueo, reintentos, excepción de panel, timeout y navegación OK',
   );

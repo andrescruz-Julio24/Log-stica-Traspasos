@@ -1,0 +1,3 @@
+.content { display:grid; gap:16px; }
+.order { border:1px solid #d8e1e7; border-radius:9px; padding:12px; margin-block:10px; }
+.order summary { cursor:pointer; font-weight:600; }

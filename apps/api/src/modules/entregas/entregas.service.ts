@@ -1,3 +1,4 @@
+import { validTripForDispatch } from '../transporte/trip-validation';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../shared/database/prisma.service';
 import { TransactionService } from '../../shared/database/transaction.service';
@@ -8,6 +9,61 @@ import { CreateClientReceptionDto, CreateClientShipmentDto } from './dto/entrega
 @Injectable()
 export class EntregasService {
   constructor(private readonly db: PrismaService, private readonly transactions: TransactionService) {}
+
+  // Resultado comercial calculado en servidor; 'READY' únicamente significa abastecimiento.
+  async deliveryStatus(orderId: string) {
+    const order = await this.db.customerOrder.findUniqueOrThrow({
+      where: { id: orderId },
+      include: {
+        lines: true, returns: true,
+        weightLines: { include: { shipments: { include: { clientReception: true } } } },
+        clientShipments: { include: { lines: true, receptions: { include: { lines: true } } } },
+      },
+    });
+    const delivered = new Map(order.lines.map(l => [l.id, 0]));
+    let rejected = 0;
+    let shipped = 0;
+    let accepted = 0;
+    for (const shipment of order.clientShipments) {
+      const byId = new Map(shipment.lines.map(l => [l.id, l.orderLineId]));
+      for (const line of shipment.lines) shipped += line.quantity;
+      for (const receipt of shipment.receptions) {
+        for (const line of receipt.lines) {
+          const orderLineId = byId.get(line.shipmentLineId);
+          if (orderLineId) delivered.set(orderLineId, (delivered.get(orderLineId) || 0) + line.accepted);
+          accepted += line.accepted;
+          rejected += line.rejected;
+        }
+      }
+    }
+    const openReturns = order.returns.filter(r => r.status !== 'RESOLVED').length;
+    const pieceComplete = order.lines.every(l => (delivered.get(l.id) || 0) >= l.required);
+    const weightSent = order.weightLines.some(l => l.shipments.length > 0);
+    const weightAccepted = order.weightLines.reduce((total, l) =>
+      total + l.shipments.reduce((sum, sh) =>
+        sum + (sh.clientReception?.acceptedKg.toNumber() || 0), 0), 0);
+    const weightRejected = order.weightLines.reduce((total, l) =>
+      total + l.shipments.reduce((sum, sh) =>
+        sum + (sh.clientReception?.rejectedKg.toNumber() || 0), 0), 0);
+    const weightComplete = order.weightLines.every(l =>
+      l.shipments.reduce((sum, sh) => sum +
+        (sh.clientReception?.acceptedKg.toNumber() || 0), 0) >= l.plannedKg.toNumber());
+    const hasLines = order.lines.length > 0 || order.weightLines.length > 0;
+    const complete = hasLines && pieceComplete && weightComplete;
+    const state = order.status === 'CANCELLED' ? 'CANCELADO'
+      : (openReturns || rejected || weightRejected || order.status === 'BLOCKED') ? 'CON_INCIDENCIAS'
+      : complete ? 'ENTREGADO_CONFORME'
+      : accepted > 0 || weightAccepted > 0 ? 'ENTREGA_PARCIAL'
+      : shipped > 0 || weightSent ? 'EN_REPARTO' : 'PENDIENTE_DE_REPARTO';
+    return {
+      orderId: order.id, supplyStatus: order.status, commercialStatus: state,
+      shipped, accepted, rejected, openReturns,
+      weightAcceptedKg: weightAccepted, weightRejectedKg: weightRejected,
+      kilogramsSent: order.weightLines.reduce((n,l)=>n+l.shipments.reduce(
+        (sum,sh)=>sum+sh.actualKg.toNumber(),0),0),
+      customerReceptionRequired: true,
+    };
+  }
 
   // Reserva directa: una existencia validada en destino no necesita traspaso ficticio.
   allocateLocal(body: { orderLineId: string; quantity: number }, key: string | undefined, actor: string) {
@@ -75,6 +131,7 @@ export class EntregasService {
         where: { id: body.orderId }, include: { lines: true },
       });
       ensure(order.status !== 'CANCELLED', 'Pedido comercial cancelado');
+      const activeTrip = await validTripForDispatch(tx, body.tripId, { orderId: order.id });
       const blocking = await tx.incident.count({
         where: { status: 'OPEN', blocking: true, allocation: { reservation: { orderLine: { orderId: order.id } } } },
       });
@@ -100,14 +157,17 @@ export class EntregasService {
       }
       const shipment = await tx.clientShipment.create({
         data: {
-          orderId: order.id, originId: order.destinationId, custodian: body.custodian.trim(),
+          orderId: order.id, originId: order.destinationId, tripId: body.tripId ?? null,
+          custodian: activeTrip?.assignments[0]?.driver.fullName || body.custodian.trim(),
           reference: body.reference || null, dispatchedBy: actor,
+          
           lines: { create: body.items.map((i) => ({ orderLineId: i.orderLineId, quantity: i.quantity })) },
         },
         include: { lines: true },
       });
       await this.transactions.auditTx(tx, 'CLIENT_SHIPMENT_DISPATCHED', 'ClientShipment', shipment.id, actor, {
-        orderId: order.id, originId: order.destinationId, custodian: body.custodian,
+        orderId: order.id, originId: order.destinationId, custodian: shipment.custodian, tripId: body.tripId || null,
+        effectiveDriverId: activeTrip?.assignments[0]?.driverId || null,
         items: body.items, inTransit: true,
       });
       return shipment;
@@ -146,6 +206,34 @@ export class EntregasService {
           })) },
         }, include: { lines: true },
       });
+      // T-27: lo rechazado sigue en custodia, sin crear stock en el destino.
+      for (const line of result.lines.filter(x => x.rejected > 0)) {
+        const original = shipment.lines.find(x => x.id === line.shipmentLineId);
+        ensure(original, 'La recepción no corresponde a esta salida');
+        const orderLine = await tx.orderLine.findUniqueOrThrow({
+          where: { id: original.orderLineId }, include: { product: true },
+        });
+        const returned = await tx.commercialReturn.create({ data: {
+          orderId: shipment.orderId, productId: orderLine.productId,
+          returnLocationId: shipment.originId, clientReceptionLineId: line.id,
+          expected: line.rejected, unit: 'PIEZA',
+          reason: body.notes?.trim() || 'Rechazo parcial del cliente',
+          registeredBy: actor,
+        } });
+        const incident = await tx.incident.create({ data: {
+          commercialReturnId: returned.id, type: 'CLIENTE_RECHAZO_PARCIAL',
+          blocking: true, sku: orderLine.product.sku,
+          quantity: line.rejected, location: shipment.originId,
+          notes: 'Cliente rechazó ' + line.rejected + ' PIEZA. ' + (body.notes || ''),
+        } });
+        await this.transactions.auditTx(tx, 'CLIENT_RETURN_OPENED',
+          'CommercialReturn', returned.id, actor, {
+            shipmentId: shipment.id, receptionId: result.id,
+            clientReceptionLineId: line.id, quantity: line.rejected,
+            incidentId: incident.id, awaitingPhysicalReturn: true,
+            stockNotRestored: true,
+          });
+      }
       await this.transactions.auditTx(tx, 'CLIENT_RECEIPT_CONFIRMED', 'ClientReception', result.id, actor, {
         shipmentId, orderId: shipment.orderId, receiverName: body.receiverName, observedAt: body.observedAt,
         items: body.items, rejected: body.items.some((i) => i.rejected > 0),

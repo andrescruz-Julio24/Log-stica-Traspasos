@@ -1,6 +1,7 @@
 'use client';
 import detailStyles from '../../../shared/componentes/styles/DetailLayout.module.css';
 import styles from '../styles/TransferTracePage.module.css';
+import { TransferSchedulePanel } from '../componentes/TransferSchedulePanel';
 import {
   Empty,
   Hint,
@@ -48,6 +49,7 @@ export default function TransferTracePage({ id }) {
         href="/traspasos"
         backLabel="traspasos"
       />
+      <TransferSchedulePanel transfer={t} orders={data.orders} events={data.transferSchedules} />
       <div className="stats">
         <Metric label="Solicitado" value={req} detail="Solicitud original" />
         <Metric

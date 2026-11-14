@@ -7,6 +7,7 @@ export class ClientShipmentItemDto {
 }
 
 export class CreateClientShipmentDto {
+  @IsOptional() @IsString() tripId?: string;
   @IsString() @IsNotEmpty() orderId!: string;
   @IsString() @IsNotEmpty() @MaxLength(120) custodian!: string;
   @IsOptional() @IsString() @MaxLength(200) reference?: string;

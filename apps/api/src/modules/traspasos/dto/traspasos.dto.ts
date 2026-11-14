@@ -44,6 +44,7 @@ export class QuantityDto {
   @IsInt() @Min(1) quantity!: number;
 }
 export class DispatchDto {
+  @IsOptional() @IsString() tripId?: string;
   @IsOptional() @IsString() @IsNotEmpty() custodian?: string;
   @IsArray()
   @ArrayMinSize(1)
