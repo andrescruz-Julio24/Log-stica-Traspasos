@@ -2,11 +2,57 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../shared/database/prisma.service';
 import { TransactionService } from '../../shared/database/transaction.service';
 import { ensure } from '../../shared/domain/assertions';
+import { refreshOrderState } from '../pedidos/readiness';
 import { CreateClientReceptionDto, CreateClientShipmentDto } from './dto/entregas.dto';
 
 @Injectable()
 export class EntregasService {
   constructor(private readonly db: PrismaService, private readonly transactions: TransactionService) {}
+
+  // Reserva directa: una existencia validada en destino no necesita traspaso ficticio.
+  allocateLocal(body: { orderLineId: string; quantity: number }, key: string | undefined, actor: string) {
+    return this.transactions.idempotent('local-commitment:' + actor, key, body, async (tx) => {
+      const line = await tx.orderLine.findUniqueOrThrow({
+        where: { id: body.orderLineId }, include: { order: true },
+      });
+      ensure(line.order.status !== 'CANCELLED', 'Pedido cancelado');
+      ensure(line.accepted + body.quantity <= line.required, 'El pedido no necesita tantas unidades');
+      const stock = await tx.stock.findUnique({
+        where: { productId_locationId: {
+          productId: line.productId, locationId: line.order.destinationId,
+        } },
+      });
+      ensure(stock && stock.physical - stock.blocked - stock.reserved >= body.quantity,
+        'Stock local utilizable insuficiente');
+      // No convertir una estimación Excel en disponibilidad. Sin concordancia de un
+      // conteo físico verificado se necesita reconciliación previa, no un ajuste oculto.
+      const physicalCount = await tx.inventoryObservation.findFirst({
+        where: {
+          productId: line.productId, locationId: line.order.destinationId,
+          status: 'VERIFIED', unit: 'PIEZA', method: 'COUNT',
+        },
+        orderBy: [{ observedAt: 'desc' }, { recordedAt: 'desc' }],
+      });
+      ensure(physicalCount && physicalCount.quantity.equals(stock.physical),
+        'Se requiere un conteo físico validado y concordante para reservar stock local');
+      const updated = await tx.stock.updateMany({
+        where: { id: stock.id, version: stock.version, physical: { gte: body.quantity } },
+        data: { reserved: { increment: body.quantity }, version: { increment: 1 } },
+      });
+      ensure(updated.count === 1, 'El stock local cambió durante la asignación');
+      await tx.orderLine.update({ where: { id: line.id }, data: { accepted: { increment: body.quantity } } });
+      const commitment = await tx.localStockCommitment.create({
+        data: { orderLineId: line.id, stockId: stock.id, quantity: body.quantity, actor },
+      });
+      await refreshOrderState(tx, line.orderId);
+      await this.transactions.auditTx(tx, 'LOCAL_STOCK_COMMITTED', 'LocalStockCommitment',
+        commitment.id, actor, {
+          orderLineId: line.id, stockId: stock.id, quantity: body.quantity,
+          countId: physicalCount.id, locationId: line.order.destinationId,
+        });
+      return commitment;
+    });
+  }
 
   list() {
     return this.db.clientShipment.findMany({

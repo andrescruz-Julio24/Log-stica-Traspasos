@@ -28,3 +28,8 @@ export class CreateClientReceptionDto {
   @IsArray() @ArrayMinSize(1) @ValidateNested({ each: true })
   @Type(() => ClientReceptionItemDto) items!: ClientReceptionItemDto[];
 }
+
+export class LocalStockCommitmentDto {
+  @IsString() @IsNotEmpty() orderLineId!: string;
+  @IsInt() @Min(1) quantity!: number;
+}
