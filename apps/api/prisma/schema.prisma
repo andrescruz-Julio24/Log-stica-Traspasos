@@ -44,6 +44,7 @@ model Location {
 }
 
 model Product {
+  measuredTransferLines MeasuredTransferLine[]
   baseUnit InventoryBaseUnit @default(PIEZA)
   externalLabel String?
   supplierLines SupplierReceiptLine[]
@@ -112,6 +113,8 @@ model OrderLine {
 }
 
 model Transfer {
+  measuredLines MeasuredTransferLine[]
+  measuredDispatches MeasuredDispatch[]
   closedWithDifferences Boolean        @default(false)
   id                    String         @id @default(cuid())
   code                  String         @unique
@@ -489,4 +492,54 @@ model SupplierBlockedReturn {
   receiptLine SupplierReceiptLine @relation(fields: [receiptLineId], references: [id])
 
   @@index([receiptLineId, returnedAt])
+}
+
+model MeasuredTransferLine {
+  id String @id @default(cuid())
+  transferId String
+  productId String
+  unit InventoryBaseUnit
+  requested Decimal @db.Decimal(18,3)
+  reserved Decimal @default(0) @db.Decimal(18,3)
+  dispatched Decimal @default(0) @db.Decimal(18,3)
+  accepted Decimal @default(0) @db.Decimal(18,3)
+  blocked Decimal @default(0) @db.Decimal(18,3)
+  estimatedPackages Int?
+  averageWeightKg Decimal? @db.Decimal(18,3)
+  transfer Transfer @relation(fields: [transferId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  dispatches MeasuredDispatch[]
+
+  @@unique([transferId, productId])
+}
+
+model MeasuredDispatch {
+  id String @id @default(cuid())
+  transferId String
+  lineId String
+  quantity Decimal @db.Decimal(18,3)
+  custodian String
+  dispatchedAt DateTime @default(now())
+  dispatchedBy String
+  transfer Transfer @relation(fields: [transferId], references: [id])
+  line MeasuredTransferLine @relation(fields: [lineId], references: [id])
+  receipts MeasuredReceipt[]
+
+  @@index([transferId, dispatchedAt])
+}
+
+model MeasuredReceipt {
+  id String @id @default(cuid())
+  dispatchId String
+  presented Decimal @db.Decimal(18,3)
+  accepted Decimal @db.Decimal(18,3)
+  blocked Decimal @db.Decimal(18,3)
+  observedAt DateTime
+  receivedAt DateTime @default(now())
+  receivedBy String
+  notes String?
+  evidenceRef String?
+  dispatch MeasuredDispatch @relation(fields: [dispatchId], references: [id])
+
+  @@index([dispatchId, receivedAt])
 }
