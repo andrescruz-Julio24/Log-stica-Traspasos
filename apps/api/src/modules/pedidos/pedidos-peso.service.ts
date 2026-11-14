@@ -14,7 +14,7 @@ export class PedidosPesoService {
   list() {
     return this.db.customerOrder.findMany({ where: { weightLines: { some: {} } },
       include: { destination: true, weightLines: { include: {
-        product: true, shipments: { orderBy: { dispatchedAt: 'asc' } },
+        product: true, shipments: { include: { clientReception: true }, orderBy: { dispatchedAt: 'asc' } },
       } } }, orderBy: { createdAt: 'desc' }, take: 200 });
   }
   create(body: CreateWeightOrderDto, key: string | undefined, actor: string) {
