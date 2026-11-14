@@ -54,15 +54,16 @@ export class EntregasService {
     });
   }
 
-  list() {
+  list(orderId?: string) {
     return this.db.clientShipment.findMany({
+      where: orderId ? { orderId } : {},
       include: {
         order: { select: { id: true, code: true, customer: true, status: true } },
         lines: { include: { orderLine: { include: { product: true } } } },
         receptions: { include: { lines: true }, orderBy: { recordedAt: 'asc' } },
       },
       orderBy: { dispatchedAt: 'desc' },
-      take: 200,
+      take: orderId ? undefined : 200,
     });
   }
 

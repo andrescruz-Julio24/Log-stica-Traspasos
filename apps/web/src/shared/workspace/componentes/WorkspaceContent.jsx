@@ -37,7 +37,7 @@ export function WorkspaceContent({ children, fallback }) {
         if (!state || state.status === 'loading')
           return (
             <p role="status" key={key}>
-              Consultando {resourceNames[key]}…
+              Consultando {(resourceNames[key] || 'Entregas de cliente')}…
             </p>
           );
         return (

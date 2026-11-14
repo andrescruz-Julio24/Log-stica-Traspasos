@@ -4,7 +4,7 @@ export const queries = {
     partial: true,
     required: ['orders'],
   },
-  orderDetail: { resources: ['orders', 'transfers', 'incidents', 'client-deliveries'] },
+  orderDetail: { resources: ['orders', 'transfers', 'incidents'] },
   clients: { resources: ['orders'] },
   cancellations: { resources: ['orders'] },
 };
